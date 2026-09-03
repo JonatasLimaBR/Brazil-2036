@@ -63,18 +63,19 @@ padrões do DESIGN (§3 D2/D5/D6) e do template ADR observado no repo.
 - **PR1 — espinha de dados** (manifesto itens 4–35): Terraform, connector, RAW/Bronze/Silver/Gold, contrato, provenance, pipeline, testes, `data.yml` + `security.yml`.
 - **PR2 — apresentação** (itens 36–56): API FastAPI, geração OpenAPI + cliente TS, card Vite/TS, Cloud Run services, e2e, `api-web.yml`.
 
-### Pré-requisitos para o PR1 (fora do controle desta sessão)
-| ID | Pendência | Bloqueia |
-|---|---|---|
-| P1 | `git` baseline: primeiro commit em `main` + branch `feature/mvp-walking-skeleton` | qualquer PR (SPEC-032) |
-| P2 | `project_id` do projeto GCP dev + billing habilitado (DEFINE A3) | Terraform apply, testes de integração, `terraform plan` no CI |
-| P3 | Descoberta do recurso real no dados.gov.br: `source_url`, `resource_url`, formato, encoding (DEFINE A1/A2 — tarefa 1 da fatia) | connector, contrato v1, `estado_ibge.csv` de referência |
-| P4 | WIF pool + provider configurados e federados com o repo GitHub (ADR-040) | gates de CI autenticados |
-| P5 | Times/owners para `CODEOWNERS` existirem na org | itens 34/54 resolverem (SPEC-032) |
-| P6 | Regenerar `MANIFEST.json` (AD #5) | integridade do pacote |
+### Pré-requisitos para o PR1
+| ID | Pendência | Bloqueia | Status |
+|---|---|---|---|
+| P1 | `git` baseline: commit em `main` + branch `feature/mvp-walking-skeleton` | qualquer PR (SPEC-032) | ✅ feito (`1836601` main, `616c9d2` branch) |
+| P2 | `project_id` do projeto GCP dev + billing habilitado (DEFINE A3) | Terraform apply, testes de integração, `terraform plan` no CI | ⏳ pendente |
+| P3 | Descoberta do recurso real: `resource_url`, formato, encoding, schema (DEFINE A1/A2 — tarefa 1) | connector, contrato v1, `uf_ibge.csv` | ✅ feito — `DISCOVERY_MVP_WALKING_SKELETON.md`; cascata DV1–DV3 aplicada a DESIGN v1.1 / DEFINE v1.2 / SPEC-033 |
+| P4 | WIF pool + provider federados com o repo GitHub (ADR-040) | gates de CI autenticados | ⏳ pendente |
+| P5 | Times/owners para `CODEOWNERS` na org | itens 34/54 (SPEC-032) | ⏳ pendente |
+| P6 | Regenerar `MANIFEST.json` (AD #5) | integridade do pacote | ⏳ pendente |
+| P7 | URL do catálogo dados.gov.br para `dataset_registry.source_url` (DEFINE A9 / SPEC-033 OQ9) | atribuição no concurso CGU; **não** bloqueia o código do PR1 | ⏳ pendente |
 
-### Dependência de decisão já resolvida no DESIGN (sem blocker)
-- OQ1–OQ8: resolvidas em `DESIGN §3`. ADR-051 e ADR-052 agora concretizam OQ1 e OQ2.
+### Dependência de decisão já resolvida (sem blocker)
+- OQ1–OQ9: OQ1–OQ8 resolvidas em `DESIGN §3` (ADR-051/052); OQ9 = P7.
 
 ---
 
@@ -94,10 +95,8 @@ As transições para `✅ Complete (Built)` só ocorrem quando PR1 + PR2 estiver
 ## 6. Handoff
 
 **Próximo passo:** iniciar o **PR1** com `/build .claude/sdd/features/DESIGN_MVP_WALKING_SKELETON.md`
-numa sessão dedicada, após resolver P1–P4. Recomenda-se, na abertura dessa sessão:
-1. Fazer o commit baseline e a branch (`chore: baseline` + `feature/mvp-walking-skeleton`).
-2. Fornecer `project_id` e a URL do recurso do dados.gov.br.
-3. Executar a tarefa 1 (inspeção do recurso) antes de escrever o connector e o contrato v1.
+numa sessão dedicada, após resolver **P2** (`project_id` + billing) e **P4** (WIF). P1 e P3 já
+concluídos; P5–P7 não bloqueiam a escrita do código.
 
 Se algum item do DESIGN se mostrar inexequível durante o PR1, usar `/iterate` sobre o `DESIGN`.
 
@@ -123,3 +122,4 @@ Se algum item do DESIGN se mostrar inexequível durante o PR1, usar `/iterate` s
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-03 | 0.1 | Execução parcial: bloco de docs (ADR-051, ADR-052, SPEC-033) + INDEX.md. PR1/PR2 pendentes. | /build (Claude Sonnet 5) |
+| 2026-09-03 | 0.2 | Tarefa 1 do PR1 (descoberta do recurso) concluída → `DISCOVERY_MVP_WALKING_SKELETON.md`. Cascata DV1–DV3 (via `/iterate`) aplicada a DESIGN v1.1, DEFINE v1.2, SPEC-033. P1/P3 marcados feitos; P7 (URL catálogo) adicionado. | /build + /iterate (Claude Sonnet 5) |
