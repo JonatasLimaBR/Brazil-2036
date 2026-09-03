@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ingestion.bigquery_io import BigQueryClient, run_sql
+from ingestion.bigquery_io import BigQueryClient, run_sql, scalar, sql_literal
 
 BRONZE_COLUMNS = ("UF", "ANO", "VALOR")
 _TECHNICAL_PREFIX = "_"
@@ -16,35 +16,8 @@ class BronzeLoad:
     row_hash: str
 
 
-def _fqtn(project: str, dataset_bronze: str, table: str) -> str:
-    return f"`{project}.{dataset_bronze}.{table}`"
-
-
-def load_ddl(project: str, dataset_bronze: str, table: str) -> str:
-    return (
-        f"CREATE TABLE IF NOT EXISTS {_fqtn(project, dataset_bronze, table)} "
-        "(UF STRING, ANO STRING, VALOR STRING, "
-        "_source_uri STRING, _ingested_at TIMESTAMP, _row_hash STRING)"
-    )
-
-
-def load_data_sql(project: str, dataset_bronze: str, table: str, raw_uri: str) -> str:
-    return (
-        f"LOAD DATA INTO {_fqtn(project, dataset_bronze, table)} "
-        "(UF STRING, ANO STRING, VALOR STRING) "
-        "FROM FILES (format='CSV', field_delimiter=';', skip_leading_rows=1, "
-        f"encoding='UTF-8', uris=['{raw_uri}'])"
-    )
-
-
-def tag_rows_sql(
-    project: str, dataset_bronze: str, table: str, source_uri: str, row_hash: str
-) -> str:
-    return (
-        f"UPDATE {_fqtn(project, dataset_bronze, table)} "
-        f"SET _source_uri='{source_uri}', _ingested_at=CURRENT_TIMESTAMP(), "
-        f"_row_hash='{row_hash}' WHERE _row_hash IS NULL"
-    )
+def _fqtn(project: str, dataset: str, table: str) -> str:
+    return f"`{project}.{dataset}.{table}`"
 
 
 def load(
@@ -57,16 +30,26 @@ def load(
     source_uri: str,
     row_hash: str,
 ) -> BronzeLoad:
-    fqtn = _fqtn(project, dataset_bronze, table)
-    run_sql(client, load_ddl(project, dataset_bronze, table))
-    run_sql(client, load_data_sql(project, dataset_bronze, table, raw_uri))
-    run_sql(client, tag_rows_sql(project, dataset_bronze, table, source_uri, row_hash))
-    counted = run_sql(
-        client, f"SELECT COUNT(*) AS n FROM {fqtn} WHERE _row_hash='{row_hash}'"
+    staging = _fqtn(project, dataset_bronze, f"{table}_stg")
+    target = _fqtn(project, dataset_bronze, table)
+
+    run_sql(
+        client,
+        f"LOAD DATA OVERWRITE {staging} (UF STRING, ANO STRING, VALOR STRING) "
+        "FROM FILES (format='CSV', field_delimiter=';', skip_leading_rows=1, "
+        f"encoding='UTF-8', uris=['{raw_uri}'])",
     )
+    run_sql(
+        client,
+        f"CREATE OR REPLACE TABLE {target} AS SELECT UF, ANO, VALOR, "
+        f"{sql_literal(source_uri)} AS _source_uri, "
+        "CURRENT_TIMESTAMP() AS _ingested_at, "
+        f"{sql_literal(row_hash)} AS _row_hash FROM {staging}",
+    )
+    counted = scalar(client, f"SELECT COUNT(*) FROM {target}")
     return BronzeLoad(
         table=f"{project}.{dataset_bronze}.{table}",
-        rows_loaded=int(counted[0]["n"]) if counted else 0,
+        rows_loaded=int(counted or 0),
         source_uri=source_uri,
         row_hash=row_hash,
     )

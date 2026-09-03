@@ -80,12 +80,12 @@ def _responder(columns: list[str]):
             return [{"column_name": c} for c in columns]
         if "MAX(reference_year)" in sql:
             return [{"y": 2022}]
-        if "_row_hash=" in sql and "COUNT(*)" in sql:
+        if "COUNT(*)" in sql and "br2036_bronze" in sql:
             return [{"n": 27}]
-        if "metric_provenance" in sql and "COUNT(*)" in sql:
-            return [{"n": 27}]
-        if "br2036_silver" in sql and "COUNT(*)" in sql:
+        if "COUNT(*)" in sql and "br2036_silver" in sql:
             return [{"c": 27}]
+        if "COUNT(*)" in sql and "metric_provenance" in sql:
+            return [{"n": 27}]
         if "SELECT metric_id, state_ibge_code, reference_year" in sql:
             return _gold_rows()
         return []

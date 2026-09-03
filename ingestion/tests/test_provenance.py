@@ -11,7 +11,7 @@ def _responder(sql: str) -> list[dict[str, object]]:
     return []
 
 
-def test_write_from_gold_ddl_delete_insert_select_count() -> None:
+def test_write_from_gold_create_or_replace_from_gold_then_count() -> None:
     client = FakeBigQuery(_responder)
     n = write_from_gold(
         client,
@@ -29,10 +29,10 @@ def test_write_from_gold_ddl_delete_insert_select_count() -> None:
         run_id="run123",
     )
     assert n == 27
-    joined = "\n".join(client.queries)
-    assert "CREATE TABLE IF NOT EXISTS `p.br2036_gold.metric_provenance`" in joined
-    assert "DELETE FROM `p.br2036_gold.metric_provenance` WHERE reference_year = 2022" in joined
-    assert "INSERT INTO `p.br2036_gold.metric_provenance`" in joined
-    assert "FROM `p.br2036_gold.gold_debt_state_current` WHERE reference_year = 2022" in joined
-    assert "'observed', 1.0" in joined
-    assert "'run123'" in joined
+    create_sql = client.queries[0]
+    assert "CREATE OR REPLACE TABLE `p.br2036_gold.metric_provenance` AS SELECT" in create_sql
+    assert "FROM `p.br2036_gold.gold_debt_state_current` WHERE reference_year = 2022" in create_sql
+    assert "'observed' AS scenario" in create_sql and "1.0 AS confidence" in create_sql
+    assert "'run123' AS run_id" in create_sql
+    assert "DELETE" not in create_sql and "INSERT" not in create_sql
+    assert "COUNT(*)" in client.queries[1]

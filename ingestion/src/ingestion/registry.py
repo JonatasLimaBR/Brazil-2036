@@ -6,11 +6,16 @@ from pathlib import Path
 
 from ingestion.bigquery_io import BigQueryClient, run_sql, sql_literal
 
-REGISTRY_DDL = (
-    "dataset_id STRING, resource_url STRING, source_url STRING, "
-    "resource_format STRING, organization STRING, license STRING, "
-    "update_frequency STRING, br2036_domain STRING, br2036_module STRING, "
-    "active BOOL, updated_at TIMESTAMP"
+_REGISTRY_FIELDS = (
+    "dataset_id",
+    "resource_url",
+    "source_url",
+    "resource_format",
+    "organization",
+    "license",
+    "update_frequency",
+    "br2036_domain",
+    "br2036_module",
 )
 
 
@@ -51,28 +56,11 @@ def upsert_dataset_registry(
     entry: Mapping[str, str],
 ) -> None:
     fq_name = f"`{project}.{dataset_control}.{table}`"
-    run_sql(client, f"CREATE TABLE IF NOT EXISTS {fq_name} ({REGISTRY_DDL})")
+    selected = ", ".join(
+        f"{sql_literal(entry.get(field, ''))} AS {field}" for field in _REGISTRY_FIELDS
+    )
     run_sql(
         client,
-        f"DELETE FROM {fq_name} WHERE dataset_id = {sql_literal(entry['dataset_id'])}",
+        f"CREATE OR REPLACE TABLE {fq_name} AS SELECT {selected}, "
+        "TRUE AS active, CURRENT_TIMESTAMP() AS updated_at",
     )
-    columns = (
-        "dataset_id, resource_url, source_url, resource_format, organization, "
-        "license, update_frequency, br2036_domain, br2036_module, active, updated_at"
-    )
-    values = ", ".join(
-        [
-            sql_literal(entry["dataset_id"]),
-            sql_literal(entry["resource_url"]),
-            sql_literal(entry.get("source_url", "")),
-            sql_literal(entry["resource_format"]),
-            sql_literal(entry["organization"]),
-            sql_literal(entry["license"]),
-            sql_literal(entry["update_frequency"]),
-            sql_literal(entry["br2036_domain"]),
-            sql_literal(entry["br2036_module"]),
-            "TRUE",
-            "CURRENT_TIMESTAMP()",
-        ]
-    )
-    run_sql(client, f"INSERT INTO {fq_name} ({columns}) VALUES ({values})")

@@ -40,7 +40,7 @@ def test_ensure_uf_ibge_uses_create_or_replace_with_structs() -> None:
     assert "INSERT" not in sql and "DELETE" not in sql
 
 
-def test_upsert_dataset_registry_delete_then_insert_values() -> None:
+def test_upsert_dataset_registry_uses_create_or_replace_no_dml() -> None:
     client = FakeBigQuery()
     upsert_dataset_registry(
         client,
@@ -58,9 +58,10 @@ def test_upsert_dataset_registry_delete_then_insert_values() -> None:
             "br2036_module": "M02",
         },
     )
-    joined = "\n".join(client.queries)
-    reg = "`p.br2036_control.dataset_registry`"
-    assert "CREATE TABLE IF NOT EXISTS" in joined
-    assert f"DELETE FROM {reg} WHERE dataset_id = 'divida_consolidada_estados'" in joined
-    assert f"INSERT INTO {reg}" in joined
-    assert "'ODbL'" in joined and "TRUE, CURRENT_TIMESTAMP()" in joined
+    assert len(client.queries) == 1
+    sql = client.queries[0]
+    assert "CREATE OR REPLACE TABLE `p.br2036_control.dataset_registry` AS SELECT" in sql
+    assert "'divida_consolidada_estados' AS dataset_id" in sql
+    assert "'ODbL' AS license" in sql
+    assert "TRUE AS active" in sql and "CURRENT_TIMESTAMP() AS updated_at" in sql
+    assert "DELETE" not in sql and "INSERT" not in sql and "MERGE" not in sql
