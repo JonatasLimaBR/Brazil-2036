@@ -11,7 +11,9 @@ resource "google_cloud_run_v2_job" "ingestion" {
       timeout         = "900s"
 
       containers {
-        image = "${var.region}-docker.pkg.dev/${var.project_id}/br2036/ingestion:latest"
+        # Placeholder so the Job can be created before the first image build.
+        # The data workflow replaces it via `gcloud run jobs deploy` (ignore_changes below).
+        image = "us-docker.pkg.dev/cloudrun/container/job:latest"
 
         env {
           name  = "GCP_PROJECT"
