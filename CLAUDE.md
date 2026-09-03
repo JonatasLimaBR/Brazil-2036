@@ -82,8 +82,8 @@ BRASIL2036/
 └─ docs/
    ├─ discovery/          7 docs: jornadas, AI value/risk, failure modes, irreversibilidade, assurance, métricas, MVP boundaries
    ├─ prd/                18 PRDs (PRD-001…018)
-   ├─ adrs/               50 ADRs (ADR-001…050)
-   ├─ specs/              32 SPECs (SPEC-001…032)
+   ├─ adrs/               52 ADRs (ADR-001…052)
+   ├─ specs/              33 SPECs (SPEC-001…033)
    ├─ risks/              RISK-REGISTER.md, RISK-CONTROL-TEST-MATRIX.md
    ├─ governance/         AI-GOVERNANCE, DATA-GOVERNANCE, RESPONSIBLE-AI
    ├─ access/             ACCESS-PROFILES.md, PERMISSION-MATRIX.md
@@ -94,7 +94,14 @@ BRASIL2036/
    └─ sources/            SOURCE-INDEX.md / .csv
 ```
 
-(`.claude/` guarda os comandos e skills do harness — ver "Comandos úteis".)
+(`.claude/` guarda os comandos e skills do harness — ver "Comandos úteis" — e, em `.claude/sdd/`, os artefatos do workflow SDD por feature.)
+
+## Estado atual (2026-09-03)
+
+- **git** inicializado. `main` = baseline (`chore: baseline repo + agentcode harness init`).
+- Branch **`feature/mvp-walking-skeleton`**: fatia vertical mínima que prova a cadeia de provenance com o dataset "Dívida Consolidada dos Estados e do DF". Fases SDD 0–2 concluídas + bloco de docs da Fase 3 (ADR-051 stack de frontend, ADR-052 execução SQL refinando ADR-007, SPEC-033). Ver `.claude/sdd/features/DESIGN_MVP_WALKING_SKELETON.md` e `.claude/sdd/reports/BUILD_REPORT_MVP_WALKING_SKELETON.md`.
+- **PR1** (Terraform + ingestão) e **PR2** (API + web) não iniciados. Pendências: `project_id` GCP dev, URL real do recurso no dados.gov.br, WIF federado.
+- `MANIFEST.json` desatualizado desde o init do agentcode — regenerar.
 
 ## Arquivos-chave
 
