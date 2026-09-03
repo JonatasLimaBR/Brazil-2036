@@ -4,7 +4,7 @@
 # Terraform owns the API runtime identity and its least-privilege data access.
 
 resource "google_service_account" "api" {
-  account_id   = "api"
+  account_id   = "api-runtime"
   display_name = "Metrics API runtime (read-only on Gold)"
 }
 
