@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars for local runs. In CI these come from GitHub Actions
+# variables and -backend-config; see .github/workflows/infra.yml.
+project_id        = "brasil2036-dev"
+region            = "southamerica-east1"
+github_repo       = "JonatasLimaBR/Brazil-2036"
+billing_account   = ""     # set to enable the budget resource (XXXXXX-XXXXXX-XXXXXX)
+budget_amount_brl = 50

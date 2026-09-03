@@ -38,6 +38,10 @@ python_version = "3.12"
 strict = true
 files = ["src/ingestion"]
 
+[[tool.mypy.overrides]]
+module = ["google.cloud.storage", "google.cloud.storage.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]

@@ -14,7 +14,8 @@
 |---|---|---|
 | A | Bloco de docs (manifesto 1–3): ADR-051, ADR-052, SPEC-033, INDEX.md | inspeção estrutural |
 | B | Tarefa 1 do PR1: descoberta do recurso → `DISCOVERY_*.md`; cascata DV1–DV3 (`/iterate`) | — |
-| C | **Fatia do PR1 sem dependência de GCP**: reference data, contrato v1, connector HTTP + parsing, modelos SQL, testes | ✅ `ruff` + `mypy --strict` + `pytest` (30) verdes via `uv` |
+| C | Fatia do PR1 sem dependência de GCP: reference data, contrato v1, connector HTTP + parsing, modelos SQL, testes | ✅ `ruff` + `mypy --strict` + `pytest` (30) via `uv` |
+| D | **PR1 completo em modelo GitOps/WIF**: módulos GCP (`raw`, `bronze`, `registry`, `provenance`, `pipeline`, `__main__`, `bigquery_io`, `sql_render`), `Dockerfile`, `scripts/verify_chain.py`, `scripts/bootstrap.sh`, `infra/terraform/**`, workflows `infra.yml` + `data.yml` | ✅ `ruff` + `mypy --strict` (15 arquivos) + `pytest` (44) + `terraform validate` + `terraform fmt` |
 
 > Escopo desta execução: apenas os itens 1–3 do manifesto (documentos que destravam D2/D5/D6).
 > Decisão de escopo dirigida pelo usuário e pelas restrições de ambiente — ver Autonomous Decisions #2.
@@ -90,28 +91,40 @@ padrões do DESIGN (§3 D2/D5/D6) e do template ADR observado no repo.
 | 5 | `MANIFEST.json` (manifesto de integridade sha256) | (a) regenerar hashes à mão para os arquivos novos/alterados; (b) deixar stale e registrar follow-up | (b) | `MANIFEST.json` é artefato gerado; recalcular hash à mão é propenso a erro e fora do escopo de uma tarefa de docs. Registrado como blocker de follow-up. |
 | 6 | Escopo do incremento C | (a) esperar P2/P4 e fazer o PR1 inteiro; (b) escrever agora só a fatia do PR1 que roda e se verifica sem GCP | (b) | `uv` disponível ⇒ `ruff`/`mypy`/`pytest` locais. connector HTTP, parsing, contrato, SQL e testes não precisam de GCP e ficam verificados de verdade; os módulos GCP-bound continuam pendentes de P2/P4. Progresso real sem código especulativo. |
 | 7 | Contagem de entes federativos | (a) manter "27 estados + DF = 28" dos docs; (b) corrigir para "26 estados + DF = 27" | (b) | O Brasil tem **26 estados** + Distrito Federal. Erro herdado do DEFINE original, propagado a DESIGN/SPEC-033/DISCOVERY. `uf_ibge.csv` (27 linhas) e o contrato (`= 27`) já foram escritos corretos. Correção factual aplicada a DEFINE v1.3, DESIGN v1.2, SPEC-033, DISCOVERY. |
+| 8 | Provisionamento GCP (pedido do usuário: "a partir do git, criar recursos pela federação") | (a) `terraform apply` local pelo humano; (b) GitOps — Actions roda `terraform` via WIF | (b) | Pedido explícito. Projeto + billing + o próprio pool WIF + bucket de state não podem nascer da federação (não há identidade ainda) → `scripts/bootstrap.sh` roda uma vez à mão. Todo o resto vem de `infra.yml` (Actions + `google-github-actions/auth@v2` + WIF, sem chave). `data.yml` faz build/push da imagem e executa o Cloud Run Job, depois `verify_chain.py`. |
+| 9 | Escopo de roles do `tf-deployer` no bootstrap | (a) `roles/owner`; (b) conjunto de admin por serviço | (b) | Menos privilégio que `owner`: `serviceusage`, `storage`, `bigquery`, `artifactregistry`, `run`, `iam.serviceAccountAdmin`, `resourcemanager.projectIamAdmin`, `billing.projectManager`, `serviceAccountUser`. Suficiente para o Terraform da fatia; revisável. |
 
 ---
 
 ## 4. Blockers e trabalho restante
 
 ### Não iniciado
-- **Restante do PR1** (GCP-bound): `raw.py`, `bronze.py`, `registry.py`, `provenance.py`, `pipeline.py`, `infra/terraform/**`, `.github/workflows/data.yml`.
 - **PR2 — apresentação** (itens 36–56): API FastAPI, geração OpenAPI + cliente TS, card Vite/TS, Cloud Run services, e2e, `api-web.yml`.
 
-### Pré-requisitos para o PR1
-| ID | Pendência | Bloqueia | Status |
-|---|---|---|---|
-| P1 | `git` baseline: commit em `main` + branch `feature/mvp-walking-skeleton` | qualquer PR (SPEC-032) | ✅ feito (`1836601` main, `616c9d2` branch) |
-| P2 | `project_id` do projeto GCP dev + billing habilitado (DEFINE A3) | Terraform apply, testes de integração, `terraform plan` no CI | ⏳ pendente |
-| P3 | Descoberta do recurso real: `resource_url`, formato, encoding, schema (DEFINE A1/A2 — tarefa 1) | connector, contrato v1, `uf_ibge.csv` | ✅ feito — `DISCOVERY_MVP_WALKING_SKELETON.md`; cascata DV1–DV3 aplicada a DESIGN v1.1 / DEFINE v1.2 / SPEC-033 |
-| P4 | WIF pool + provider federados com o repo GitHub (ADR-040) | gates de CI autenticados | ⏳ pendente |
-| P5 | Times/owners para `CODEOWNERS` na org | itens 34/54 (SPEC-032) | ⏳ pendente |
-| P6 | Regenerar `MANIFEST.json` (AD #5) | integridade do pacote | ⏳ pendente |
-| P7 | URL do catálogo dados.gov.br para `dataset_registry.source_url` (DEFINE A9 / SPEC-033 OQ9) | atribuição no concurso CGU; **não** bloqueia o código do PR1 | ⏳ pendente |
+### Código do PR1 — completo e verificado localmente
+`ingestion/**` (connector, parsing, raw, bronze, silver/gold SQL, registry, provenance, contract,
+pipeline, `__main__`, `Dockerfile`, `verify_chain.py`), `infra/terraform/**`, `scripts/bootstrap.sh`,
+`.github/workflows/{infra,data,security}.yml`. 44 testes; `mypy --strict`; `terraform validate`.
+**Falta apenas rodar em GCP real** (nenhuma execução de infra/integração é possível sem projeto).
 
-### Dependência de decisão já resolvida (sem blocker)
-- OQ1–OQ9: OQ1–OQ8 resolvidas em `DESIGN §3` (ADR-051/052); OQ9 = P7.
+### Pré-requisitos para EXECUTAR o PR1 em GCP
+| ID | Pendência | Como | Status |
+|---|---|---|---|
+| P1 | Repo remoto | `github.com/JonatasLimaBR/Brazil-2036`, `origin/main` | ✅ feito |
+| P2 | Projeto GCP dev + billing + bootstrap (bucket state, pool WIF, `tf-deployer` SA) | rodar `scripts/bootstrap.sh` com `PROJECT_ID`/`REGION`/`BILLING_ACCOUNT`/`GITHUB_REPO` | ⏳ **você** |
+| P3 | Descoberta do recurso | `DISCOVERY_*.md`; cascata DV1–DV3 | ✅ feito |
+| P4 | WIF federado + variáveis de repo no GitHub | o `bootstrap.sh` cria o pool/provider e imprime `GCP_WIF_PROVIDER` / `GCP_DEPLOYER_SA` / `GCP_PROJECT` / `GCP_REGION` / `GCP_TF_STATE_BUCKET` — adicionar como **Actions Variables** | ⏳ **você** (depende de P2) |
+| P5 | Times para `CODEOWNERS` | criar handles/teams e editar `.github/CODEOWNERS` | ⏳ pendente |
+| P6 | Regenerar `MANIFEST.json` | script `scripts/gen_manifest.py` (a escrever) | ⏳ pendente |
+| P7 | URL do catálogo dados.gov.br | preencher `config.yaml:catalog_url` e `contract:source.catalog_url` | ⏳ pendente (não bloqueia) |
+
+### Fluxo após P2/P4
+1. `git push` → workflow **infra** roda `terraform init/plan/apply` via WIF → cria bucket RAW, 4 datasets, Artifact Registry, Cloud Run Job, IAM, budget.
+2. Workflow **data**: `checks` (ruff/mypy/pytest) → `deploy-and-run` (build+push imagem, `run jobs deploy`, `run jobs execute --wait`, `verify_chain.py`).
+3. `verify_chain.py` falha o CI se a Gold não tiver 27 entes ou a cobertura de provenance quebrar.
+
+### Decisão já resolvida (sem blocker)
+- OQ1–OQ9: OQ1–OQ8 em `DESIGN §3` (ADR-051/052); OQ9 = P7.
 
 ---
 
@@ -130,11 +143,16 @@ As transições para `✅ Complete (Built)` só ocorrem quando PR1 + PR2 estiver
 
 ## 6. Handoff
 
-**Próximo passo:** iniciar o **PR1** com `/build .claude/sdd/features/DESIGN_MVP_WALKING_SKELETON.md`
-numa sessão dedicada, após resolver **P2** (`project_id` + billing) e **P4** (WIF). P1 e P3 já
-concluídos; P5–P7 não bloqueiam a escrita do código.
+**Código do PR1 pronto.** Próximo passo é operacional (você):
 
-Se algum item do DESIGN se mostrar inexequível durante o PR1, usar `/iterate` sobre o `DESIGN`.
+1. `bash scripts/bootstrap.sh` com `PROJECT_ID` / `REGION` / `BILLING_ACCOUNT` / `GITHUB_REPO=JonatasLimaBR/Brazil-2036`.
+2. Adicionar as 5 Actions Variables que o script imprime.
+3. `git push` (ou disparar o workflow **infra**) → Terraform provisiona → workflow **data** builda, roda o Job e verifica a cadeia.
+4. `/verify-spec` contra `SPEC-033` (subconjunto PR1) em sessão nova, read-only.
+5. Merge.
+
+Depois: **PR2** (API + web) — `/build` retoma pelo item 36 do manifesto.
+Se algo do DESIGN se mostrar inexequível na execução, `/iterate` sobre o `DESIGN`.
 
 ---
 
@@ -160,3 +178,4 @@ Se algum item do DESIGN se mostrar inexequível durante o PR1, usar `/iterate` s
 | 2026-09-03 | 0.1 | Execução parcial: bloco de docs (ADR-051, ADR-052, SPEC-033) + INDEX.md. PR1/PR2 pendentes. | /build (Claude Sonnet 5) |
 | 2026-09-03 | 0.2 | Tarefa 1 do PR1 (descoberta do recurso) concluída → `DISCOVERY_MVP_WALKING_SKELETON.md`. Cascata DV1–DV3 (via `/iterate`) aplicada a DESIGN v1.1, DEFINE v1.2, SPEC-033. P1/P3 marcados feitos; P7 (URL catálogo) adicionado. | /build + /iterate (Claude Sonnet 5) |
 | 2026-09-03 | 0.3 | Incremento C: fatia do PR1 sem GCP (16 arquivos em `ingestion/` + `.gitattributes` + `security.yml`). `ruff` + `mypy --strict` + `pytest` (30) verdes via `uv`. AD #6/#7. Correção "26 estados + DF = 27" (DEFINE v1.3, DESIGN v1.2, SPEC-033, DISCOVERY). | /build (Claude Sonnet 5) |
+| 2026-09-03 | 0.4 | Incremento D: PR1 completo em modelo **GitOps/WIF** (pedido do usuário). Módulos GCP (`raw/bronze/registry/provenance/pipeline/__main__/bigquery_io/sql_render`), `Dockerfile`, `scripts/{bootstrap.sh,verify_chain.py}`, `infra/terraform/**`, workflows `infra.yml`+`data.yml`. `ruff` + `mypy --strict` (15) + `pytest` (44) + `terraform validate`/`fmt` verdes. AD #8/#9. Repo em `github.com/JonatasLimaBR/Brazil-2036`. | /build (Claude Sonnet 5) |
