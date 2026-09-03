@@ -4,6 +4,7 @@ from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.bigquery_repo import BigQueryRepo, build_bigquery_run_query
 from api.config import Config, load_config
@@ -13,6 +14,14 @@ app = FastAPI(
     title="BRASIL 2036 — Metrics API",
     version="1.0.0",
     description="Walking skeleton: consolidated state debt with full provenance (SPEC-033).",
+)
+
+# Public, read-only open-data API (ADR-044): any origin may read.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET"],
+    allow_headers=["*"],
 )
 
 

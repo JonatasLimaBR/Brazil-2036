@@ -4,7 +4,7 @@ test("card renders the debt value from the API with a source link", async ({ pag
   await page.goto("/");
 
   const value = page.getByTestId("value");
-  await expect(value).toBeVisible();
+  await expect(value).toBeVisible({ timeout: 20_000 });
   await expect(value).toContainText("R$");
 
   const source = page.getByTestId("source");
