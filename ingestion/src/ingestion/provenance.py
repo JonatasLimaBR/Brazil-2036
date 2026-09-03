@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any
-
-from ingestion.bigquery_io import BigQueryClient, insert_rows, run_sql
+from ingestion.bigquery_io import BigQueryClient, run_sql, sql_literal
 
 PROVENANCE_DDL = (
     "metric_id STRING, state_ibge_code STRING, reference_year INT64, "
@@ -14,63 +11,51 @@ PROVENANCE_DDL = (
     "assumptions ARRAY<STRING>, run_id STRING, created_at TIMESTAMP"
 )
 
+_ASSUMPTIONS = (
+    "['value reported by the producing organization under the PAF', "
+    "'reference_date set to the fiscal year end (December 31)']"
+)
 
-def build_rows(
-    gold_rows: Sequence[dict[str, Any]],
+
+def write_from_gold(
+    client: BigQueryClient,
     *,
+    project: str,
+    dataset_gold: str,
+    gold_table: str,
+    provenance_table: str,
+    reference_year: int,
     source_url: str,
-    gold_object: str,
     silver_transform: str,
     silver_transform_version: str,
     bronze_object: str,
     catalog_dataset_id: str,
     producing_organization: str,
     run_id: str,
-    created_at: str,
-) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    for row in gold_rows:
-        rows.append(
-            {
-                "metric_id": row["metric_id"],
-                "state_ibge_code": row["state_ibge_code"],
-                "reference_year": row["reference_year"],
-                "reference_date": str(row["reference_date"]),
-                "value": str(row["value"]),
-                "unit": row["unit"],
-                "source": source_url,
-                "gold_object": gold_object,
-                "silver_transform": silver_transform,
-                "silver_transform_version": silver_transform_version,
-                "bronze_object": bronze_object,
-                "catalog_dataset_id": catalog_dataset_id,
-                "producing_organization": producing_organization,
-                "model": "none",
-                "model_version": "n/a",
-                "scenario": "observed",
-                "confidence": 1.0,
-                "assumptions": [
-                    "value reported by the producing organization under the PAF",
-                    "reference_date set to the fiscal year end (December 31)",
-                ],
-                "run_id": run_id,
-                "created_at": created_at,
-            }
-        )
-    return rows
-
-
-def write(
-    client: BigQueryClient,
-    *,
-    project: str,
-    dataset_gold: str,
-    table: str,
-    rows: Sequence[dict[str, Any]],
-    reference_year: int,
 ) -> int:
-    fq_name = f"{project}.{dataset_gold}.{table}"
-    run_sql(client, f"CREATE TABLE IF NOT EXISTS `{fq_name}` ({PROVENANCE_DDL})")
-    run_sql(client, f"DELETE FROM `{fq_name}` WHERE reference_year = {reference_year}")
-    insert_rows(client, fq_name, rows)
-    return len(rows)
+    gold = f"`{project}.{dataset_gold}.{gold_table}`"
+    prov = f"`{project}.{dataset_gold}.{provenance_table}`"
+    gold_object = f"{project}.{dataset_gold}.{gold_table}"
+
+    run_sql(client, f"CREATE TABLE IF NOT EXISTS {prov} ({PROVENANCE_DDL})")
+    run_sql(client, f"DELETE FROM {prov} WHERE reference_year = {reference_year}")
+    run_sql(
+        client,
+        f"INSERT INTO {prov} (metric_id, state_ibge_code, reference_year, "
+        "reference_date, value, unit, source, gold_object, silver_transform, "
+        "silver_transform_version, bronze_object, catalog_dataset_id, "
+        "producing_organization, model, model_version, scenario, confidence, "
+        "assumptions, run_id, created_at) "
+        "SELECT metric_id, state_ibge_code, reference_year, reference_date, value, "
+        f"unit, {sql_literal(source_url)}, {sql_literal(gold_object)}, "
+        f"{sql_literal(silver_transform)}, {sql_literal(silver_transform_version)}, "
+        f"{sql_literal(bronze_object)}, {sql_literal(catalog_dataset_id)}, "
+        f"{sql_literal(producing_organization)}, 'none', 'n/a', 'observed', 1.0, "
+        f"{_ASSUMPTIONS}, {sql_literal(run_id)}, CURRENT_TIMESTAMP() "
+        f"FROM {gold} WHERE reference_year = {reference_year}",
+    )
+    counted = run_sql(
+        client,
+        f"SELECT COUNT(*) AS n FROM {prov} WHERE reference_year = {reference_year}",
+    )
+    return int(counted[0]["n"]) if counted else 0

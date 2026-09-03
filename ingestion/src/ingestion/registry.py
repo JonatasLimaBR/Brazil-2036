@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 import csv
-import datetime as dt
 from collections.abc import Mapping
 from pathlib import Path
 
-from ingestion.bigquery_io import BigQueryClient, insert_rows, run_sql
-
-UF_IBGE_DDL = "uf STRING, state_ibge_code STRING, state_name STRING"
+from ingestion.bigquery_io import BigQueryClient, run_sql, sql_literal
 
 REGISTRY_DDL = (
     "dataset_id STRING, resource_url STRING, source_url STRING, "
@@ -31,10 +28,17 @@ def ensure_uf_ibge(
     csv_path: str | Path,
 ) -> int:
     rows = load_uf_ibge_rows(csv_path)
-    fq_name = f"{project}.{dataset_control}.{table}"
-    run_sql(client, f"CREATE TABLE IF NOT EXISTS `{fq_name}` ({UF_IBGE_DDL})")
-    run_sql(client, f"TRUNCATE TABLE `{fq_name}`")
-    insert_rows(client, fq_name, rows)
+    fq_name = f"`{project}.{dataset_control}.{table}`"
+    structs = ",\n".join(
+        f"STRUCT({sql_literal(r['uf'])} AS uf, "
+        f"{sql_literal(r['state_ibge_code'])} AS state_ibge_code, "
+        f"{sql_literal(r['state_name'])} AS state_name)"
+        for r in rows
+    )
+    run_sql(
+        client,
+        f"CREATE OR REPLACE TABLE {fq_name} AS SELECT * FROM UNNEST([{structs}])",
+    )
     return len(rows)
 
 
@@ -46,28 +50,29 @@ def upsert_dataset_registry(
     table: str,
     entry: Mapping[str, str],
 ) -> None:
-    fq_name = f"{project}.{dataset_control}.{table}"
-    run_sql(client, f"CREATE TABLE IF NOT EXISTS `{fq_name}` ({REGISTRY_DDL})")
+    fq_name = f"`{project}.{dataset_control}.{table}`"
+    run_sql(client, f"CREATE TABLE IF NOT EXISTS {fq_name} ({REGISTRY_DDL})")
     run_sql(
         client,
-        f"DELETE FROM `{fq_name}` WHERE dataset_id = '{entry['dataset_id']}'",
+        f"DELETE FROM {fq_name} WHERE dataset_id = {sql_literal(entry['dataset_id'])}",
     )
-    insert_rows(
-        client,
-        fq_name,
+    columns = (
+        "dataset_id, resource_url, source_url, resource_format, organization, "
+        "license, update_frequency, br2036_domain, br2036_module, active, updated_at"
+    )
+    values = ", ".join(
         [
-            {
-                "dataset_id": entry["dataset_id"],
-                "resource_url": entry["resource_url"],
-                "source_url": entry.get("source_url", ""),
-                "resource_format": entry["resource_format"],
-                "organization": entry["organization"],
-                "license": entry["license"],
-                "update_frequency": entry["update_frequency"],
-                "br2036_domain": entry["br2036_domain"],
-                "br2036_module": entry["br2036_module"],
-                "active": True,
-                "updated_at": dt.datetime.now(dt.UTC).isoformat(),
-            }
-        ],
+            sql_literal(entry["dataset_id"]),
+            sql_literal(entry["resource_url"]),
+            sql_literal(entry.get("source_url", "")),
+            sql_literal(entry["resource_format"]),
+            sql_literal(entry["organization"]),
+            sql_literal(entry["license"]),
+            sql_literal(entry["update_frequency"]),
+            sql_literal(entry["br2036_domain"]),
+            sql_literal(entry["br2036_module"]),
+            "TRUE",
+            "CURRENT_TIMESTAMP()",
+        ]
     )
+    run_sql(client, f"INSERT INTO {fq_name} ({columns}) VALUES ({values})")

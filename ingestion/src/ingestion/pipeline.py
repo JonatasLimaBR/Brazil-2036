@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime as dt
 import logging
 import tempfile
 import uuid
@@ -49,7 +48,6 @@ def run(
     sql_dir: Path | None = None,
 ) -> RunResult:
     run_id = uuid.uuid4().hex
-    started = dt.datetime.now(dt.UTC).isoformat()
     result = RunResult(run_id=run_id, status="started")
     sql_dir = sql_dir or _SQL_DIR
     contract = DataContract.load(config.contract_path)
@@ -155,25 +153,20 @@ def run(
     )
     result.gold_rows = len(gold_rows)
 
-    provenance_rows = provenance.build_rows(
-        gold_rows,
+    result.provenance_rows = provenance.write_from_gold(
+        bq_client,
+        project=config.gcp_project,
+        dataset_gold=config.bq_dataset_gold,
+        gold_table=config.gold_table,
+        provenance_table=config.provenance_table,
+        reference_year=reference_year,
         source_url=config.resource_url,
-        gold_object=f"{config.gcp_project}.{config.bq_dataset_gold}.{config.gold_table}",
         silver_transform="sql/silver/debt_state.sql",
         silver_transform_version=run_id,
         bronze_object=raw_object.uri,
         catalog_dataset_id=config.dataset_id,
         producing_organization="COREM / STN",
         run_id=run_id,
-        created_at=started,
-    )
-    result.provenance_rows = provenance.write(
-        bq_client,
-        project=config.gcp_project,
-        dataset_gold=config.bq_dataset_gold,
-        table=config.provenance_table,
-        rows=provenance_rows,
-        reference_year=reference_year,
     )
 
     gold_check = contract.check_gold(
