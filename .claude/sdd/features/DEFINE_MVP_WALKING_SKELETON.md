@@ -9,7 +9,7 @@
 - **Criado:** 2026-09-03
 - **Idioma:** PT-BR
 - **Clarity score:** 14/15 (HIGH)
-- **Versão:** 1.2 (2026-09-03 — cascata da descoberta do recurso, DV1–DV3)
+- **Versão:** 1.3 (2026-09-03 — cascata DV1–DV3 + correção 26 estados + DF = 27)
 - **Design:** `.claude/sdd/features/DESIGN_MVP_WALKING_SKELETON.md` v1.1 (2026-09-03)
 - **Descoberta:** `.claude/sdd/features/DISCOVERY_MVP_WALKING_SKELETON.md` (2026-09-03)
 - **Próximo passo:** `/build .claude/sdd/features/DESIGN_MVP_WALKING_SKELETON.md`
@@ -69,7 +69,7 @@ apresentação`, com o ritual de CI todo verde e nada burlado.
 | # | Critério | Medição |
 |---|---|---|
 | S1 | Cobertura de provenance | **100%** das linhas de `gold_debt_state_current` têm linha correspondente em `metric_provenance` com todos os campos `SPEC-007` não-nulos. |
-| S2 | Completude da carga | Para o `reference_year` escolhido (`MAX(reference_year)`), **27 estados + DF = 28** linhas na Gold; zero nulos em `state_ibge_code`/`reference_year`/`reference_date`/`value`. |
+| S2 | Completude da carga | Para o `reference_year` escolhido (`MAX(reference_year)`), **26 estados + DF = 27** linhas na Gold; zero nulos em `state_ibge_code`/`reference_year`/`reference_date`/`value`. |
 | S3 | Verificação independente | `/verify-spec` retorna **PASS em 100%** dos requisitos, em sessão nova read-only. |
 | S4 | Gates de CI | **Todos** os gates obrigatórios verdes num PR; nenhum marcado como skip exceto `agent-eval` (N/A documentado). |
 | S5 | Sem segredo / sem exposição | `terraform plan` sem exposição pública não declarada em ADR; **zero** chave estática no repo (scan de `/security-check`). |
@@ -138,7 +138,7 @@ apresentação`, com o ritual de CI todo verde e nada burlado.
 | A1 | O recurso está baixável em formato legível por máquina | — | ☑ **2026-09-03** — CSV `;`, UTF-8, 5,6 KiB, no CKAN do Tesouro Transparente (DISCOVERY §1). |
 | A2 | Valor publicado por ente por período, diretamente utilizável, sem derivação pesada | — | ☑ **2026-09-03 (com correção)** — valor direto **e anual** (`UF;ANO;VALOR`); porém é **Dívida Consolidada bruta (PAF)**, não DCL. Métrica da fatia = `divida_consolidada` (ver DESIGN D12). DCL/RCL fica fora de escopo. |
 | A3 | Há um projeto GCP com billing disponível (ou criável) para o ambiente dev | Fallback para spike local mais curto, enfraquecendo o "ponta a ponta" | ☐ **pendente (P2)** |
-| A4 | Existe lookup estável ente → código IBGE, versionável | — | ☑ **2026-09-03 (com correção)** — a chave da origem é `UF` de 2 letras; de-para `UF (2 letras) → código IBGE (2 dígitos)`, 28 linhas, em `ingestion/reference/uf_ibge.csv`. |
+| A4 | Existe lookup estável ente → código IBGE, versionável | — | ☑ **2026-09-03 (com correção)** — a chave da origem é `UF` de 2 letras; de-para `UF (2 letras) → código IBGE (2 dígitos)`, 27 linhas (26 estados + DF), em `ingestion/reference/uf_ibge.csv`. |
 | A5 | Os rituais `.claude/commands/*` rodam como estão contra esta fatia | Definir os equivalentes do repo antes (impacto baixo) | ☐ |
 | A6 | Adiar Dataform (ADR-007) na fatia #1 é aceitável para os donos do ADR | Levantar Dataform já na fatia #1, aumentando o PR1 (impacto médio) | ☑ **2026-09-03** — resolvido por **ADR-052** (refina, não substitui ADR-007). |
 | A7 | Marcar `agent-eval` como N/A numa fatia sem agente não fere "nunca burlar gate obrigatório" | Precisar de mecanismo formal de waiver em `SPEC-031` | ☑ **2026-09-03** — `SPEC-031` diz "agent evals **quando afetados**"; sem agente ⇒ N/A legítimo. |
@@ -167,7 +167,7 @@ apresentação`, com o ritual de CI todo verde e nada burlado.
 - **Licença:** ODbL. **Atualização:** anual.
 
 ### Volumes
-- **Grão anual:** ~**28 linhas por `ANO`** (27 UF + DF). Cobertura 2015–2022 ⇒ **~216 linhas** totais. **< 10 KiB**. Sem streaming.
+- **Grão anual:** ~**27 linhas por `ANO`** (26 estados + DF). Cobertura 2015–2022 ⇒ **~216 linhas** totais. **< 10 KiB**. Sem streaming.
 
 ### Freshness SLA
 - Fatia #1: **batch, execução manual** do Cloud Run Job (Cloud Scheduler é COULD). `freshness.max_age_days = 500` (atualização anual). Alvo: refletir o último `ANO` publicado.
@@ -184,7 +184,7 @@ apresentação`, com o ritual de CI todo verde e nada burlado.
 > Nomenclatura de datasets/tabelas a confirmar contra `CONTEXTO §10` no `/design` — **OQ6**.
 
 ### Completeness metrics
-- 28/28 entes presentes para `MAX(reference_year)`.
+- 27/27 entes presentes para `MAX(reference_year)`.
 - Zero nulos em `state_ibge_code`, `reference_year`, `reference_date`, `value`. `value >= 0`.
 - Nenhuma `UF` da origem descartada silenciosamente na Silver (`UF` não mapeada ⇒ falha).
 
@@ -201,7 +201,7 @@ apresentação`, com o ritual de CI todo verde e nada burlado.
 | Problem | 3 | 3 | Uma frase, específica e acionável: falta cadeia provada ponta a ponta; construir a fatia vertical mínima. |
 | Users | 2 | 3 | Persona primária (time/agentes de implementação) clara com pain point; personas secundárias (CGU, cidadão) herdadas de PRD-001. "Usuário" de um walking skeleton é parcialmente abstrato — daí 2. |
 | Goals | 3 | 3 | 12 goals com MoSCoW; mensuráveis; ligados a ADRs/SPECs. |
-| Success | 3 | 3 | 8 critérios testáveis com números (28 linhas, 100% provenance, 0 chaves, PASS 100%). |
+| Success | 3 | 3 | 8 critérios testáveis com números (27 linhas, 100% provenance, 0 chaves, PASS 100%). |
 | Scope | 3 | 3 | Fronteiras explícitas: tabela YAGNI de 12 itens com destino, split PR1/PR2, out-of-scope não vazio. |
 | **Total** | **14** | **15** | **HIGH — prosseguir para `/design`.** |
 
@@ -230,3 +230,4 @@ apresentação`, com o ritual de CI todo verde e nada burlado.
 | 2026-09-03 | 1.0 | Criação a partir de `BRAINSTORM_MVP_WALKING_SKELETON.md`. Clarity 14/15. Status → Ready for Design. | /define (Claude Sonnet 5) |
 | 2026-09-03 | 1.1 | Fase 2 concluída. Status → ✅ Complete (Designed). OQ1–OQ8 resolvidas no DESIGN. Próximo passo → /build. | /design (Claude Sonnet 5) |
 | 2026-09-03 | 1.2 | Cascata da descoberta do recurso (`DISCOVERY_MVP_WALKING_SKELETON.md`), Modificadora. **A1/A2/A4/A6/A7 validadas** (A2/A4 com correção); **A9** nova. Métrica passa a `divida_consolidada` (bruta, PAF) — DV2. Grão anual `reference_year` + `DATE(ANO,12,31)` — DV1. Chave `UF` 2 letras → `uf_ibge` — DV3. Ajustados G1/G5/G9, S2/S7, AT1/AT3/AT4/AT5/AT7/AT9/AT10, C8/C9, §8, §10, §12. Status `✅ Complete (Designed)` mantido (correção factual, não re-escopo). | /iterate (Claude Sonnet 5) |
+| 2026-09-03 | 1.3 | Correção factual encontrada ao escrever o código: **Brasil tem 26 estados + DF = 27** entes, não 28. Ajustados S2, §8 A4, §10 (volume + completude), §11. Contrato `divida_consolidada_estados.yaml` e `uf_ibge.csv` já corretos (27). | /build (Claude Sonnet 5) |

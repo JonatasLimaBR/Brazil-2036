@@ -40,7 +40,7 @@ AL;2015;11.252.027.857,87
 | `UF` | código de 2 letras (`AC`, `AL`, …, `DF`) — **não** nome de estado |
 | `ANO` | ano `YYYY` — **grão anual, não data** |
 | `VALOR` | BRL; **Dívida Consolidada (bruta)** do PAF — **não** Dívida Consolidada Líquida |
-| Volume | ~216 linhas (27 UF + DF × ~8 anos) |
+| Volume | ~216 linhas (26 estados + DF = 27 × ~8 anos) |
 
 ## 3. Divergências com DEFINE/DESIGN (exigem `/iterate`)
 
@@ -48,7 +48,7 @@ AL;2015;11.252.027.857,87
 |---|---|---|---|
 | DV1 | `reference_date DATE` | grão anual (`ANO` inteiro) | Silver deriva `reference_date = DATE(ANO, 12, 31)` (fim do exercício fiscal); manter `reference_date DATE` na Gold/provenance para compatibilidade com `SPEC-007`. Adicionar coluna `reference_year INT` na Silver/Gold. |
 | DV2 | `metric_id = 'divida_consolidada_liquida'` | CSV traz **Dívida Consolidada bruta** (PAF); DCL exigiria deduzir haveres (outra fonte) | `metric_id = 'divida_consolidada'`; rótulo do card = "Dívida Consolidada dos Estados (PAF)". DCL/RCL fica como trabalho futuro (fora do escopo da fatia — DEFINE fixou 1 dataset). |
-| DV3 | de-para `nome do ente → state_ibge_code` | chave é `UF` de 2 letras | de-para = `UF (2 letras) → state_ibge_code (2 dígitos IBGE)`; arquivo `ingestion/reference/uf_ibge.csv` (27 UF + DF). Ex.: `AC→12`, `AL→27`, `DF→53`, `SP→35`. |
+| DV3 | de-para `nome do ente → state_ibge_code` | chave é `UF` de 2 letras | de-para = `UF (2 letras) → state_ibge_code (2 dígitos IBGE)`; arquivo `ingestion/reference/uf_ibge.csv` (26 estados + DF = 27 linhas). Ex.: `AC→12`, `AL→27`, `DF→53`, `SP→35`. |
 
 ## 4. Residual
 
@@ -78,7 +78,7 @@ required_fields:
   unit:            {type: STRING, nullable: false, allowed: [BRL]}
 freshness: {max_age_days: 500}     # atualização anual
 quality_rules:
-  - completeness_27_uf_plus_df: "count(distinct state_ibge_code) = 28"
+  - completeness_26_states_plus_df: "count(distinct state_ibge_code) = 27"
   - provenance_coverage: "toda linha de métrica tem linha em metric_provenance"
 evolution_policy: additive_only
 ```

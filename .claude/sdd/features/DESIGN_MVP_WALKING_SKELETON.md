@@ -9,7 +9,7 @@
 - **Criado:** 2026-09-03
 - **Idioma:** PT-BR
 - **Confiança de design:** 0.82 — padrões vêm de SPECs/ADRs do repo (não há `${CLAUDE_PLUGIN_ROOT}/kb/`); agentes casados a partir da lista disponível na sessão.
-- **Versão:** 1.1 (2026-09-03 — cascata da descoberta do recurso, DV1–DV3)
+- **Versão:** 1.2 (2026-09-03 — cascata DV1–DV3 + correção 26 estados + DF = 27)
 - **Próximo passo:** `/build .claude/sdd/features/DESIGN_MVP_WALKING_SKELETON.md`
 
 > Nota de ambiente: assets do plugin SDD ausentes (`DESIGN_TEMPLATE.md`, `kb/`, `agents/**`,
@@ -28,7 +28,7 @@ aplicadas nesta versão (Modificadoras):
   `metric_id = 'divida_consolidada'` (era `divida_consolidada_liquida`). DCL/RCL fica fora do
   escopo da fatia (DEFINE fixou 1 dataset). Ver D12.
 - **DV3 — chave é `UF` de 2 letras.** de-para = `UF → state_ibge_code`; arquivo
-  `ingestion/reference/uf_ibge.csv` (27 UF + DF).
+  `ingestion/reference/uf_ibge.csv` (26 estados + DF).
 - Fonte: Tesouro Transparente (CKAN), licença **ODbL**, org **COREM/STN**, atualização **anual**,
   cobertura 2015–2022. URL do catálogo no dados.gov.br a confirmar (residual, ver DISCOVERY §4).
 
@@ -145,7 +145,7 @@ Confiança pela matriz do skill: **KB patterns ausentes / agent match encontrado
 6. `silver.sql` normaliza para `debt_state` (`UF`→`state_ibge_code` via `uf_ibge`; `ANO`→`reference_year`+`reference_date`; `VALOR`→`NUMERIC`). `UF` sem correspondência em `uf_ibge` ⇒ falha explícita.
 7. `gold.sql` faz `MERGE` em `gold_debt_state_current` (`metric_id='divida_consolidada'`).
 8. `provenance.write` insere/atualiza `metric_provenance` para cada linha de métrica do `reference_year` corrente.
-9. `contract.check(gold)`: 28 linhas para o `reference_year`, `NOT NULL` em PK, `value >= 0`, cobertura de provenance 100%. Falha ⇒ exit ≠ 0.
+9. `contract.check(gold)`: 27 linhas para o `reference_year`, `NOT NULL` em PK, `value >= 0`, cobertura de provenance 100%. Falha ⇒ exit ≠ 0.
 10. API lê `gold_debt_state_current` (`WHERE reference_year = (SELECT MAX(reference_year) ...)`) e `metric_provenance`. Web renderiza.
 
 ### 2.4 Pontos de integração externos
@@ -291,7 +291,7 @@ DCL e a razão DCL/RCL ficam como trabalho futuro (fora do escopo — DEFINE fix
 | OQ | Resolução |
 |---|---|
 | OQ2 | Ver D2 — nota de amendment no ADR-007 é entregável do PR1. |
-| OQ3 | de-para = `ingestion/reference/uf_ibge.csv` (27 UF + DF, `UF` de 2 letras → código IBGE de 2 dígitos, versionado no repo) → carregado em `br2036_control.uf_ibge` por `registry`. (cascata DV3) |
+| OQ3 | de-para = `ingestion/reference/uf_ibge.csv` (26 estados + DF = 27 linhas, `UF` de 2 letras → código IBGE de 2 dígitos, versionado no repo) → carregado em `br2036_control.uf_ibge` por `registry`. (cascata DV3) |
 | OQ4 | Ver D6 — **um** SPEC (`SPEC-033`), dois ciclos de build. |
 | OQ5 | `confidence = 1.0` quando `scenario='observed'` nesta fatia; propor a convenção como nota em `SPEC-007`. |
 | OQ6 | Usar `br2036_gold.gold_debt_state_current` (nome específico e novo). Relacionar com `gold_debt_trajectory` / `gold_state_profile` do `CONTEXTO §10` fica como trabalho futuro registrado no `SPEC-033`. |
@@ -344,7 +344,7 @@ Agentes casados a partir da lista disponível na sessão (não há `${CLAUDE_PLU
 | 16 | `ingestion/src/ingestion/raw.py` | Create | Escrita GCS RAW: `<sha256>.<ext>` + `.manifest.json`, `if_generation_match=0` | `ai-data-engineer-gcp` | 12,13 |
 | 17 | `ingestion/src/ingestion/bronze.py` | Create | `bq load` → `debt_state_raw` + colunas técnicas | `ai-data-engineer-gcp` | 16 |
 | 18 | `ingestion/src/ingestion/registry.py` | Create | Upsert `dataset_registry` (ODbL, COREM/STN, annual); carga de `uf_ibge` | `python-developer` | 13 |
-| 19 | `ingestion/reference/uf_ibge.csv` | Create | de-para 28 linhas `UF` (2 letras) → código IBGE 2 dígitos (OQ3, DV3) | `(general)` | — |
+| 19 | `ingestion/reference/uf_ibge.csv` | Create | de-para 27 linhas (26 estados + DF) `UF` (2 letras) → código IBGE 2 dígitos (OQ3, DV3) | `(general)` | — |
 | 20 | `ingestion/contracts/divida_consolidada_estados.yaml` | Create | Contrato v1 (`SPEC-005`: schema `UF;ANO;VALOR`, keys `state_ibge_code`+`reference_year`, freshness anual, evolution) | `data-contracts-engineer` | 3 |
 | 21 | `ingestion/src/ingestion/contract.py` | Create | Avaliador do contrato nos pontos Bronze→Silver e Gold (D4) | `data-quality-analyst` | 20 |
 | 22 | `ingestion/sql/silver/debt_state.sql` | Create | Normalização `UF`→IBGE, `ANO`→`reference_year`+`reference_date`, `VALOR`→NUMERIC (formato Dataform, D2); `UF` não mapeada ⇒ falha | `sql-optimizer` | 6,19 |
@@ -354,7 +354,7 @@ Agentes casados a partir da lista disponível na sessão (não há `${CLAUDE_PLU
 | 26 | `ingestion/tests/test_connector.py` | Create | discover/metadata/checkpoint; retry registrado (AT2 parcial) | `python-reviewer` | 15 |
 | 27 | `ingestion/tests/test_raw_immutability.py` | Create | AT2 — não sobrescreve, hash no nome | `python-reviewer` | 16 |
 | 28 | `ingestion/tests/test_silver_normalization.py` | Create | AT4 — `UF`→IBGE, `DATE(ANO,12,31)`, `VALOR` `pt-BR`→NUMERIC, `UF` não mapeada falha | `data-quality-analyst` | 22 |
-| 29 | `ingestion/tests/test_contract_gold.py` | Create | AT7/S2/S1 — schema, NOT NULL, `value>=0`, 28 linhas por `reference_year`, cobertura provenance (R-006) | `data-quality-analyst` | 21,23,24 |
+| 29 | `ingestion/tests/test_contract_gold.py` | Create | AT7/S2/S1 — schema, NOT NULL, `value>=0`, 27 linhas por `reference_year`, cobertura provenance (R-006) | `data-quality-analyst` | 21,23,24 |
 | 30 | `ingestion/tests/test_contract_bronze_drift.py` | Create | R-006 — drift de origem ⇒ quarentena antes da Silver (D4) | `data-quality-analyst` | 21 |
 | 31 | `ingestion/tests/test_output_classification.py` | Create | R-003 — Gold e provenance carregam `observed` (AT6) | `data-quality-analyst` | 23,24 |
 | 32 | `.github/workflows/data.yml` | Create | Gates PR1: ruff+black, mypy, pytest unit+integration, contract, `terraform validate/plan` via WIF, spec-verify | `ci-cd-specialist` | 9,10,21,25 |
@@ -492,8 +492,8 @@ required_fields:
 null_thresholds: {value: 0.0}
 freshness: {max_age_days: 500}   # atualização anual
 quality_rules:
-  - name: completeness_27_uf_plus_df
-    expr: "count(distinct state_ibge_code) = 28"
+  - name: completeness_26_states_plus_df
+    expr: "count(distinct state_ibge_code) = 27"
   - name: provenance_coverage
     expr: "every metric row has a metric_provenance row"
 evolution_policy: additive_only  # mudança que quebra ⇒ nova versão
@@ -685,7 +685,7 @@ registry.upsert
 - **Bronze:** append (cada carga é um snapshot rastreável por `_row_hash` / `_ingested_at`).
 - **Silver/Gold:** `MERGE` por `(state_ibge_code, reference_year[, metric_id])` — re-execução é idempotente.
 - **Provenance:** `MERGE` pela mesma chave + `metric_id`.
-- Sem CDC, sem streaming (volume ~216 linhas totais, ~28 por ano).
+- Sem CDC, sem streaming (volume ~216 linhas totais, ~27 por ano).
 
 ### 7.4 Evolução de schema
 
@@ -699,7 +699,7 @@ registry.upsert
 |---|---|---|---|
 | Schema origem | após Bronze | colunas `UF;ANO;VALOR` do contrato v1 | quarentena, sem Silver |
 | Territorial | Silver | todo `UF` casa em `uf_ibge` (`COUNT` bronze = `COUNT` silver) | erro, run falha |
-| Completude | após Gold | 28 entes para o `reference_year` corrente | run falha |
+| Completude | após Gold | 27 entes (26 estados + DF) para o `reference_year` corrente | run falha |
 | Integridade | após Gold | `NOT NULL` em PK, `value >= 0` | run falha |
 | Provenance | após Gold | 100% das linhas de métrica com linha em `metric_provenance` | run falha |
 | Classificação | após Gold | `data_class = 'observed'` e `scenario='observed'` | run falha (R-003) |
@@ -740,4 +740,5 @@ Ordem de build sugerida (respeitando dependências do manifesto):
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-03 | 1.0 | Criação a partir de `DEFINE_MVP_WALKING_SKELETON.md`. 5 ADRs inline, 56 itens de manifesto, OQ1–OQ8 resolvidas. Status → Ready for Build. | /design (Claude Sonnet 5) |
+| 2026-09-03 | 1.2 | Correção factual (ao escrever o código do PR1): **26 estados + DF = 27** entes, não 28. Ajustados §1.0/§2.3/§3 OQ3/§4 itens 19,29/§5.3/§7.5. `uf_ibge.csv` e o contrato v1 já corretos. | /build (Claude Sonnet 5) |
 | 2026-09-03 | 1.1 | Cascata da descoberta do recurso (`DISCOVERY_MVP_WALKING_SKELETON.md`). Modificadoras: **DV1** grão anual (`reference_year` + `DATE(ANO,12,31)`); **DV2** métrica = Dívida Consolidada bruta, `metric_id='divida_consolidada'` (nova decisão D12); **DV3** chave `UF` de 2 letras → de-para `uf_ibge.csv`. Ajustados: §1.0, §2.2 (C5–C8, C11), §2.3, §2.4, §3 (D3, D12, OQ3/OQ8, DV-cat), §4 (itens 15,18,19,20,22,23,28,29,37,38,39), §5.1/5.3/5.4/5.5/5.6, §6, §7.2/7.3/7.5. Status permanece Ready for Build. | /iterate (Claude Sonnet 5) |

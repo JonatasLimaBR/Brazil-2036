@@ -34,8 +34,9 @@ Traceability: requirements R1–R14 and acceptance tests AT1–AT11 are defined 
 - An unmapped `UF` fails the run; no silent drop (ADR-011).
 - Data contract v1 (`ingestion/contracts/divida_consolidada_estados.yaml`, SPEC-005) is enforced
   at two points: Bronze→Silver (breaking drift ⇒ quarantine, nothing promoted, non-zero exit,
-  alert — SPEC-004, ADR-052) and Gold (28 rows for `MAX(reference_year)`, NOT NULL on
-  `state_ibge_code`/`reference_year`/`reference_date`/`value`, `value >= 0`, provenance coverage).
+  alert — SPEC-004, ADR-052) and Gold (27 rows for `MAX(reference_year)` — 26 states + DF,
+  NOT NULL on `state_ibge_code`/`reference_year`/`reference_date`/`value`, `value >= 0`,
+  provenance coverage).
 - `br2036_gold.metric_provenance` has one row per metric row resolving
   `metric → Gold → Silver transform → Bronze → source resource → catalog dataset → org`
   (SPEC-007), with `scenario='observed'`, `model='none'`, `confidence=1.0`.

@@ -1,0 +1,33 @@
+dataset_id: divida_consolidada_estados
+br2036_domain: fiscal
+br2036_module: M02
+
+resource_url: "https://www.tesourotransparente.gov.br/ckan/dataset/01aa8c02-4f77-4fcf-a850-ff8f13decb00/resource/de4a234e-1712-4a50-8d31-ae4748a5f715/download/divida-consolidada-dos-estados---paf.csv"
+resource_format: csv
+catalog_url: ""
+
+metric_id: divida_consolidada
+unit: BRL
+data_class: observed
+
+contract_path: contracts/divida_consolidada_estados.yaml
+uf_ibge_path: reference/uf_ibge.csv
+
+gcp_project: ""
+raw_bucket: ""
+raw_prefix: divida_estados
+
+bq_dataset_control: br2036_control
+bq_dataset_bronze: br2036_bronze
+bq_dataset_silver: br2036_silver
+bq_dataset_gold: br2036_gold
+
+bronze_table: debt_state_raw
+silver_table: debt_state
+gold_table: gold_debt_state_current
+provenance_table: metric_provenance
+uf_ibge_table: uf_ibge
+registry_table: dataset_registry
+
+download_max_retries: 4
+download_backoff_seconds: 2.0

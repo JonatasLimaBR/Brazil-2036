@@ -1,0 +1,63 @@
+dataset: divida_consolidada_estados
+version: 1
+
+source:
+  catalog_url: ""
+  resource_url: "https://www.tesourotransparente.gov.br/ckan/dataset/01aa8c02-4f77-4fcf-a850-ff8f13decb00/resource/de4a234e-1712-4a50-8d31-ae4748a5f715/download/divida-consolidada-dos-estados---paf.csv"
+  organization: "COREM / STN"
+  license: "ODbL"
+  update_frequency: "annual"
+
+format:
+  type: csv
+  delimiter: ";"
+  decimal: ","
+  thousands: "."
+  encoding: "utf-8"
+
+source_columns:
+  - UF
+  - ANO
+  - VALOR
+
+keys:
+  - state_ibge_code
+  - reference_year
+
+required_fields:
+  state_ibge_code:
+    type: STRING
+    nullable: false
+  reference_year:
+    type: INT64
+    nullable: false
+  reference_date:
+    type: DATE
+    nullable: false
+  value:
+    type: NUMERIC
+    nullable: false
+    min: 0
+  unit:
+    type: STRING
+    nullable: false
+    allowed:
+      - BRL
+
+null_thresholds:
+  value: 0.0
+
+freshness:
+  max_age_days: 500
+
+quality_rules:
+  - name: completeness_26_states_plus_df
+    description: "26 states plus the Federal District present for the latest reference_year"
+    expr: "count(distinct state_ibge_code) = 27"
+  - name: non_negative_value
+    expr: "min(value) >= 0"
+  - name: provenance_coverage
+    description: "every Gold metric row has a matching metric_provenance row"
+    expr: "count(gold) = count(provenance)"
+
+evolution_policy: additive_only
