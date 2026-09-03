@@ -1,0 +1,17 @@
+{
+  "mode": "spec-driven",
+  "required_context": [
+    "CONTEXTO.md",
+    "PRD",
+    "SPEC",
+    "ADR",
+    "RISK-CONTROL-TEST-MATRIX"
+  ],
+  "reviewer": {
+    "read_only": true,
+    "may_fix": false
+  },
+  "production": {
+    "direct_access": false
+  }
+}

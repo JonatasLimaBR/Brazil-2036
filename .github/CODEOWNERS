@@ -1,0 +1,7 @@
+/terraform/ @platform-team
+/docs/adrs/ @architecture-team
+/docs/risks/ @security-team
+/agents/ @ai-team
+/models/ @ml-team
+/services/authorization/ @security-team
+/services/approval/ @security-team

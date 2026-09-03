@@ -1,0 +1,732 @@
+[
+  {
+    "path": ".claude/README.md",
+    "sha256": "5be8cb015ec540ad2855d653b6ad961d6fa23c4f6979c8341327306ba827196e",
+    "bytes": 604
+  },
+  {
+    "path": ".claude/commands/agent-eval.md",
+    "sha256": "e417ff76d6b2c0e4474a65bb02df4ebd349899f606b969f9caa786be8cc6524d",
+    "bytes": 229
+  },
+  {
+    "path": ".claude/commands/implement-spec.md",
+    "sha256": "60990a2bf00989726b778acf8a4f7e1d0fb19a3e12d3c67933156d675aeea7ca",
+    "bytes": 223
+  },
+  {
+    "path": ".claude/commands/review-pr.md",
+    "sha256": "3a7068708257c7129f99521ec97c393d2a0b293fe16d33e6ec66722ee0559fb2",
+    "bytes": 254
+  },
+  {
+    "path": ".claude/commands/security-check.md",
+    "sha256": "8e4616862497918bd033c8fba864e71b9443a062bd01f178e4997b4460bac8cb",
+    "bytes": 212
+  },
+  {
+    "path": ".claude/commands/understand-spec.md",
+    "sha256": "7f0480faaa4f3c14b7f4a368ddad735cc62a20d3e3544abc7e889cd54d91471c",
+    "bytes": 220
+  },
+  {
+    "path": ".claude/commands/verify-spec.md",
+    "sha256": "e69266e745ca5bdb748cb53ff9b45451c852ceab4ff827d02232016b603e902b",
+    "bytes": 281
+  },
+  {
+    "path": ".claude/settings.example.json",
+    "sha256": "5027f4961a2bce5e0bd42dbb345b2586793caaa72a13364a0b559843145506b1",
+    "bytes": 256
+  },
+  {
+    "path": ".claude/skills/agent-security/SKILL.md",
+    "sha256": "9981c3a887b0b22eaba82769decff7171545357098cdd78fcc45b36e498d0bbf",
+    "bytes": 192
+  },
+  {
+    "path": ".claude/skills/data-contract/SKILL.md",
+    "sha256": "b8e4852184059bb64979a72b442094c4d50e3741343fe09085c0479befb0974d",
+    "bytes": 173
+  },
+  {
+    "path": ".claude/skills/gcp-data-engineering/SKILL.md",
+    "sha256": "2cd94646292f0cc1fd72b44d30d44c3d25ae6f7b01caea99318ac2a7f7a8f9c4",
+    "bytes": 212
+  },
+  {
+    "path": ".claude/skills/spec-verifier/SKILL.md",
+    "sha256": "02baa8541bb0ca1d407bd482b8dd23dff7029afffd49af807ed7c9478ab120c1",
+    "bytes": 223
+  },
+  {
+    "path": ".claude/skills/terraform-review/SKILL.md",
+    "sha256": "d23b8768d2c875e98bbab29272787842a9576ba1e124ac26be64b4b618fc4ac8",
+    "bytes": 189
+  },
+  {
+    "path": ".claude/skills.lock",
+    "sha256": "501fdd298f3cbcbbeeb201aabf645998836e78a0d0ca122e0b20c5abcad49b1d",
+    "bytes": 351
+  },
+  {
+    "path": ".github/CODEOWNERS",
+    "sha256": "fc1ecfd309844d64dd9c6ac4801e6fc3109b63d02a55f826ff30412962fc72cd",
+    "bytes": 197
+  },
+  {
+    "path": ".github/pull_request_template.md",
+    "sha256": "328dea1478c709980368ffdc4424fcfa34ae18f1727d06635a6ccadb683f0157",
+    "bytes": 301
+  },
+  {
+    "path": ".github/workflows/README.md",
+    "sha256": "18bd5e17d47e927cf4f0aab44d4772d08596a0593c1c4eb581c75d0e37135009",
+    "bytes": 206
+  },
+  {
+    "path": "AGENTS.md",
+    "sha256": "a81f9e36bade08c361e055f0a1c17d28b55e4cb2c0e975420665a77f834f6b94",
+    "bytes": 1736
+  },
+  {
+    "path": "CLAUDE.md",
+    "sha256": "10befe61993aaf970d8ee4058a54259a765d14af39f55fcd4776a323b46052b4",
+    "bytes": 1472
+  },
+  {
+    "path": "CONTEXTO.md",
+    "sha256": "91fdc599a68c58f7af15633c3be31724228e21875c123596074cf693d7d54723",
+    "bytes": 24130
+  },
+  {
+    "path": "INDEX.md",
+    "sha256": "d339a7f3f0ce771a0c0ee0198e953aafc10022272e012b9e9eb6f10dddb06646",
+    "bytes": 6501
+  },
+  {
+    "path": "README.md",
+    "sha256": "8cb84046ffd00522723d4cb26e753ca4fc1df0812ecb96b1d921af6b33a7aefd",
+    "bytes": 600
+  },
+  {
+    "path": "backlog/BACKLOG-MESTRE.md",
+    "sha256": "480d0005ad1538e4ed39e940251b33ce77c72da6adf213f38813826789baeafa",
+    "bytes": 15498
+  },
+  {
+    "path": "docs/access/ACCESS-PROFILES.md",
+    "sha256": "f5433b02af29bbb814fb1d6b0738c97dad47c6929908eca0960cb057329e9894",
+    "bytes": 1274
+  },
+  {
+    "path": "docs/access/PERMISSION-MATRIX.md",
+    "sha256": "e6c56aabf3acccbd1e21552c45e835889d91fbae09ca3955e4993beb10a2aca6",
+    "bytes": 801
+  },
+  {
+    "path": "docs/adrs/ADR-001-gcp-as-primary-cloud.md",
+    "sha256": "58493f96e048c1cd1e5077ede97d82747ca9624679d75038a9e6fe55fd443bd8",
+    "bytes": 1461
+  },
+  {
+    "path": "docs/adrs/ADR-002-serverless-first-runtime.md",
+    "sha256": "40ab71bc9cf9290f4bfe484e12fb6706762b56c2c51c735a6c52934af3391224",
+    "bytes": 1408
+  },
+  {
+    "path": "docs/adrs/ADR-003-bigquery-as-quantitative-system-of-record.md",
+    "sha256": "c7a19cece9b554b38dfbda40064d4e40ee1c857fd8147c5e5730181f65fd1333",
+    "bytes": 1399
+  },
+  {
+    "path": "docs/adrs/ADR-004-alloydb-for-operational-state.md",
+    "sha256": "25e3198f8cab3f20b357b653c1b0d3d1979aab9397f4e3259fc4367321646fd3",
+    "bytes": 1419
+  },
+  {
+    "path": "docs/adrs/ADR-005-immutable-raw-zone.md",
+    "sha256": "a3e77830dae7f4a867ad57eb11f1de2dac6479ac3e9f549f9ca95498348d9429",
+    "bytes": 1410
+  },
+  {
+    "path": "docs/adrs/ADR-006-bronze-silver-gold-layers.md",
+    "sha256": "25d930432cde48aa2287280e0309c573767052a94510fc6818875106c4681cc0",
+    "bytes": 1402
+  },
+  {
+    "path": "docs/adrs/ADR-007-dataform-for-sql-transformations.md",
+    "sha256": "1d8cc7ad5ed53dc339d60079d06aaf806244cb77dc0d96323287860d18c57912",
+    "bytes": 1396
+  },
+  {
+    "path": "docs/adrs/ADR-008-dados-gov-br-as-discovery-catalog.md",
+    "sha256": "cde5d21ac701503f2d72be22080fbf0c2c9387fc1dfd50c010b02bc43a225b5e",
+    "bytes": 1511
+  },
+  {
+    "path": "docs/adrs/ADR-009-internal-dataset-registry.md",
+    "sha256": "4d7e09822043d96584cfaac42352aa12f99f2046977543e48680415feeb86c05",
+    "bytes": 1425
+  },
+  {
+    "path": "docs/adrs/ADR-010-canonical-semantic-layer.md",
+    "sha256": "250111e20cff8513e7d8cdca6d3a2e963c2a14aa859f957d8fdc450946bcd00c",
+    "bytes": 1413
+  },
+  {
+    "path": "docs/adrs/ADR-011-ibge-municipality-code-as-territorial-key.md",
+    "sha256": "62d09f25edcdbb621c9d396f8a03a86c1148ee22d9b78b2167da9d554d7384d8",
+    "bytes": 1446
+  },
+  {
+    "path": "docs/adrs/ADR-012-llm-never-computes-official-metrics.md",
+    "sha256": "c2546ce6c60ece0fde60282dd7d61e146f1f48f2bcb8222be22019305aacb678",
+    "bytes": 1438
+  },
+  {
+    "path": "docs/adrs/ADR-013-deterministic-core-probabilistic-edge.md",
+    "sha256": "d400687230df4d49e809c1b394ca855795f25333bd8c406f60ed2cb77089a8a4",
+    "bytes": 1438
+  },
+  {
+    "path": "docs/adrs/ADR-014-champion-challenger-forecasting.md",
+    "sha256": "c2eea328298765b2dfd3fb6107b17ff41ae0ea5ffc2ddf0f13b335637886789f",
+    "bytes": 1410
+  },
+  {
+    "path": "docs/adrs/ADR-015-causal-claims-require-identification-checks.md",
+    "sha256": "ad3b037b6fdf12e66b9bab360924adcc36d28f5bdbd8c3c2a8daefffc3e85021",
+    "bytes": 1424
+  },
+  {
+    "path": "docs/adrs/ADR-016-monte-carlo-percentiles.md",
+    "sha256": "0e9e8637c3240851c513143c91b73ef988c67ab5281bbdbf886ce6ed4c5324d1",
+    "bytes": 1428
+  },
+  {
+    "path": "docs/adrs/ADR-017-capability-based-agent-permissions.md",
+    "sha256": "382e6bb0e94296704b452aacc5dee333a815ed452a271cebdbff5adcedfe5d1e",
+    "bytes": 1412
+  },
+  {
+    "path": "docs/adrs/ADR-018-security-by-capability-absence.md",
+    "sha256": "fcd4572464005a74f5a2128090a927174aac7ee5bf6692bb34e9124dddc54954",
+    "bytes": 1437
+  },
+  {
+    "path": "docs/adrs/ADR-019-persistent-approval-workflow.md",
+    "sha256": "f8e52b989db344bb73a064eabd2c0253188a7265bd5a423ee2523c0dff862d65",
+    "bytes": 1411
+  },
+  {
+    "path": "docs/adrs/ADR-020-four-eyes-for-security-critical-actions.md",
+    "sha256": "54f12205baf60656cb4fba897a7f55628fa66fa2fd24401e4ee844399945ac0d",
+    "bytes": 1387
+  },
+  {
+    "path": "docs/adrs/ADR-021-persist-agent-checkpoints.md",
+    "sha256": "256e46efd846c1e62ee6424c0d90a4fff907e06b38f189d631ad39bf14a70d34",
+    "bytes": 1429
+  },
+  {
+    "path": "docs/adrs/ADR-022-pre-trace-pii-redaction.md",
+    "sha256": "9f0cd52d78a61811e0ce65103519462faba027f2fb82701a90b39022f2f3c7c7",
+    "bytes": 1398
+  },
+  {
+    "path": "docs/adrs/ADR-023-observability-from-first-agent-commit.md",
+    "sha256": "92311983b0bf5aafaba00483f4c0c8f259cccce8553bbe3c8ff3d8bafa852b05",
+    "bytes": 1426
+  },
+  {
+    "path": "docs/adrs/ADR-024-fastapi-openapi-generated-ts-client.md",
+    "sha256": "71c8705dcf731c17c21aa7bdcf0cc2c7ec06f85c3e396f43e4b00c43400ba23c",
+    "bytes": 1420
+  },
+  {
+    "path": "docs/adrs/ADR-025-sse-for-agent-progress.md",
+    "sha256": "e29ed057cfe4616adfd218840157d5de3607156ca77e64224e8015bd0e83eaca",
+    "bytes": 1400
+  },
+  {
+    "path": "docs/adrs/ADR-026-hybrid-rag.md",
+    "sha256": "894e4df683532bebf94a4d0cef0bc067a1af68cd88632ac6890f0feae3093974",
+    "bytes": 1356
+  },
+  {
+    "path": "docs/adrs/ADR-027-graph-abstraction-service.md",
+    "sha256": "1a787e8497719f548a5dc9a84c0bf7d2a0547aa5126c4f5b37eec1655a3ecef1",
+    "bytes": 1366
+  },
+  {
+    "path": "docs/adrs/ADR-028-observed-estimated-simulated-labels.md",
+    "sha256": "d48599571bca034d931189c8fd57062bd9eca7daad489425c112ede833cc5344",
+    "bytes": 1419
+  },
+  {
+    "path": "docs/adrs/ADR-029-rbac-abac.md",
+    "sha256": "ae7d19a69d956cf4c427e1ed178a59bf4dd235773212cf526a2dddecbb617f52",
+    "bytes": 1406
+  },
+  {
+    "path": "docs/adrs/ADR-030-multi-organization-tenancy.md",
+    "sha256": "c27a943a3759d1f154d063c7dcc7b28c900d8fedb702ffd713e6b4ba263c62b0",
+    "bytes": 1452
+  },
+  {
+    "path": "docs/adrs/ADR-031-claude-code-as-primary-harness.md",
+    "sha256": "2b5cdf683e31eaf31af5945887c4ba02279a6486bd8f8f57181fb4e35bd81952",
+    "bytes": 1434
+  },
+  {
+    "path": "docs/adrs/ADR-032-agent-references-in-english.md",
+    "sha256": "cc9e4d2fe0a301ad48309fd2661a2ac790a0afdd8654b0939985d61464c5eba3",
+    "bytes": 1447
+  },
+  {
+    "path": "docs/adrs/ADR-033-author-reviewer-separation.md",
+    "sha256": "c3579dd7d600414f5482999f121f4c94eef9a4a859690faf94ab70724d7953df",
+    "bytes": 1400
+  },
+  {
+    "path": "docs/adrs/ADR-034-reviewer-is-read-only.md",
+    "sha256": "ca3c08d0744778e4642d572c0e114a42d24a9c5627a3dfe7ca892956a7def1dd",
+    "bytes": 1416
+  },
+  {
+    "path": "docs/adrs/ADR-035-spec-verification-as-required-ritual.md",
+    "sha256": "c659d3d2d6d1a87c1a60479ebdd8ffc339a7c624cae0014ae8387676758955d3",
+    "bytes": 1440
+  },
+  {
+    "path": "docs/adrs/ADR-036-agent-evals-block-merge.md",
+    "sha256": "886166da26f4f77969707c9c2c1b4420d30ce88ebc15ea23bc5d402d4d70adf3",
+    "bytes": 1391
+  },
+  {
+    "path": "docs/adrs/ADR-037-vendored-pinned-coding-skills.md",
+    "sha256": "63e6d0a5d8ff34430610a5444ad494c9471560eca181e78e4eaaf9961e5997a0",
+    "bytes": 1381
+  },
+  {
+    "path": "docs/adrs/ADR-038-protected-main-and-pr-only.md",
+    "sha256": "4c67cc93dac72c4325daaba229f512361b91cf52936a7512fcb8a4e111fb5410",
+    "bytes": 1411
+  },
+  {
+    "path": "docs/adrs/ADR-039-terraform-as-iac.md",
+    "sha256": "4205d933b4b5e815cbf9173fcc39f7775c405a66d63ea05990ffb6a8277341ba",
+    "bytes": 1318
+  },
+  {
+    "path": "docs/adrs/ADR-040-workload-identity-federation.md",
+    "sha256": "2e46bd980675a79f93810474c5647d1bef7b65cde6caf378fe9003a5f4654d6c",
+    "bytes": 1347
+  },
+  {
+    "path": "docs/adrs/ADR-041-landing-is-phase-1-product.md",
+    "sha256": "e702d77052a0072be14bce326292c5413e4026454d8b811acc27b489b6a0af9f",
+    "bytes": 1433
+  },
+  {
+    "path": "docs/adrs/ADR-042-simulators-outside-the-llm.md",
+    "sha256": "f2d767f4632222001174bdbe1b7e48653023243284fa5bb59e5bb71a17899e3f",
+    "bytes": 1382
+  },
+  {
+    "path": "docs/adrs/ADR-043-fraud-module-is-review-assist-only.md",
+    "sha256": "1bd13b14fa6a4cba0e698095bc860b3f54ca3c32c178999f7f14bfeaacf62b59",
+    "bytes": 1376
+  },
+  {
+    "path": "docs/adrs/ADR-044-public-and-authenticated-portals-separated.md",
+    "sha256": "ecc5c0c0569918ebe2aba1a4f404bc0697ae1a4e0a2aac8740fd27131909e3b5",
+    "bytes": 1466
+  },
+  {
+    "path": "docs/adrs/ADR-045-api-versioning.md",
+    "sha256": "fc51cad2b52cbcb598e70b07f80d1e2dd46bd3321968288ca25d1c22b705969c",
+    "bytes": 1366
+  },
+  {
+    "path": "docs/adrs/ADR-046-data-trust-gates-model-usage.md",
+    "sha256": "237199ad85d4d7c138080214c665b1ed1ed1407f0d78c5f55fcf2f6bb40fc719",
+    "bytes": 1402
+  },
+  {
+    "path": "docs/adrs/ADR-047-open-data-impact-as-product-metric.md",
+    "sha256": "ac3a95aae7d7d2d496704c72478b7ec6c2e5fa69d6e33dbf13ca1503bcb4b3f0",
+    "bytes": 1413
+  },
+  {
+    "path": "docs/adrs/ADR-048-on-track-weights-are-transparent.md",
+    "sha256": "f55ca9d128fab3ad8d5fdd578ee3c3b3cdc74505d9803309b86559f17fc7f8af",
+    "bytes": 1417
+  },
+  {
+    "path": "docs/adrs/ADR-049-policy-optimizer-exposes-objective-weights.md",
+    "sha256": "53a037ff56254b21ccc933ecf0933f701e95a98807a447d5fdca7085a90c8174",
+    "bytes": 1390
+  },
+  {
+    "path": "docs/adrs/ADR-050-no-production-direct-access-for-coding-agent.md",
+    "sha256": "e1f5fd793d8220c87d4b9a5eb8929b90dfe81e4742768973937fcd78ac4c3aaf",
+    "bytes": 1460
+  },
+  {
+    "path": "docs/architecture/ARCHITECTURE.md",
+    "sha256": "faf038f97fe6f4dbdc8f019ab9c0c9e19b1ff139b236af97f01f3098e1ae757e",
+    "bytes": 1339
+  },
+  {
+    "path": "docs/discovery/01-USER-JOURNEYS.md",
+    "sha256": "2517876ef1a2bd1f3168763e3d87c07f15613f9074032bffb95ab42b7bc9d775",
+    "bytes": 1037
+  },
+  {
+    "path": "docs/discovery/02-AI-VALUE-RISK-MATRIX.md",
+    "sha256": "a4891c208d07ecfe9875a5e681e655099c729867e68b55cf0a0e7cb96df1264f",
+    "bytes": 729
+  },
+  {
+    "path": "docs/discovery/03-FAILURE-MODES.md",
+    "sha256": "da75443492ee000f3b261633a8c502119d9f8bf00e5dc8d65a01673efefa13a0",
+    "bytes": 799
+  },
+  {
+    "path": "docs/discovery/04-IRREVERSIBILITY.md",
+    "sha256": "ae019c390e89d6eaf9bc2fd510e514faaeb045e3a9a46877b158867d46e03b80",
+    "bytes": 255
+  },
+  {
+    "path": "docs/discovery/05-ASSURANCE-MATRIX.md",
+    "sha256": "a1fe7c1003e1718206774fb69eda5f5bb15d9f8245d4a2f2a086afa2c913629e",
+    "bytes": 297
+  },
+  {
+    "path": "docs/discovery/06-SUCCESS-METRICS.md",
+    "sha256": "9b9958546085fe3d1d2739243516e8e599f4eea274165bab9d6f9bed1771672c",
+    "bytes": 390
+  },
+  {
+    "path": "docs/discovery/07-MVP-BOUNDARIES.md",
+    "sha256": "20178ff46612e9e6e8252bc23562e7e93ad924ec0a198d5c3ee0e227ebaee459",
+    "bytes": 446
+  },
+  {
+    "path": "docs/governance/AI-GOVERNANCE.md",
+    "sha256": "0003765bd3b0eaef39816c9b93c82a224fa64d06c69331625358223b860abd6e",
+    "bytes": 174
+  },
+  {
+    "path": "docs/governance/DATA-GOVERNANCE.md",
+    "sha256": "43bb3a2bee337179d976c0d3bae43602644db2ed82db1829d60000ad86d3afce",
+    "bytes": 213
+  },
+  {
+    "path": "docs/governance/RESPONSIBLE-AI.md",
+    "sha256": "db11a2ee239473c1083777d111dba74b56389aba833dbb92e0481c08bfc10e1f",
+    "bytes": 245
+  },
+  {
+    "path": "docs/prd/PRD-001-landing-page-brasil-hoje.md",
+    "sha256": "8a0c8780d91c0a3e220fc3b713ebace353bf8e236051c56fc9457ad1d7182224",
+    "bytes": 1874
+  },
+  {
+    "path": "docs/prd/PRD-002-open-data-hub.md",
+    "sha256": "034da1ca87a2d1b197db2fd52d07dc2c7cb6a259ee6a89ffd1cee222f7ca95a2",
+    "bytes": 1781
+  },
+  {
+    "path": "docs/prd/PRD-003-macro-economic-twin.md",
+    "sha256": "516f7963b46ab36503baeabae344b36d810685b51e3eaad787b85b28af20fd0a",
+    "bytes": 1678
+  },
+  {
+    "path": "docs/prd/PRD-004-fiscal-debtlab.md",
+    "sha256": "e3a66025c68a20ea77c01011a01f97112a4146ad79c80168cd4b1399730916ae",
+    "bytes": 1674
+  },
+  {
+    "path": "docs/prd/PRD-005-previd-ncia-inss.md",
+    "sha256": "fc26ea3f82627bb6b65cba57a023da86b72193ad19824de96615c7c1477fc7e5",
+    "bytes": 1775
+  },
+  {
+    "path": "docs/prd/PRD-006-trabalho-renda-formaliza-brasil.md",
+    "sha256": "c940360445fe34c9ed4d247de34bf97d0f81ab1f1b9faac2ccbef1acafe24bab",
+    "bytes": 1657
+  },
+  {
+    "path": "docs/prd/PRD-007-estados-munic-pios.md",
+    "sha256": "bb5f8df87dbcea76b9ed979e46a1e1afa268b2a1fe41efab62f6422a5209ee1f",
+    "bytes": 1632
+  },
+  {
+    "path": "docs/prd/PRD-008-policy-lab.md",
+    "sha256": "4361b795670e83ec1e8e406bb20669e235be3f48250b91192f521acae2d17907",
+    "bytes": 1657
+  },
+  {
+    "path": "docs/prd/PRD-009-brasil-on-track-index.md",
+    "sha256": "6a5ff86af8f6c835883cb8c196ca9ef1f06ed6479329555363953a077f5f0c97",
+    "bytes": 1587
+  },
+  {
+    "path": "docs/prd/PRD-010-agent-center.md",
+    "sha256": "d3c2b03310d2dcdce980fe89c957f2ab16d495cfaae5e8a43a28c25f8c0c81b6",
+    "bytes": 1619
+  },
+  {
+    "path": "docs/prd/PRD-011-command-center.md",
+    "sha256": "c1db9c9a10e355d6ea06c7e599be93c1405a822cca54f71d3aabe3db8ab18a75",
+    "bytes": 1591
+  },
+  {
+    "path": "docs/prd/PRD-012-admin-access-organizations.md",
+    "sha256": "dae98246154f679f3c07a1f800578b8584f17cf2a140b225f1ccf6a94c7f81e9",
+    "bytes": 1605
+  },
+  {
+    "path": "docs/prd/PRD-013-developers-apis.md",
+    "sha256": "e6191b3e29754b83b6cb6a6bcec22795702119cefa60cc219ded8d7f6971fe7c",
+    "bytes": 1595
+  },
+  {
+    "path": "docs/prd/PRD-014-open-data-impact.md",
+    "sha256": "3912d922f6dc1e302c8cab7d1f05d05ea98f3b5e3b6f5e721ecc35fc3f751cb0",
+    "bytes": 1573
+  },
+  {
+    "path": "docs/prd/PRD-015-fraud-anomaly-intelligence.md",
+    "sha256": "72698bbf8ef97be8d095b5cf761132430bfc1708cfbbcf30a72091d038de49a4",
+    "bytes": 1614
+  },
+  {
+    "path": "docs/prd/PRD-016-infrastructure-public-investment-roi.md",
+    "sha256": "476187561d533fec1f851f2e63f1a92071159be7ca644c719fec58ffdb412fe0",
+    "bytes": 1638
+  },
+  {
+    "path": "docs/prd/PRD-017-monetization-sustainability.md",
+    "sha256": "867761f7cfa8fa6d11eb77ccaf2516a55362afc384afca0cc237b140cfd25c37",
+    "bytes": 1661
+  },
+  {
+    "path": "docs/prd/PRD-018-agentic-developer-experience.md",
+    "sha256": "dd7dcf24079eb2d82a11741f165067269d5fbc15c35bd69acca2ad7e25da4f12",
+    "bytes": 1681
+  },
+  {
+    "path": "docs/process/PROCESS-VISIBLE.md",
+    "sha256": "9fde360bab1eeba044fa5e63bdd4cd67123fd1be56323da5494c3589c2ccb24f",
+    "bytes": 592
+  },
+  {
+    "path": "docs/risks/RISK-CONTROL-TEST-MATRIX.md",
+    "sha256": "172924a8c4efb65b53c11379c0b354e5bf109c75aa86a371bc8b3d289ce77b70",
+    "bytes": 1033
+  },
+  {
+    "path": "docs/risks/RISK-REGISTER.md",
+    "sha256": "05347a80d17b2cdb1cbb644eda55013630ef547539d70614b6dfc632ab9da355",
+    "bytes": 816
+  },
+  {
+    "path": "docs/runbooks/AGENT-INCIDENT.md",
+    "sha256": "6732dfc865314c2d43fcd85dbeb40aba205df8fd9fa7f68259367d9d786e78db",
+    "bytes": 334
+  },
+  {
+    "path": "docs/runbooks/COST-ANOMALY.md",
+    "sha256": "ced603164dce026e537d65981a519a6ef228ee307c136832371393f734698d33",
+    "bytes": 176
+  },
+  {
+    "path": "docs/runbooks/PIPELINE-FAILURE.md",
+    "sha256": "bf0203cbecef33ce6ce1f1a411e5c769059f64b5da84aee5a7f08d501f51acb2",
+    "bytes": 209
+  },
+  {
+    "path": "docs/runbooks/SCHEMA-DRIFT.md",
+    "sha256": "03ee82edb81c725d9d5afe7df90c8b55a06a08100ec7ec5dbbaeae477823dd35",
+    "bytes": 176
+  },
+  {
+    "path": "docs/simulators/SIMULATORS-CATALOG.md",
+    "sha256": "c3c316ff281e47acca02bbe483ba2c015a65f0695cbf9c3fb122fa0131b471e8",
+    "bytes": 5657
+  },
+  {
+    "path": "docs/sources/SOURCE-INDEX.csv",
+    "sha256": "45f0b472d5a52f23f2273d41fb0cf6d1487532192d20f0a8653f7f6fa16b5d5b",
+    "bytes": 1869
+  },
+  {
+    "path": "docs/sources/SOURCE-INDEX.md",
+    "sha256": "96d837d504db58fc279f077c31d5dccfd2a37b24aec7798fd1be1d80e83a7830",
+    "bytes": 170
+  },
+  {
+    "path": "docs/specs/SPEC-001-GCP-FOUNDATION.md",
+    "sha256": "af1bbe3c13a9a33abd3452752d39b6c9bf620794a310013056160506c4b420e3",
+    "bytes": 556
+  },
+  {
+    "path": "docs/specs/SPEC-002-OPEN-DATA-DISCOVERY.md",
+    "sha256": "63eac979e722e58fea15d8958da6ee0e722b40defa00c5ee71eb6a07d1554f99",
+    "bytes": 329
+  },
+  {
+    "path": "docs/specs/SPEC-003-RESOURCE-RESOLVER-CONNECTORS.md",
+    "sha256": "3078e3f3da8bac62e2a9f69dfaccc863126d9d073e3fb44b93bedabb8a3cceee",
+    "bytes": 327
+  },
+  {
+    "path": "docs/specs/SPEC-004-RAW-BRONZE-SILVER-GOLD.md",
+    "sha256": "14b6f5a0cd246142057d8a4f843b00816e1022bd0d29105d60386adbb34bba88",
+    "bytes": 287
+  },
+  {
+    "path": "docs/specs/SPEC-005-DATA-CONTRACTS.md",
+    "sha256": "187d935659c7dfa1ec4ebc4d03028a6833b491d5e1578c2c215f3027dcdcc601",
+    "bytes": 281
+  },
+  {
+    "path": "docs/specs/SPEC-006-DATA-TRUST-SCORE.md",
+    "sha256": "0f8613506ecdaeb1bc241077c311a71aa202d6ec0297e41bb1492b02a8d59b57",
+    "bytes": 278
+  },
+  {
+    "path": "docs/specs/SPEC-007-PROVENANCE.md",
+    "sha256": "751a1f7cfbbabc5c38c6616f443da25cd847626eefa5a701bbbe4abb0d7bfc8d",
+    "bytes": 314
+  },
+  {
+    "path": "docs/specs/SPEC-008-SEMANTIC-LAYER.md",
+    "sha256": "bccda13067c867cf1cbef645b00b265bfee7a7b6a341db0e1deca240ce6f5030",
+    "bytes": 258
+  },
+  {
+    "path": "docs/specs/SPEC-009-MACRO-TWIN.md",
+    "sha256": "2da339f8b9bc29b2592af0ce8a7453c7a797da793e92e8c677aacbf0391d1cf5",
+    "bytes": 290
+  },
+  {
+    "path": "docs/specs/SPEC-010-DEBTLAB.md",
+    "sha256": "ff26b4bbf6a9287346c7d2d40e1212042e632a5b8b6f032f5123b5292d9a92fb",
+    "bytes": 327
+  },
+  {
+    "path": "docs/specs/SPEC-011-INSS-TWIN.md",
+    "sha256": "69045331b7726a45ad98d211a2ea51443584ffac50ad2652a5fee097ffd2c3d9",
+    "bytes": 297
+  },
+  {
+    "path": "docs/specs/SPEC-012-PENSION-SIMULATOR.md",
+    "sha256": "cbd2de014ce312e7b69494cad0bf115dd0ea9ad40c2a7fd6f7b7eccd3346703f",
+    "bytes": 331
+  },
+  {
+    "path": "docs/specs/SPEC-013-STATE-MUNICIPAL-TWINS.md",
+    "sha256": "37b6912d715ab8180e7702efebe0f77daff7e8934973ab463694cbbf9ecbac7a",
+    "bytes": 275
+  },
+  {
+    "path": "docs/specs/SPEC-014-FORECAST-ENGINE.md",
+    "sha256": "7b5f6b894db2187ba722f032166631a32f41d4a509400f59400014ce6ec92b2d",
+    "bytes": 323
+  },
+  {
+    "path": "docs/specs/SPEC-015-CAUSAL-ENGINE.md",
+    "sha256": "49f3118d0e138283f2eb6ae66b79061f473243c6b8980b6647431543cab1047e",
+    "bytes": 281
+  },
+  {
+    "path": "docs/specs/SPEC-016-MONTE-CARLO.md",
+    "sha256": "e25a4af8e635ca3227c1ac41c832fee46db56150773c0ba56421cd92fa8c2cf9",
+    "bytes": 253
+  },
+  {
+    "path": "docs/specs/SPEC-017-POLICY-LAB.md",
+    "sha256": "ebac45129c0c9bddd6cd663716a645167ed62116f83cea4b3600827b9bf7db65",
+    "bytes": 245
+  },
+  {
+    "path": "docs/specs/SPEC-018-RAG.md",
+    "sha256": "dace4efe76c65eb7e6f21ccd31efaf071dfca6e1b4972132c6d6939d9d2984ed",
+    "bytes": 316
+  },
+  {
+    "path": "docs/specs/SPEC-019-GRAPH-ONTOLOGY.md",
+    "sha256": "bcfb765566e2fc4aef32d6d0e49c45fc5cfb06ef4a70ff3644a2aecbfc27035f",
+    "bytes": 249
+  },
+  {
+    "path": "docs/specs/SPEC-020-AGENT-CAPABILITIES.md",
+    "sha256": "e78a09bc4f8815e9f2e5a816c496f4e544a34f4fd414ecb8088806def6d18a42",
+    "bytes": 294
+  },
+  {
+    "path": "docs/specs/SPEC-021-AGENT-RUNTIME.md",
+    "sha256": "1e6a33d1e634fefbd6e8350766d8521c557da08fb33807a461a773fd73f3b9d9",
+    "bytes": 330
+  },
+  {
+    "path": "docs/specs/SPEC-022-PERSISTED-APPROVAL.md",
+    "sha256": "3d2eebb91d31155f11d3878f8567aa1733d4ce3153d5ef84261be1295eff87bf",
+    "bytes": 305
+  },
+  {
+    "path": "docs/specs/SPEC-023-AGENT-CHECKPOINT.md",
+    "sha256": "afd9558335ef554a5298141c6001e0bd434e629e08dce1b73dfb24b3b685695b",
+    "bytes": 257
+  },
+  {
+    "path": "docs/specs/SPEC-024-PII-REDACTION.md",
+    "sha256": "23d13573d0152be139efcd782405b3c484a098c44eae52825d02fedc901ed2d6",
+    "bytes": 295
+  },
+  {
+    "path": "docs/specs/SPEC-025-AGENT-OBSERVABILITY.md",
+    "sha256": "c47bede14092db49e0cfc83502f70df8c40ccb3449691ab6e75b237c6a236b9e",
+    "bytes": 272
+  },
+  {
+    "path": "docs/specs/SPEC-026-FASTAPI-OPENAPI-CLIENT.md",
+    "sha256": "e3309911b977dc6d985212b9c2476fc03823c05a628ab95a06200bfbc60a0ea1",
+    "bytes": 249
+  },
+  {
+    "path": "docs/specs/SPEC-027-SSE.md",
+    "sha256": "eea831b6919ea5f408d8d387375627f44e7770c8d581e65ae935fee54cd6c218",
+    "bytes": 266
+  },
+  {
+    "path": "docs/specs/SPEC-028-RBAC-ABAC.md",
+    "sha256": "1440bd4f47539d093884bd27907132c74b0b1a57ac7d114cd6536d230ae9914d",
+    "bytes": 247
+  },
+  {
+    "path": "docs/specs/SPEC-029-ADMIN.md",
+    "sha256": "8a0c4481043cfdc0584f68cb00de7cc0274907a34aad9d50fdf5e47f42a7a71a",
+    "bytes": 230
+  },
+  {
+    "path": "docs/specs/SPEC-030-CLAUDE-HARNESS.md",
+    "sha256": "3c4be1a155e627c32fa122de74e2a80d0d506870365fc2a2d447c17d1abfb307",
+    "bytes": 292
+  },
+  {
+    "path": "docs/specs/SPEC-031-CI-GATES.md",
+    "sha256": "15c71f77f34ba7eb7b031dbdb0acd593430c06f2c2c86c047e00571d88dfdc62",
+    "bytes": 290
+  },
+  {
+    "path": "docs/specs/SPEC-032-REPO-GOVERNANCE.md",
+    "sha256": "02e71facfc88f8579c2c64d0b5af5f6576b9ccf4f8d57a2ec6da2a18c1512cd9",
+    "bytes": 217
+  }
+]

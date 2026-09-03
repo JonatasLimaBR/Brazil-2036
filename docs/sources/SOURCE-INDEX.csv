@@ -1,0 +1,21 @@
+source,organization,url,mode,priority,module
+dados.gov.br,Portal Brasileiro de Dados Abertos,https://dados.gov.br/,catalog,P0,Discovery/catalog
+CGU Concurso Reúso 2026,CGU,https://www.gov.br/cgu/pt-br/acesso-a-informacao/dados-abertos/concurso-dados-abertos,web,P0,Contest rules
+INSS Benefícios Emitidos,INSS,https://dados.gov.br/dados/conjuntos-dados/inss-beneficios-emitidos,ZIP,P0,INSS
+INSS Benefícios Mantidos,INSS,https://dados.gov.br/dados/conjuntos-dados/beneficios-mantidos-plano-de-dados-abertos-jun-2023-a-jun-2025,CSV,P0,INSS
+INSS Benefícios Indeferidos,INSS,https://dados.gov.br/dados/conjuntos-dados/beneficios-indeferidos-plano-de-dados-abertos-jun-2023-a-jun-2025,CSV,P0,INSS
+Dívida Consolidada Estados/DF,Ministério da Fazenda,https://dados.gov.br/dados/conjuntos-dados/divida-consolidada-estados,CSV/PDF,P0,Fiscal territorial
+IBGE,IBGE,https://www.ibge.gov.br/,API/files,P0,Macro/demografia
+Banco Central,BCB,https://www.bcb.gov.br/,API/OData,P0,Macro/monetário
+Tesouro Nacional,Tesouro,https://www.tesourotransparente.gov.br/,API/files,P0,Fiscal/dívida
+SICONFI,Tesouro,https://siconfi.tesouro.gov.br/,API/files,P0,Estados/municípios
+Novo CAGED,MTE,https://www.gov.br/trabalho-e-emprego/,files,P0,Trabalho
+PNCP,Governo Federal,https://www.gov.br/pncp/,API,P0,Compras
+Transferegov,Governo Federal,https://www.gov.br/transferegov/,API/files,P0,Transferências
+DATASUS,Ministério da Saúde,https://datasus.saude.gov.br/,files/API,P1,Saúde
+INEP,MEC,https://www.gov.br/inep/,files/API,P1,Educação
+ComexStat,MDIC,https://comexstat.mdic.gov.br/,files/API,P1,Comércio
+IPEA,IPEA,https://www.ipea.gov.br/,files/API,P1,Economia/social
+Receita Federal,RFB,https://www.gov.br/receitafederal/,files/API,P1,Tributação
+ANEEL,ANEEL,https://www.gov.br/aneel/,files/API,P1,Energia
+ANP,ANP,https://www.gov.br/anp/,files/API,P1,Energia

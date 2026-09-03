@@ -1,0 +1,9 @@
+.env
+*.tfvars
+__pycache__/
+.venv/
+node_modules/
+*.log
+dist/
+build/
+CLAUDE.md.bak.*

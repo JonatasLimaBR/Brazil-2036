@@ -1,0 +1,45 @@
+# ADR-009 — Internal Dataset Registry
+
+## Status
+Accepted
+
+## Contexto
+Esta decisão é parte do baseline arquitetural do BRASIL 2036 e deve ser lida com o `CONTEXTO.md`.
+
+## Decision drivers
+- segurança e auditabilidade;
+- reprodutibilidade;
+- escalabilidade;
+- custo operacional;
+- aderência ao GCP;
+- clareza para portfólio e agentes de código.
+
+## Alternativas consideradas
+### A. Rely only on external metadata
+Alternativa considerada e descartada por não equilibrar adequadamente os drivers acima.
+
+### B. Spreadsheet registry
+Alternativa considerada; pode ser válida em outro contexto, mas aumenta risco, acoplamento ou complexidade para este projeto.
+
+### C. Versioned internal registry
+Alternativa escolhida ou base para a decisão.
+
+## Decisão
+**Versioned internal registry.**
+
+## Por que
+Need operational status, trust, module mapping and lineage not guaranteed externally.
+
+## Consequências positivas
+- comportamento mais explícito e testável;
+- decisão documentada para novos desenvolvedores/agentes;
+- redução de ambiguidade.
+
+## Consequências negativas / custo aceito
+Requires stewardship.
+
+## Verificação
+A decisão deve aparecer em SPECs, testes, CI ou políticas de repositório quando aplicável.
+
+## Quando reconsiderar
+Reconsiderar quando métricas operacionais, requisitos legais, custo, escala ou limitações de plataforma demonstrarem que os decision drivers mudaram materialmente.

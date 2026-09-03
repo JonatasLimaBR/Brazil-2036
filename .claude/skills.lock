@@ -1,0 +1,15 @@
+spec-verifier:
+  version: 1.0.0
+  sha: REPLACE_WITH_REAL_VENDOR_SHA
+gcp-data-engineering:
+  version: 1.0.0
+  sha: REPLACE_WITH_REAL_VENDOR_SHA
+agent-security:
+  version: 1.0.0
+  sha: REPLACE_WITH_REAL_VENDOR_SHA
+data-contract:
+  version: 1.0.0
+  sha: REPLACE_WITH_REAL_VENDOR_SHA
+terraform-review:
+  version: 1.0.0
+  sha: REPLACE_WITH_REAL_VENDOR_SHA
