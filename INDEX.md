@@ -74,6 +74,8 @@
 - `docs/adrs/ADR-048-on-track-weights-are-transparent.md`
 - `docs/adrs/ADR-049-policy-optimizer-exposes-objective-weights.md`
 - `docs/adrs/ADR-050-no-production-direct-access-for-coding-agent.md`
+- `docs/adrs/ADR-051-frontend-stack-vite-typescript-for-public-landing.md`
+- `docs/adrs/ADR-052-sql-execution-for-walking-skeleton-refines-adr-007.md`
 - `docs/architecture/ARCHITECTURE.md`
 - `docs/discovery/01-USER-JOURNEYS.md`
 - `docs/discovery/02-AI-VALUE-RISK-MATRIX.md`
@@ -145,3 +147,4 @@
 - `docs/specs/SPEC-030-CLAUDE-HARNESS.md`
 - `docs/specs/SPEC-031-CI-GATES.md`
 - `docs/specs/SPEC-032-REPO-GOVERNANCE.md`
+- `docs/specs/SPEC-033-MVP-WALKING-SKELETON.md`
