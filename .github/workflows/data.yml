@@ -48,11 +48,14 @@ jobs:
           service_account: ${{ vars.GCP_DEPLOYER_SA }}
 
       - uses: google-github-actions/setup-gcloud@v2
+      - uses: astral-sh/setup-uv@v5
 
       - name: build and push image
         run: |
           IMAGE="${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT }}/br2036/ingestion:${{ github.sha }}"
-          gcloud builds submit ingestion --tag "$IMAGE" --project "${{ vars.GCP_PROJECT }}"
+          gcloud auth configure-docker "${{ vars.GCP_REGION }}-docker.pkg.dev" --quiet
+          docker build -t "$IMAGE" ingestion
+          docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 
       - name: deploy job
@@ -68,4 +71,5 @@ jobs:
 
       - name: verify provenance chain
         run: |
-          python ingestion/scripts/verify_chain.py --project "${{ vars.GCP_PROJECT }}"
+          uv run --with google-cloud-bigquery \
+            python ingestion/scripts/verify_chain.py --project "${{ vars.GCP_PROJECT }}"
