@@ -52,9 +52,8 @@ for role in \
   roles/artifactregistry.admin \
   roles/run.admin \
   roles/iam.serviceAccountAdmin \
-  roles/resourcemanager.projectIamAdmin \
-  roles/billing.projectManager \
-  roles/serviceaccount.user ; do
+  roles/iam.serviceAccountUser \
+  roles/resourcemanager.projectIamAdmin ; do
   gcloud projects add-iam-policy-binding "$PROJECT_ID" \
     --member "serviceAccount:${DEPLOYER_SA}" --role "$role" --condition=None >/dev/null
 done
