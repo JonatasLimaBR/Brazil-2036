@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** MVP_WALKING_SKELETON
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 1 (Define)
 - **Entrada:** `.claude/sdd/features/BRAINSTORM_MVP_WALKING_SKELETON.md` (tipo: `brainstorm_document`)
 - **Criado:** 2026-09-03
@@ -231,3 +231,4 @@ apresentação`, com o ritual de CI todo verde e nada burlado.
 | 2026-09-03 | 1.1 | Fase 2 concluída. Status → ✅ Complete (Designed). OQ1–OQ8 resolvidas no DESIGN. Próximo passo → /build. | /design (Claude Sonnet 5) |
 | 2026-09-03 | 1.2 | Cascata da descoberta do recurso (`DISCOVERY_MVP_WALKING_SKELETON.md`), Modificadora. **A1/A2/A4/A6/A7 validadas** (A2/A4 com correção); **A9** nova. Métrica passa a `divida_consolidada` (bruta, PAF) — DV2. Grão anual `reference_year` + `DATE(ANO,12,31)` — DV1. Chave `UF` 2 letras → `uf_ibge` — DV3. Ajustados G1/G5/G9, S2/S7, AT1/AT3/AT4/AT5/AT7/AT9/AT10, C8/C9, §8, §10, §12. Status `✅ Complete (Designed)` mantido (correção factual, não re-escopo). | /iterate (Claude Sonnet 5) |
 | 2026-09-03 | 1.3 | Correção factual encontrada ao escrever o código: **Brasil tem 26 estados + DF = 27** entes, não 28. Ajustados S2, §8 A4, §10 (volume + completude), §11. Contrato `divida_consolidada_estados.yaml` e `uf_ibge.csv` já corretos (27). | /build (Claude Sonnet 5) |
+| 2026-09-03 | 1.4 | Shipped e arquivado. | /ship (Claude Sonnet 5) |

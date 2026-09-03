@@ -6,7 +6,7 @@
 - **Fase:** 3 (Build) — **concluída** (PR1 + PR2 verdes no GCP real)
 - **Entrada:** `.claude/sdd/features/DESIGN_MVP_WALKING_SKELETON.md` (v1.2)
 - **Data:** 2026-09-03
-- **Status da build:** ✅ **Complete (Built)** — cadeia provada ponta a ponta em `brasil2036-dev`
+- **Status da build:** ✅ **Shipped** (arquivado 2026-09-03)
 - **Ambiente vivo:**
   - Web (card público): `https://br2036-web-gzt6fzwoda-rj.a.run.app`
   - API: `https://br2036-api-gzt6fzwoda-rj.a.run.app` (`/v1/metrics/{id}`, `/v1/provenance/{id}`, `/openapi.json`)
@@ -195,3 +195,4 @@ Aplicadas ao concluir a build (PR1 + PR2 verdes no GCP real):
 | 2026-09-03 | 0.3 | Incremento C: fatia do PR1 sem GCP (16 arquivos em `ingestion/` + `.gitattributes` + `security.yml`). `ruff` + `mypy --strict` + `pytest` (30) verdes via `uv`. AD #6/#7. Correção "26 estados + DF = 27" (DEFINE v1.3, DESIGN v1.2, SPEC-033, DISCOVERY). | /build (Claude Sonnet 5) |
 | 2026-09-03 | 0.4 | Incremento D: PR1 completo em modelo **GitOps/WIF** (pedido do usuário). Módulos GCP (`raw/bronze/registry/provenance/pipeline/__main__/bigquery_io/sql_render`), `Dockerfile`, `scripts/{bootstrap.sh,verify_chain.py}`, `infra/terraform/**`, workflows `infra.yml`+`data.yml`. `ruff` + `mypy --strict` (15) + `pytest` (44) + `terraform validate`/`fmt` verdes. AD #8/#9. Repo em `github.com/JonatasLimaBR/Brazil-2036`. | /build (Claude Sonnet 5) |
 | 2026-09-03 | 1.0 | **Build concluída.** Incremento E: `bootstrap.sh` executado, WIF federado, 5 Actions Variables; `infra` + `data` verdes → job rodou no GCP real, `verify_chain.py` PASS (27 entes / 2022 / provenance 100%). Incremento F: PR2 (`api/` FastAPI + `web/` Vite+TS + `api-web.yml`), `deploy` + Playwright e2e verdes contra a URL viva. 7 falhas de runtime corrigidas (AD #10). DEFINE/DESIGN → `✅ Complete (Built)`. Próximo: `/verify-spec` → proteção de branch → `/ship`. | /build (Claude Sonnet 5) |
+| 2026-09-03 | 1.1 | Shipped e arquivado em `.claude/sdd/archive/MVP_WALKING_SKELETON/`. | /ship (Claude Sonnet 5) |

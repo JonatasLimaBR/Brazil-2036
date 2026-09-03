@@ -103,13 +103,12 @@ BRASIL2036/
 
 - **Repo:** `github.com/JonatasLimaBR/Brazil-2036`, `origin/main` (histórico linear, sem proteção de branch ainda — ver follow-up).
 - **GCP:** projeto `brasil2036-dev`, região `southamerica-east1`. Provisionamento **GitOps via WIF**: `scripts/bootstrap.sh` (uma vez) → 5 *Actions Variables* → workflows `infra.yml` (terraform), `data.yml` (ingestão), `api-web.yml` (API+web), `security.yml` (gitleaks). Sem chave estática.
-- **`MVP_WALKING_SKELETON` — SDD Fases 0–3 concluídas.** A fatia prova a cadeia de provenance ponta a ponta com "Dívida Consolidada dos Estados e do DF" (CSV do Tesouro Transparente/CKAN, ODbL; métrica `divida_consolidada`, bruta, anual por UF).
-  - **PR1 (espinha de dados) ✅ vivo:** Cloud Run Job baixa o recurso → GCS RAW imutável → BigQuery Bronze→Silver→Gold→`metric_provenance`. `verify_chain.py` no CI exige 27 entes / `MAX(reference_year)` / cobertura de provenance 100%.
-  - **PR2 (apresentação) ✅ vivo:** API FastAPI (`/v1/metrics/{id}`, `/v1/provenance/{id}`, `/openapi.json`) + card público Vite/TS (cliente gerado do OpenAPI, sem número no bundle). Playwright e2e contra a URL viva.
-  - **Ambiente:** web `https://br2036-web-gzt6fzwoda-rj.a.run.app` · api `https://br2036-api-gzt6fzwoda-rj.a.run.app`.
-  - Artefatos SDD: `.claude/sdd/features/{BRAINSTORM,DEFINE,DESIGN,DISCOVERY}_MVP_WALKING_SKELETON.md`, `.claude/sdd/reports/BUILD_REPORT_MVP_WALKING_SKELETON.md`. DEFINE/DESIGN = `✅ Complete (Built)`.
-- **Próximo:** `/verify-spec` (SPEC-033) em sessão nova → **proteção de branch `main` + PR-only** (SPEC-032/ADR-038, adiado pelo usuário até aqui) → `/ship`.
-- **Follow-ups menores:** `MANIFEST.json` desatualizado, URL do catálogo dados.gov.br para `dataset_registry.source_url` (concurso CGU), times de `CODEOWNERS`, provenance histórica.
+- **`MVP_WALKING_SKELETON` — ✅ SHIPPED (2026-09-03).** Ciclo SDD 0–4 completo; `/verify-spec` independente = OVERALL PASS (todos os não-negociáveis do `CLAUDE.md` OK). Prova a cadeia de provenance ponta a ponta com "Dívida Consolidada dos Estados e do DF" (Tesouro Transparente/CKAN, ODbL; `metric_id='divida_consolidada'`, bruta, anual por UF).
+  - Vivo: web `https://br2036-web-gzt6fzwoda-rj.a.run.app` · api `https://br2036-api-gzt6fzwoda-rj.a.run.app`.
+  - Arquivo: `.claude/sdd/archive/MVP_WALKING_SKELETON/` (BRAINSTORM, DEFINE, DESIGN, DISCOVERY, BUILD_REPORT, VERIFY_SPEC, `SHIPPED_2026-09-03.md`).
+  - Código em `ingestion/`, `api/`, `web/`, `infra/terraform/`, `scripts/`, `.github/workflows/`. SPEC-033, ADR-051/052/053.
+- **Follow-ups rastreados (SHIPPED §7):** gates de integração real + spec-verifier no CI; **proteção de branch `main` + PR-only** (exige repo público ou GitHub Pro); URL do catálogo dados.gov.br → `dataset_registry.source_url` (concurso CGU); `wif.tf`/serviços no Terraform; `MANIFEST.json`; provenance histórica.
+- **Próxima feature:** slice #2 = **INSS Benefícios Emitidos** sobre o padrão de pipeline já provado — começar por `/brainstorm` ou `/define` (regra: todo dev passa por SDD).
 
 ## Arquivos-chave
 

@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** MVP_WALKING_SKELETON
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 2 (Design)
 - **Entrada:** `.claude/sdd/features/DEFINE_MVP_WALKING_SKELETON.md` (Clarity 14/15)
 - **Criado:** 2026-09-03
@@ -767,3 +767,4 @@ Ordem de build sugerida (respeitando dependências do manifesto):
 | 2026-09-03 | 1.2 | Correção factual (ao escrever o código do PR1): **26 estados + DF = 27** entes, não 28. Ajustados §1.0/§2.3/§3 OQ3/§4 itens 19,29/§5.3/§7.5. `uf_ibge.csv` e o contrato v1 já corretos. | /build (Claude Sonnet 5) |
 | 2026-09-03 | 1.3 | Pós-`/verify-spec` independente (PASS com follow-ups). Nova decisão **D13 + ADR-053** (WIF bootstrap e serviços Cloud Run fora do Terraform, exposição pública declarada). RAW bucket IAM apertado (`objectCreator`+`objectViewer`). CODEOWNERS corrigido. ADR-007 com back-ref ao ADR-052. Follow-ups do CI (integração/spec-verifier) registrados. Status → `✅ Complete (Built)`. | /iterate (Claude Sonnet 5) |
 | 2026-09-03 | 1.1 | Cascata da descoberta do recurso (`DISCOVERY_MVP_WALKING_SKELETON.md`). Modificadoras: **DV1** grão anual (`reference_year` + `DATE(ANO,12,31)`); **DV2** métrica = Dívida Consolidada bruta, `metric_id='divida_consolidada'` (nova decisão D12); **DV3** chave `UF` de 2 letras → de-para `uf_ibge.csv`. Ajustados: §1.0, §2.2 (C5–C8, C11), §2.3, §2.4, §3 (D3, D12, OQ3/OQ8, DV-cat), §4 (itens 15,18,19,20,22,23,28,29,37,38,39), §5.1/5.3/5.4/5.5/5.6, §6, §7.2/7.3/7.5. Status permanece Ready for Build. | /iterate (Claude Sonnet 5) |
+| 2026-09-03 | 1.4 | Shipped e arquivado. | /ship (Claude Sonnet 5) |
