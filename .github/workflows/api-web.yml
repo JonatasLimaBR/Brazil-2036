@@ -1,0 +1,112 @@
+name: api-web
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "api/**"
+      - "web/**"
+      - "infra/terraform/cloud_run_services.tf"
+      - ".github/workflows/api-web.yml"
+  pull_request:
+    paths:
+      - "api/**"
+      - "web/**"
+      - ".github/workflows/api-web.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: api-web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: api lint / types / tests
+        working-directory: api
+        run: |
+          uv sync --extra dev
+          uv run ruff check .
+          uv run mypy
+          uv run python -m pytest -q
+
+      - name: openapi is up to date
+        working-directory: api
+        run: |
+          uv run python scripts/export_openapi.py
+          git diff --exit-code -- openapi/openapi.json
+
+      - name: web client / typecheck / build
+        working-directory: web
+        run: |
+          npm ci
+          npm run gen:client
+          git diff --exit-code -- src/api-client/schema.d.ts
+          npm run typecheck
+          npm run build
+
+  deploy:
+    needs: checks
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: docker auth
+        run: gcloud auth configure-docker "${{ vars.GCP_REGION }}-docker.pkg.dev" --quiet
+
+      - name: build + deploy api
+        run: |
+          IMG="${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT }}/br2036/api:${{ github.sha }}"
+          docker build -t "$IMG" api
+          docker push "$IMG"
+          gcloud run deploy br2036-api --image "$IMG" \
+            --region "${{ vars.GCP_REGION }}" --project "${{ vars.GCP_PROJECT }}" \
+            --service-account "api@${{ vars.GCP_PROJECT }}.iam.gserviceaccount.com" \
+            --allow-unauthenticated --port 8080 \
+            --set-env-vars "GCP_PROJECT=${{ vars.GCP_PROJECT }}"
+          API_URL=$(gcloud run services describe br2036-api \
+            --region "${{ vars.GCP_REGION }}" --project "${{ vars.GCP_PROJECT }}" \
+            --format='value(status.url)')
+          echo "API_URL=$API_URL" >> "$GITHUB_ENV"
+
+      - name: build + deploy web
+        run: |
+          IMG="${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT }}/br2036/web:${{ github.sha }}"
+          docker build --build-arg "VITE_API_URL=$API_URL" -t "$IMG" web
+          docker push "$IMG"
+          gcloud run deploy br2036-web --image "$IMG" \
+            --region "${{ vars.GCP_REGION }}" --project "${{ vars.GCP_PROJECT }}" \
+            --allow-unauthenticated --port 8080
+          WEB_URL=$(gcloud run services describe br2036-web \
+            --region "${{ vars.GCP_REGION }}" --project "${{ vars.GCP_PROJECT }}" \
+            --format='value(status.url)')
+          echo "WEB_URL=$WEB_URL" >> "$GITHUB_ENV"
+
+      - name: e2e
+        working-directory: web
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          PLAYWRIGHT_BASE_URL="$WEB_URL" npm run e2e

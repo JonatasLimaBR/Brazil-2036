@@ -1,0 +1,96 @@
+:root {
+  --green: #1b7a3d;
+  --ink: #14202b;
+  --muted: #5b6b7a;
+  --bg: #f7f9fb;
+  --line: #d9e2ea;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+main {
+  max-width: 40rem;
+  margin: 3rem auto;
+  padding: 0 1.25rem;
+}
+
+h1 {
+  font-size: 1.35rem;
+  margin: 0 0 1rem;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.data-class {
+  display: inline-block;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
+.data-class--observed {
+  color: var(--green);
+}
+
+.data-class--estimated {
+  color: #a86a00;
+}
+
+.data-class--simulated {
+  color: #7a3ea8;
+}
+
+.state {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+}
+
+.value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0.25rem 0 0;
+}
+
+.ref {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+.source {
+  display: inline-block;
+  margin-top: 0.75rem;
+  color: var(--green);
+}
+
+.source:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 2px;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.error {
+  color: #b3261e;
+  margin: 0;
+}
