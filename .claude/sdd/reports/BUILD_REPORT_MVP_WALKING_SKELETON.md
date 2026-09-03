@@ -3,11 +3,14 @@
 ## Metadados
 
 - **Feature:** MVP_WALKING_SKELETON
-- **Fase:** 3 (Build) — **execução parcial em incrementos**
+- **Fase:** 3 (Build) — **concluída** (PR1 + PR2 verdes no GCP real)
 - **Entrada:** `.claude/sdd/features/DESIGN_MVP_WALKING_SKELETON.md` (v1.2)
 - **Data:** 2026-09-03
-- **Status da build:** ⏸️ Parcial — bloco de docs + fatia do PR1 sem-GCP concluídos; falta o restante do PR1 (GCP) e todo o PR2
-- **DESIGN status:** permanece `Ready for Build` (build não concluída)
+- **Status da build:** ✅ **Complete (Built)** — cadeia provada ponta a ponta em `brasil2036-dev`
+- **Ambiente vivo:**
+  - Web (card público): `https://br2036-web-gzt6fzwoda-rj.a.run.app`
+  - API: `https://br2036-api-gzt6fzwoda-rj.a.run.app` (`/v1/metrics/{id}`, `/v1/provenance/{id}`, `/openapi.json`)
+- **Próximo passo:** `/verify-spec` (SPEC-033, sessão nova read-only) → `/ship`
 
 ### Incrementos
 | # | Escopo | Verificação |
@@ -15,7 +18,9 @@
 | A | Bloco de docs (manifesto 1–3): ADR-051, ADR-052, SPEC-033, INDEX.md | inspeção estrutural |
 | B | Tarefa 1 do PR1: descoberta do recurso → `DISCOVERY_*.md`; cascata DV1–DV3 (`/iterate`) | — |
 | C | Fatia do PR1 sem dependência de GCP: reference data, contrato v1, connector HTTP + parsing, modelos SQL, testes | ✅ `ruff` + `mypy --strict` + `pytest` (30) via `uv` |
-| D | **PR1 completo em modelo GitOps/WIF**: módulos GCP (`raw`, `bronze`, `registry`, `provenance`, `pipeline`, `__main__`, `bigquery_io`, `sql_render`), `Dockerfile`, `scripts/verify_chain.py`, `scripts/bootstrap.sh`, `infra/terraform/**`, workflows `infra.yml` + `data.yml` | ✅ `ruff` + `mypy --strict` (15 arquivos) + `pytest` (44) + `terraform validate` + `terraform fmt` |
+| D | PR1 completo em modelo GitOps/WIF: módulos GCP, `Dockerfile`, `verify_chain.py`, `bootstrap.sh`, `infra/terraform/**`, workflows `infra.yml` + `data.yml` | ✅ `ruff` + `mypy --strict` (15) + `pytest` (44) + `terraform validate` |
+| E | **PR1 executado no GCP real**: `bootstrap.sh` rodado, WIF federado, Actions Variables setadas; `infra` verde; `data` verde → job baixou a Dívida real, RAW→Bronze→Silver→Gold→provenance, `verify_chain.py` PASS | ✅ **27 entes / 2022 / 100% cobertura de provenance** no BigQuery |
+| F | **PR2**: `api/` (FastAPI, `/v1/metrics` + `/v1/provenance`, OpenAPI gerado), `web/` (Vite+TS, 1 card, cliente gerado), Terraform da SA `api-runtime`, `.github/workflows/api-web.yml` | ✅ `ruff`+`mypy`+`pytest` (api, 9) + `tsc`+`vite build` (web) + **Playwright e2e contra a URL viva** |
 
 > Escopo desta execução: apenas os itens 1–3 do manifesto (documentos que destravam D2/D5/D6).
 > Decisão de escopo dirigida pelo usuário e pelas restrições de ambiente — ver Autonomous Decisions #2.
@@ -92,16 +97,32 @@ padrões do DESIGN (§3 D2/D5/D6) e do template ADR observado no repo.
 | 6 | Escopo do incremento C | (a) esperar P2/P4 e fazer o PR1 inteiro; (b) escrever agora só a fatia do PR1 que roda e se verifica sem GCP | (b) | `uv` disponível ⇒ `ruff`/`mypy`/`pytest` locais. connector HTTP, parsing, contrato, SQL e testes não precisam de GCP e ficam verificados de verdade; os módulos GCP-bound continuam pendentes de P2/P4. Progresso real sem código especulativo. |
 | 7 | Contagem de entes federativos | (a) manter "27 estados + DF = 28" dos docs; (b) corrigir para "26 estados + DF = 27" | (b) | O Brasil tem **26 estados** + Distrito Federal. Erro herdado do DEFINE original, propagado a DESIGN/SPEC-033/DISCOVERY. `uf_ibge.csv` (27 linhas) e o contrato (`= 27`) já foram escritos corretos. Correção factual aplicada a DEFINE v1.3, DESIGN v1.2, SPEC-033, DISCOVERY. |
 | 8 | Provisionamento GCP (pedido do usuário: "a partir do git, criar recursos pela federação") | (a) `terraform apply` local pelo humano; (b) GitOps — Actions roda `terraform` via WIF | (b) | Pedido explícito. Projeto + billing + o próprio pool WIF + bucket de state não podem nascer da federação (não há identidade ainda) → `scripts/bootstrap.sh` roda uma vez à mão. Todo o resto vem de `infra.yml` (Actions + `google-github-actions/auth@v2` + WIF, sem chave). `data.yml` faz build/push da imagem e executa o Cloud Run Job, depois `verify_chain.py`. |
-| 9 | Escopo de roles do `tf-deployer` no bootstrap | (a) `roles/owner`; (b) conjunto de admin por serviço | (b) | Menos privilégio que `owner`: `serviceusage`, `storage`, `bigquery`, `artifactregistry`, `run`, `iam.serviceAccountAdmin`, `resourcemanager.projectIamAdmin`, `billing.projectManager`, `serviceAccountUser`. Suficiente para o Terraform da fatia; revisável. |
+| 9 | Escopo de roles do `tf-deployer` no bootstrap | (a) `roles/owner`; (b) conjunto de admin por serviço | (b) | Menos privilégio que `owner`. `billing.projectManager` removido (inválido em escopo de projeto); `serviceaccount.user` → `iam.serviceAccountUser` (bug de nome). |
+| 10 | Falhas de runtime resolvidas ao executar no GCP (não são forks de design; correções de implementação) | — | — | (a) Cloud Build sem `cloudbuild.builds.editor` → build via `docker` no runner + push direto ao Artifact Registry. (b) `UPDATE/DELETE over streaming buffer` → trocar `insert_rows_json` por DML, e depois por **`CREATE OR REPLACE TABLE ... AS SELECT`** (zero DML, imune ao buffer) em `registry`/`provenance`/`bronze`/gold SQL. (c) `MERGE` exige tabela pré-existente → gold vira `CREATE OR REPLACE`. (d) Cloud Run Job/Services exigem imagem existente → imagem placeholder pública + `ignore_changes=[image]`; o workflow troca pela real. (e) `account_id` de SA ≥ 6 chars → `api` → `api-runtime`. (f) corrida entre `infra` e `api-web` → `api-web` faz poll da SA antes do deploy. (g) fetch cross-origin bloqueado → `CORSMiddleware(allow_origins=['*'], GET)` na API (pública, ADR-044). |
 
 ---
 
 ## 4. Blockers e trabalho restante
 
-### Não iniciado
-- **PR2 — apresentação** (itens 36–56): API FastAPI, geração OpenAPI + cliente TS, card Vite/TS, Cloud Run services, e2e, `api-web.yml`.
+### Concluído
 
-### Código do PR1 — completo e verificado localmente
+- **PR1 + PR2 verdes no GCP real.** Ambiente vivo (Cloud Run, `southamerica-east1`):
+  - web: `https://br2036-web-gzt6fzwoda-rj.a.run.app`
+  - api: `https://br2036-api-gzt6fzwoda-rj.a.run.app`
+- Prova no BigQuery: 27 entes / `reference_year=2022` / cobertura de provenance 100%;
+  `/v1/provenance/divida_consolidada` resolve a cadeia `SPEC-007` completa; nenhum
+  número no bundle do web (checado no e2e).
+
+### Follow-ups (não bloqueiam a feature)
+
+- **Proteção de branch `main` + fluxo de PR** — deferido pelo usuário para "depois do PR2" (agora due). SPEC-032 / ADR-038.
+- `MANIFEST.json` desatualizado (P6) — script de regeneração.
+- URL do catálogo dados.gov.br para `dataset_registry.source_url` (P7 / OQ9) — relevante para a submissão CGU.
+- Times/handles de `CODEOWNERS` (P5).
+- Provenance histórica (hoje `CREATE OR REPLACE` guarda só o último ano) — `SPEC-006`/incremento.
+- Node20-deprecation warnings nos workflows (cosmético).
+
+### (histórico) Código do PR1 — completo e verificado localmente
 `ingestion/**` (connector, parsing, raw, bronze, silver/gold SQL, registry, provenance, contract,
 pipeline, `__main__`, `Dockerfile`, `verify_chain.py`), `infra/terraform/**`, `scripts/bootstrap.sh`,
 `.github/workflows/{infra,data,security}.yml`. 44 testes; `mypy --strict`; `terraform validate`.
@@ -130,29 +151,23 @@ pipeline, `__main__`, `Dockerfile`, `verify_chain.py`), `infra/terraform/**`, `s
 
 ## 5. Status transitions
 
-**Não aplicadas** — a build está parcial. `DEFINE` e `DESIGN` permanecem:
+Aplicadas ao concluir a build (PR1 + PR2 verdes no GCP real):
 
-| Arquivo | Status atual | Próximo passo |
+| Arquivo | Status | Próximo passo |
 |---|---|---|
-| `DEFINE_MVP_WALKING_SKELETON.md` | `✅ Complete (Designed)` | `/build` (PR1) |
-| `DESIGN_MVP_WALKING_SKELETON.md` | `Ready for Build` | `/build` (PR1) — bloco de docs concluído |
-
-As transições para `✅ Complete (Built)` só ocorrem quando PR1 + PR2 estiverem implementados e verificados.
+| `DEFINE_MVP_WALKING_SKELETON.md` | `✅ Complete (Built)` | `/verify-spec` → `/ship` |
+| `DESIGN_MVP_WALKING_SKELETON.md` | `✅ Complete (Built)` | `/verify-spec` → `/ship` |
 
 ---
 
 ## 6. Handoff
 
-**Código do PR1 pronto.** Próximo passo é operacional (você):
+**Build concluída.** Próximos passos:
 
-1. `bash scripts/bootstrap.sh` com `PROJECT_ID` / `REGION` / `BILLING_ACCOUNT` / `GITHUB_REPO=JonatasLimaBR/Brazil-2036`.
-2. Adicionar as 5 Actions Variables que o script imprime.
-3. `git push` (ou disparar o workflow **infra**) → Terraform provisiona → workflow **data** builda, roda o Job e verifica a cadeia.
-4. `/verify-spec` contra `SPEC-033` (subconjunto PR1) em sessão nova, read-only.
-5. Merge.
-
-Depois: **PR2** (API + web) — `/build` retoma pelo item 36 do manifesto.
-Se algo do DESIGN se mostrar inexequível na execução, `/iterate` sobre o `DESIGN`.
+1. `/verify-spec` contra `SPEC-033` em sessão nova, read-only — PASS/FAIL por requisito (PR1 + PR2).
+2. Proteção de branch `main` + fluxo de PR (deferido pelo usuário para "depois do PR2").
+3. `/ship` — arquiva a feature, lições aprendidas, status → Shipped.
+4. Follow-ups da §4 (MANIFEST.json, URL do catálogo dados.gov.br para o concurso CGU, CODEOWNERS).
 
 ---
 
@@ -179,3 +194,4 @@ Se algo do DESIGN se mostrar inexequível na execução, `/iterate` sobre o `DES
 | 2026-09-03 | 0.2 | Tarefa 1 do PR1 (descoberta do recurso) concluída → `DISCOVERY_MVP_WALKING_SKELETON.md`. Cascata DV1–DV3 (via `/iterate`) aplicada a DESIGN v1.1, DEFINE v1.2, SPEC-033. P1/P3 marcados feitos; P7 (URL catálogo) adicionado. | /build + /iterate (Claude Sonnet 5) |
 | 2026-09-03 | 0.3 | Incremento C: fatia do PR1 sem GCP (16 arquivos em `ingestion/` + `.gitattributes` + `security.yml`). `ruff` + `mypy --strict` + `pytest` (30) verdes via `uv`. AD #6/#7. Correção "26 estados + DF = 27" (DEFINE v1.3, DESIGN v1.2, SPEC-033, DISCOVERY). | /build (Claude Sonnet 5) |
 | 2026-09-03 | 0.4 | Incremento D: PR1 completo em modelo **GitOps/WIF** (pedido do usuário). Módulos GCP (`raw/bronze/registry/provenance/pipeline/__main__/bigquery_io/sql_render`), `Dockerfile`, `scripts/{bootstrap.sh,verify_chain.py}`, `infra/terraform/**`, workflows `infra.yml`+`data.yml`. `ruff` + `mypy --strict` (15) + `pytest` (44) + `terraform validate`/`fmt` verdes. AD #8/#9. Repo em `github.com/JonatasLimaBR/Brazil-2036`. | /build (Claude Sonnet 5) |
+| 2026-09-03 | 1.0 | **Build concluída.** Incremento E: `bootstrap.sh` executado, WIF federado, 5 Actions Variables; `infra` + `data` verdes → job rodou no GCP real, `verify_chain.py` PASS (27 entes / 2022 / provenance 100%). Incremento F: PR2 (`api/` FastAPI + `web/` Vite+TS + `api-web.yml`), `deploy` + Playwright e2e verdes contra a URL viva. 7 falhas de runtime corrigidas (AD #10). DEFINE/DESIGN → `✅ Complete (Built)`. Próximo: `/verify-spec` → proteção de branch → `/ship`. | /build (Claude Sonnet 5) |

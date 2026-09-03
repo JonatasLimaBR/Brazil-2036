@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** MVP_WALKING_SKELETON
-- **Status:** ✅ Complete (Designed)
+- **Status:** ✅ Complete (Built)
 - **Fase:** 1 (Define)
 - **Entrada:** `.claude/sdd/features/BRAINSTORM_MVP_WALKING_SKELETON.md` (tipo: `brainstorm_document`)
 - **Criado:** 2026-09-03
@@ -12,7 +12,7 @@
 - **Versão:** 1.3 (2026-09-03 — cascata DV1–DV3 + correção 26 estados + DF = 27)
 - **Design:** `.claude/sdd/features/DESIGN_MVP_WALKING_SKELETON.md` v1.1 (2026-09-03)
 - **Descoberta:** `.claude/sdd/features/DISCOVERY_MVP_WALKING_SKELETON.md` (2026-09-03)
-- **Próximo passo:** `/build .claude/sdd/features/DESIGN_MVP_WALKING_SKELETON.md`
+- **Próximo passo:** `/verify-spec` (SPEC-033) em sessão nova → `/ship`
 
 > Nota de ambiente: os assets do plugin SDD (`DEFINE_TEMPLATE.md`, `WORKFLOW_CONTRACTS.yaml`,
 > `kb/_index.yaml`, `tools/spec-linter`) não estão instalados neste projeto. O documento segue

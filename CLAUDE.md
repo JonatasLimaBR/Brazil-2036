@@ -101,14 +101,15 @@ BRASIL2036/
 
 ## Estado atual (2026-09-03)
 
-- **Repo:** `github.com/JonatasLimaBR/Brazil-2036`, `origin/main`. Histórico linear (baseline → SDD docs → ADR-051/052 + SPEC-033 → descoberta + cascata → código do PR1).
-- **Feature em curso: `MVP_WALKING_SKELETON`** — fatia vertical que prova a cadeia de provenance com "Dívida Consolidada dos Estados e do DF" (CSV `UF;ANO;VALOR` do Tesouro Transparente/CKAN, licença ODbL; métrica `divida_consolidada` bruta/anual). SDD Fases 0–2 concluídas; artefatos em `.claude/sdd/features/{BRAINSTORM,DEFINE,DESIGN,DISCOVERY}_*.md` e `.claude/sdd/reports/BUILD_REPORT_*.md`.
-- **Fase 3 (Build) — parcial:**
-  - **PR1 (espinha de dados): código completo, verificado localmente** (`ruff` + `mypy --strict` + `pytest` 44 + `terraform validate`). `ingestion/**` + `infra/terraform/**` + `scripts/bootstrap.sh` + workflows `infra.yml`/`data.yml`/`security.yml`. **Falta rodar em GCP real.**
-  - Modelo de provisionamento: **GitOps via WIF** — `bootstrap.sh` (manual, uma vez) cria projeto/billing/APIs/bucket-de-state/pool-WIF/`tf-deployer`; o resto vem do `terraform` rodando no GitHub Actions.
-  - **PR2 (API + web): não iniciado.**
-- **Pendências operacionais:** rodar `scripts/bootstrap.sh` (P2) e adicionar as 5 *Actions Variables* (`GCP_PROJECT`, `GCP_REGION`, `GCP_TF_STATE_BUCKET`, `GCP_WIF_PROVIDER`, `GCP_DEPLOYER_SA`) (P4). Menores: times de `CODEOWNERS` (P5), regenerar `MANIFEST.json` (P6), URL do catálogo dados.gov.br (P7).
-- **Nota:** os documentos SDD por feature vivem em `.claude/sdd/` (não versionado como código de produto, mas commitado). `DEFINE`/`DESIGN` seguem `Ready for Build` até PR1+PR2 verificados em GCP.
+- **Repo:** `github.com/JonatasLimaBR/Brazil-2036`, `origin/main` (histórico linear, sem proteção de branch ainda — ver follow-up).
+- **GCP:** projeto `brasil2036-dev`, região `southamerica-east1`. Provisionamento **GitOps via WIF**: `scripts/bootstrap.sh` (uma vez) → 5 *Actions Variables* → workflows `infra.yml` (terraform), `data.yml` (ingestão), `api-web.yml` (API+web), `security.yml` (gitleaks). Sem chave estática.
+- **`MVP_WALKING_SKELETON` — SDD Fases 0–3 concluídas.** A fatia prova a cadeia de provenance ponta a ponta com "Dívida Consolidada dos Estados e do DF" (CSV do Tesouro Transparente/CKAN, ODbL; métrica `divida_consolidada`, bruta, anual por UF).
+  - **PR1 (espinha de dados) ✅ vivo:** Cloud Run Job baixa o recurso → GCS RAW imutável → BigQuery Bronze→Silver→Gold→`metric_provenance`. `verify_chain.py` no CI exige 27 entes / `MAX(reference_year)` / cobertura de provenance 100%.
+  - **PR2 (apresentação) ✅ vivo:** API FastAPI (`/v1/metrics/{id}`, `/v1/provenance/{id}`, `/openapi.json`) + card público Vite/TS (cliente gerado do OpenAPI, sem número no bundle). Playwright e2e contra a URL viva.
+  - **Ambiente:** web `https://br2036-web-gzt6fzwoda-rj.a.run.app` · api `https://br2036-api-gzt6fzwoda-rj.a.run.app`.
+  - Artefatos SDD: `.claude/sdd/features/{BRAINSTORM,DEFINE,DESIGN,DISCOVERY}_MVP_WALKING_SKELETON.md`, `.claude/sdd/reports/BUILD_REPORT_MVP_WALKING_SKELETON.md`. DEFINE/DESIGN = `✅ Complete (Built)`.
+- **Próximo:** `/verify-spec` (SPEC-033) em sessão nova → **proteção de branch `main` + PR-only** (SPEC-032/ADR-038, adiado pelo usuário até aqui) → `/ship`.
+- **Follow-ups menores:** `MANIFEST.json` desatualizado, URL do catálogo dados.gov.br para `dataset_registry.source_url` (concurso CGU), times de `CODEOWNERS`, provenance histórica.
 
 ## Arquivos-chave
 

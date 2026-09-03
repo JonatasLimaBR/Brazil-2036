@@ -3,14 +3,14 @@
 ## Metadados
 
 - **Feature:** MVP_WALKING_SKELETON
-- **Status:** Ready for Build
+- **Status:** ✅ Complete (Built)
 - **Fase:** 2 (Design)
 - **Entrada:** `.claude/sdd/features/DEFINE_MVP_WALKING_SKELETON.md` (Clarity 14/15)
 - **Criado:** 2026-09-03
 - **Idioma:** PT-BR
 - **Confiança de design:** 0.82 — padrões vêm de SPECs/ADRs do repo (não há `${CLAUDE_PLUGIN_ROOT}/kb/`); agentes casados a partir da lista disponível na sessão.
 - **Versão:** 1.2 (2026-09-03 — cascata DV1–DV3 + correção 26 estados + DF = 27)
-- **Próximo passo:** `/build .claude/sdd/features/DESIGN_MVP_WALKING_SKELETON.md`
+- **Próximo passo:** `/verify-spec` (SPEC-033) em sessão nova → `/ship`. Ambiente vivo: web `https://br2036-web-gzt6fzwoda-rj.a.run.app`, api `https://br2036-api-gzt6fzwoda-rj.a.run.app`.
 
 > Nota de ambiente: assets do plugin SDD ausentes (`DESIGN_TEMPLATE.md`, `kb/`, `agents/**`,
 > `tools/spec-linter`). O documento segue a lista de seções do skill `sdd-design`. O **contract
