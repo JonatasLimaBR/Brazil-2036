@@ -41,10 +41,14 @@ Traceability: requirements R1–R14 and acceptance tests AT1–AT11 are defined 
   `metric → Gold → Silver transform → Bronze → source resource → catalog dataset → org`
   (SPEC-007), with `scenario='observed'`, `model='none'`, `confidence=1.0`.
 - SQL models are Dataform-shaped `.sql` files executed via the BigQuery client (ADR-052).
-- Infrastructure is created only by Terraform in one dev project (GCS RAW bucket with versioning
+- Infrastructure is created by Terraform in one dev project (GCS RAW bucket with versioning
   + lifecycle, BigQuery datasets `control/bronze/silver/gold`, Artifact Registry, Cloud Run Job,
-  least-privilege service accounts, WIF pool, budget). No org/folders, no stg/prod (SPEC-001
-  subset, ADR-039, ADR-040).
+  least-privilege service accounts — RAW zone: `objectCreator` + `objectViewer`, never
+  `objectAdmin` — budget). No org/folders, no stg/prod (SPEC-001 subset, ADR-039, ADR-040).
+  **Exception (ADR-053):** the WIF pool/provider (`scripts/bootstrap.sh`, one-time) and the
+  Cloud Run *services* `br2036-api`/`br2036-web` (`api-web.yml`, image + URL dependency) are
+  provisioned outside Terraform; Terraform still owns their identity/IAM. ADR-053 declares the
+  two services as publicly invokable — the only declared public exposure.
 - CI authenticates via Workload Identity Federation; no static key in the repo (SPEC-031, R-011).
 
 ## MUST — PR2 (presentation)
@@ -75,6 +79,19 @@ Traceability: requirements R1–R14 and acceptance tests AT1–AT11 are defined 
   is committed. Playwright e2e confirms the card value comes from the API and the bundle contains
   no hardcoded number. Required CI gates are green; `agent-eval` is N/A (no agent affected,
   SPEC-031). `/verify-spec` returns PASS per requirement in a fresh reviewer session.
+
+## Verification
+
+`/verify-spec` ran independently 2026-09-03 (isolated reviewer, read-only): **OVERALL PASS**,
+all CLAUDE.md non-negotiables hold, chain proven live. Mandatory follow-ups recorded below.
+
+## Follow-ups (before slice #2 reuses this as the pattern)
+- **CI ritual gaps (AT11):** no dedicated integration job (pipeline tests use in-memory fakes;
+  real BigQuery validation is only `verify_chain.py` post-deploy on `main`); no automated
+  spec-verifier gate; path filters mean no single PR runs the full gate set.
+- Move Cloud Run *services* into Terraform if/when the image + URL dependency is solvable
+  cleanly (ADR-053 "when to reconsider").
+- `wif.tf` — bring the WIF pool/provider under Terraform (ADR-053).
 
 ## Future work (not in this SPEC)
 - Adopt Dataform for the Silver/Gold `.sql` files (closes ADR-052, restores full ADR-007).

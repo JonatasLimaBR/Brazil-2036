@@ -3,6 +3,11 @@
 ## Status
 Accepted
 
+## Refinamentos
+- **2026-09-03 — ADR-052:** para o incremento `MVP_WALKING_SKELETON` a transformação SQL usa
+  BigQuery SQL direto, com os arquivos `.sql` já no formato Dataform; a adoção do Dataform
+  fica para um incremento seguinte. ADR-052 **refina, não substitui** esta decisão.
+
 ## Contexto
 Esta decisão é parte do baseline arquitetural do BRASIL 2036 e deve ser lida com o `CONTEXTO.md`.
 

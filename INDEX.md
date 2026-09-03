@@ -76,6 +76,7 @@
 - `docs/adrs/ADR-050-no-production-direct-access-for-coding-agent.md`
 - `docs/adrs/ADR-051-frontend-stack-vite-typescript-for-public-landing.md`
 - `docs/adrs/ADR-052-sql-execution-for-walking-skeleton-refines-adr-007.md`
+- `docs/adrs/ADR-053-cloud-run-services-and-wif-bootstrap-outside-terraform.md`
 - `docs/architecture/ARCHITECTURE.md`
 - `docs/discovery/01-USER-JOURNEYS.md`
 - `docs/discovery/02-AI-VALUE-RISK-MATRIX.md`

@@ -1,7 +1,23 @@
-/terraform/ @platform-team
-/docs/adrs/ @architecture-team
-/docs/risks/ @security-team
-/agents/ @ai-team
-/models/ @ml-team
-/services/authorization/ @security-team
-/services/approval/ @security-team
+# Owners for sensitive paths (SPEC-032). Solo repo: everything is @JonatasLimaBR
+# for now; split into teams (see comments) once they exist.
+
+# Architecture decisions & specs           -> architecture-team
+/docs/adrs/                @JonatasLimaBR
+/docs/specs/               @JonatasLimaBR
+
+# Risk & governance                        -> security-team
+/docs/risks/               @JonatasLimaBR
+/docs/governance/          @JonatasLimaBR
+
+# Infrastructure as code                   -> platform-team
+/infra/                    @JonatasLimaBR
+/scripts/bootstrap.sh      @JonatasLimaBR
+/.github/workflows/        @JonatasLimaBR
+
+# Data contracts                           -> data-team
+/ingestion/contracts/      @JonatasLimaBR
+
+# Application code
+/ingestion/                @JonatasLimaBR
+/api/                      @JonatasLimaBR
+/web/                      @JonatasLimaBR

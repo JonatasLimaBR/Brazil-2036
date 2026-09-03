@@ -3,9 +3,16 @@ resource "google_service_account" "ingestion_job" {
   display_name = "MVP walking skeleton ingestion job runtime"
 }
 
-resource "google_storage_bucket_iam_member" "job_raw_writer" {
+# Least privilege on the immutable RAW zone: create + read, never overwrite/delete.
+resource "google_storage_bucket_iam_member" "job_raw_creator" {
   bucket = google_storage_bucket.raw.name
-  role   = "roles/storage.objectAdmin"
+  role   = "roles/storage.objectCreator"
+  member = "serviceAccount:${google_service_account.ingestion_job.email}"
+}
+
+resource "google_storage_bucket_iam_member" "job_raw_viewer" {
+  bucket = google_storage_bucket.raw.name
+  role   = "roles/storage.objectViewer"
   member = "serviceAccount:${google_service_account.ingestion_job.email}"
 }
 

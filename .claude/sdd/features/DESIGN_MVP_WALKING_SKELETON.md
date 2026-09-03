@@ -9,7 +9,7 @@
 - **Criado:** 2026-09-03
 - **Idioma:** PT-BR
 - **Confiança de design:** 0.82 — padrões vêm de SPECs/ADRs do repo (não há `${CLAUDE_PLUGIN_ROOT}/kb/`); agentes casados a partir da lista disponível na sessão.
-- **Versão:** 1.2 (2026-09-03 — cascata DV1–DV3 + correção 26 estados + DF = 27)
+- **Versão:** 1.3 (2026-09-03 — pós-`/verify-spec`: ADR-053, D13, RAW IAM, follow-ups do CI)
 - **Próximo passo:** `/verify-spec` (SPEC-033) em sessão nova → `/ship`. Ambiente vivo: web `https://br2036-web-gzt6fzwoda-rj.a.run.app`, api `https://br2036-api-gzt6fzwoda-rj.a.run.app`.
 
 > Nota de ambiente: assets do plugin SDD ausentes (`DESIGN_TEMPLATE.md`, `kb/`, `agents/**`,
@@ -244,6 +244,30 @@ DCL e a razão DCL/RCL ficam como trabalho futuro (fora do escopo — DEFINE fix
 2. *Rotular como `divida_consolidada_liquida` mesmo assim* — rejeitado: falsearia a métrica (fere ADR-012 / provenance).
 
 **Consequências:** (+) métrica fiel à fonte; (−) o rótulo público é "bruta", menos comparável entre entes que a razão DCL/RCL — aceito para a fatia.
+
+### D13 — WIF bootstrap e serviços Cloud Run fora do Terraform (ADR-053)
+
+| Atributo | Valor |
+|---|---|
+| Status | Accepted |
+| Data | 2026-09-03 (pós-`/verify-spec`) |
+
+**Contexto:** o `/verify-spec` independente apontou que o pool WIF (em `scripts/bootstrap.sh`)
+e os serviços Cloud Run `br2036-api`/`br2036-web` (em `api-web.yml`) não são criados pelo
+Terraform, contra o MUST "infra só por Terraform" do SPEC-033.
+
+**Escolha:** formalizar via **ADR-053**. WIF = dependência circular (não há identidade federada
+antes de o pool existir) → bootstrap manual único. Serviços Cloud Run = dependência de imagem
+pré-existente + da URL do `api` no build do `web` → `gcloud run deploy` no CI. Terraform
+mantém identidade/IAM (SA `api-runtime` read-only no `br2036_gold`). ADR-053 **declara** os dois
+serviços como publicamente invocáveis (satisfaz AT8 "sem exposição fora de um ADR").
+
+**Também:** RAW bucket — SA do job passa de `storage.objectAdmin` para
+`storage.objectCreator` + `storage.objectViewer` (não pode sobrescrever/apagar — reforça a
+imutabilidade no nível de IAM). Achado #5 do review.
+
+**Follow-up rastreado (não bloqueia o ship):** gates de integração real e spec-verifier no CI;
+`wif.tf` e serviços no Terraform quando a dependência circular for resolvível.
 
 ### D4 — Checagem de contrato no limite Bronze→Silver (quarentena) além da Gold
 
@@ -741,4 +765,5 @@ Ordem de build sugerida (respeitando dependências do manifesto):
 |---|---|---|---|
 | 2026-09-03 | 1.0 | Criação a partir de `DEFINE_MVP_WALKING_SKELETON.md`. 5 ADRs inline, 56 itens de manifesto, OQ1–OQ8 resolvidas. Status → Ready for Build. | /design (Claude Sonnet 5) |
 | 2026-09-03 | 1.2 | Correção factual (ao escrever o código do PR1): **26 estados + DF = 27** entes, não 28. Ajustados §1.0/§2.3/§3 OQ3/§4 itens 19,29/§5.3/§7.5. `uf_ibge.csv` e o contrato v1 já corretos. | /build (Claude Sonnet 5) |
+| 2026-09-03 | 1.3 | Pós-`/verify-spec` independente (PASS com follow-ups). Nova decisão **D13 + ADR-053** (WIF bootstrap e serviços Cloud Run fora do Terraform, exposição pública declarada). RAW bucket IAM apertado (`objectCreator`+`objectViewer`). CODEOWNERS corrigido. ADR-007 com back-ref ao ADR-052. Follow-ups do CI (integração/spec-verifier) registrados. Status → `✅ Complete (Built)`. | /iterate (Claude Sonnet 5) |
 | 2026-09-03 | 1.1 | Cascata da descoberta do recurso (`DISCOVERY_MVP_WALKING_SKELETON.md`). Modificadoras: **DV1** grão anual (`reference_year` + `DATE(ANO,12,31)`); **DV2** métrica = Dívida Consolidada bruta, `metric_id='divida_consolidada'` (nova decisão D12); **DV3** chave `UF` de 2 letras → de-para `uf_ibge.csv`. Ajustados: §1.0, §2.2 (C5–C8, C11), §2.3, §2.4, §3 (D3, D12, OQ3/OQ8, DV-cat), §4 (itens 15,18,19,20,22,23,28,29,37,38,39), §5.1/5.3/5.4/5.5/5.6, §6, §7.2/7.3/7.5. Status permanece Ready for Build. | /iterate (Claude Sonnet 5) |
