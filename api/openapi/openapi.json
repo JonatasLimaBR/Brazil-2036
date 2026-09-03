@@ -1,0 +1,347 @@
+{
+  "components": {
+    "schemas": {
+      "DataClass": {
+        "enum": [
+          "observed",
+          "estimated",
+          "simulated"
+        ],
+        "title": "DataClass",
+        "type": "string"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "MetricResponse": {
+        "properties": {
+          "data_class": {
+            "$ref": "#/components/schemas/DataClass"
+          },
+          "metric_id": {
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ProvenanceSummary"
+          },
+          "reference_date": {
+            "title": "Reference Date",
+            "type": "string"
+          },
+          "reference_year": {
+            "title": "Reference Year",
+            "type": "integer"
+          },
+          "state_ibge_code": {
+            "title": "State Ibge Code",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "metric_id",
+          "state_ibge_code",
+          "value",
+          "unit",
+          "reference_year",
+          "reference_date",
+          "data_class",
+          "provenance"
+        ],
+        "title": "MetricResponse",
+        "type": "object"
+      },
+      "ProvenanceResponse": {
+        "properties": {
+          "bronze_object": {
+            "title": "Bronze Object",
+            "type": "string"
+          },
+          "catalog_dataset_id": {
+            "title": "Catalog Dataset Id",
+            "type": "string"
+          },
+          "gold_object": {
+            "title": "Gold Object",
+            "type": "string"
+          },
+          "metric_id": {
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "producing_organization": {
+            "title": "Producing Organization",
+            "type": "string"
+          },
+          "reference_date": {
+            "title": "Reference Date",
+            "type": "string"
+          },
+          "reference_year": {
+            "title": "Reference Year",
+            "type": "integer"
+          },
+          "silver_transform": {
+            "title": "Silver Transform",
+            "type": "string"
+          },
+          "silver_transform_version": {
+            "title": "Silver Transform Version",
+            "type": "string"
+          },
+          "source_resource_url": {
+            "title": "Source Resource Url",
+            "type": "string"
+          },
+          "state_ibge_code": {
+            "title": "State Ibge Code",
+            "type": "string"
+          },
+          "trust_status": {
+            "title": "Trust Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "metric_id",
+          "state_ibge_code",
+          "reference_year",
+          "reference_date",
+          "gold_object",
+          "silver_transform",
+          "silver_transform_version",
+          "bronze_object",
+          "source_resource_url",
+          "catalog_dataset_id",
+          "producing_organization",
+          "trust_status"
+        ],
+        "title": "ProvenanceResponse",
+        "type": "object"
+      },
+      "ProvenanceSummary": {
+        "properties": {
+          "reference_date": {
+            "title": "Reference Date",
+            "type": "string"
+          },
+          "source": {
+            "description": "URL of the source resource",
+            "title": "Source",
+            "type": "string"
+          },
+          "trust_status": {
+            "description": "Provenance trust status; 'source_only' until a Data Trust Score exists (SPEC-006)",
+            "title": "Trust Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "reference_date",
+          "trust_status"
+        ],
+        "title": "ProvenanceSummary",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Walking skeleton: consolidated state debt with full provenance (SPEC-033).",
+    "title": "BRASIL 2036 \u2014 Metrics API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/healthz": {
+      "get": {
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Healthz Healthz Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Healthz"
+      }
+    },
+    "/v1/metrics/{metric_id}": {
+      "get": {
+        "operationId": "get_metric_v1_metrics__metric_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "metric_id",
+            "required": true,
+            "schema": {
+              "title": "Metric Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state_ibge_code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State Ibge Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Metric"
+      }
+    },
+    "/v1/provenance/{metric_id}": {
+      "get": {
+        "operationId": "get_provenance_v1_provenance__metric_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "metric_id",
+            "required": true,
+            "schema": {
+              "title": "Metric Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state_ibge_code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State Ibge Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvenanceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Provenance"
+      }
+    }
+  }
+}

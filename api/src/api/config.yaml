@@ -1,0 +1,6 @@
+gcp_project: ""
+bq_dataset_gold: br2036_gold
+gold_table: gold_debt_state_current
+provenance_table: metric_provenance
+default_metric_id: divida_consolidada
+default_state_ibge_code: "35"
