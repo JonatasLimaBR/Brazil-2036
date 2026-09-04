@@ -86,7 +86,7 @@ mesma disciplina do MVP_WALKING_SKELETON.
 | Contratos carregam | `DataContract.load()` nos 3 YAML novos | ✅ |
 | Configs carregam | `load_incremental_config()` nos 3 YAML novos | ✅ |
 | `terraform fmt` | `terraform fmt -check -diff` em `cloud_run.tf` | ✅ |
-| `integration` (BigQuery real) | — | ⚠️ **não executado** — precisa de `GCP_PROJECT`/WIF, indisponível nesta sessão interativa |
+| `integration` (BigQuery real) | PR #4, `ci.yml` `integration` job | ✅ **PASS ao vivo** — `status=ok`, 5 linhas Bronze/Gold/provenance, lineage fecha (`file://` → `gs://` → registry). 1ª tentativa pegou um bug real na asserção do teste (grão UF×espécie, não só UF — 5 linhas, não 3); corrigido e reexecutado, verde. |
 | Backfill real (183 recursos, ~100–130 GB) | — | ⚠️ **não executado** — operação longa/custosa; deliberadamente não disparada sem confirmação explícita do usuário (ver Blockers) |
 
 ---
