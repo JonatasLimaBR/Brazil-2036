@@ -78,14 +78,15 @@ BRASIL2036/
 ├─ .github/
 │  ├─ CODEOWNERS
 │  ├─ pull_request_template.md
-│  └─ workflows/          infra.yml (terraform via WIF), data.yml (checks+deploy+verify), security.yml (gitleaks)
+│  ├─ ci/gates.yaml       manifesto SPEC-031: gate → job/status (agent-eval: n/a)
+│  └─ workflows/          ci.yml (gate de merge: changes+lint/type/unit+web+terraform+integration+spec-verify+secret-scan→ci-gate), infra.yml (apply), data.yml (deploy-and-run), api-web.yml (deploy)
 ├─ ingestion/             job de ingestão da fatia MVP (connector, RAW/Bronze/Silver/Gold SQL, contrato, provenance, pipeline, testes)
 ├─ infra/terraform/       IaC do projeto dev (backend GCS, buckets, BQ, Artifact Registry, Cloud Run Job, IAM, budget)
 ├─ scripts/               bootstrap.sh (bootstrap GCP+WIF, uma vez)
 └─ docs/
    ├─ discovery/          7 docs: jornadas, AI value/risk, failure modes, irreversibilidade, assurance, métricas, MVP boundaries
    ├─ prd/                18 PRDs (PRD-001…018)
-   ├─ adrs/               52 ADRs (ADR-001…052)
+   ├─ adrs/               54 ADRs (ADR-001…054)
    ├─ specs/              33 SPECs (SPEC-001…033)
    ├─ risks/              RISK-REGISTER.md, RISK-CONTROL-TEST-MATRIX.md
    ├─ governance/         AI-GOVERNANCE, DATA-GOVERNANCE, RESPONSIBLE-AI
@@ -99,16 +100,17 @@ BRASIL2036/
 
 (`.claude/` guarda os comandos e skills do harness — ver "Comandos úteis" — e, em `.claude/sdd/`, os artefatos do workflow SDD por feature.)
 
-## Estado atual (2026-09-03)
+## Estado atual (2026-09-04)
 
-- **Repo:** `github.com/JonatasLimaBR/Brazil-2036`, `origin/main` (histórico linear, sem proteção de branch ainda — ver follow-up).
-- **GCP:** projeto `brasil2036-dev`, região `southamerica-east1`. Provisionamento **GitOps via WIF**: `scripts/bootstrap.sh` (uma vez) → 5 *Actions Variables* → workflows `infra.yml` (terraform), `data.yml` (ingestão), `api-web.yml` (API+web), `security.yml` (gitleaks). Sem chave estática.
-- **`MVP_WALKING_SKELETON` — ✅ SHIPPED (2026-09-03).** Ciclo SDD 0–4 completo; `/verify-spec` independente = OVERALL PASS (todos os não-negociáveis do `CLAUDE.md` OK). Prova a cadeia de provenance ponta a ponta com "Dívida Consolidada dos Estados e do DF" (Tesouro Transparente/CKAN, ODbL; `metric_id='divida_consolidada'`, bruta, anual por UF).
+- **Repo:** `github.com/JonatasLimaBR/Brazil-2036`, `origin/main`. **Branch protection ativa desde 2026-09-04**: PR-only, `required_status_checks = [ci-gate]`.
+- **GCP:** projeto `brasil2036-dev`, região `southamerica-east1`. Provisionamento **GitOps via WIF**: `scripts/bootstrap.sh` (uma vez) → 5 *Actions Variables* → `ci.yml` (gate de merge) + `infra.yml`/`data.yml`/`api-web.yml` (deploy/apply pós-merge). Sem chave estática.
+- **`MVP_WALKING_SKELETON` — ✅ SHIPPED (2026-09-03).** Ciclo SDD 0–4 completo; `/verify-spec` independente = OVERALL PASS. Prova a cadeia de provenance ponta a ponta com "Dívida Consolidada dos Estados e do DF" (Tesouro Transparente/CKAN, ODbL; `metric_id='divida_consolidada'`, bruta, anual por UF).
   - Vivo: web `https://br2036-web-gzt6fzwoda-rj.a.run.app` · api `https://br2036-api-gzt6fzwoda-rj.a.run.app`.
-  - Arquivo: `.claude/sdd/archive/MVP_WALKING_SKELETON/` (BRAINSTORM, DEFINE, DESIGN, DISCOVERY, BUILD_REPORT, VERIFY_SPEC, `SHIPPED_2026-09-03.md`).
-  - Código em `ingestion/`, `api/`, `web/`, `infra/terraform/`, `scripts/`, `.github/workflows/`. SPEC-033, ADR-051/052/053.
-- **Follow-ups rastreados (SHIPPED §7):** gates de integração real + spec-verifier no CI; **proteção de branch `main` + PR-only** (exige repo público ou GitHub Pro); URL do catálogo dados.gov.br → `dataset_registry.source_url` (concurso CGU); `wif.tf`/serviços no Terraform; `MANIFEST.json`; provenance histórica.
-- **Próxima feature:** slice #2 = **INSS Benefícios Emitidos** sobre o padrão de pipeline já provado — começar por `/brainstorm` ou `/define` (regra: todo dev passa por SDD).
+  - Arquivo: `.claude/sdd/archive/MVP_WALKING_SKELETON/`. Código em `ingestion/`, `api/`, `web/`, `infra/terraform/`, `scripts/`. SPEC-033, ADR-051/052/053.
+- **`CI_ASSURANCE_GATES` — ✅ SHIPPED (2026-09-04).** Realiza `SPEC-031`/ADR-054: `ci.yml` (guarda-chuva sem filtro de path) → `changes` decide gates condicionais (`lint-typecheck-unit`, `web-check`, `terraform`, `integration` contra BigQuery real em dataset `citest_<run>_*` isolado, `spec-verify`, `secret-scan`) → `ci-gate` agrega (`if: always()`) e é o único required check. `scripts/spec_verify.py` + `.github/ci/gates.yaml` dão piso mecânico ao `/verify-spec` humano (não o substituem). PR #1 provou ao vivo (integration 1m7s, ci-gate verde); PR #2 (docs-only) provou o pass-through (ci-gate verde em ~6 s).
+  - Arquivo: `.claude/sdd/archive/CI_ASSURANCE_GATES/`. ADR-054; SPEC-031/ADR-036 atualizados.
+- **Follow-ups rastreados (SHIPPED §7 de CI_ASSURANCE_GATES):** cap de bytes por query no gate `integration` (residual aceito, custo ínfimo); revisão humana obrigatória em `main` (hoje só CI); job noturno contra a fonte real do Tesouro (drift); bump de actions Node 20. **Follow-ups antigos ainda abertos (MVP_WALKING_SKELETON §7):** URL do catálogo dados.gov.br → `dataset_registry.source_url` (concurso CGU); `wif.tf`/serviços no Terraform; `MANIFEST.json`; provenance histórica.
+- **Próxima feature:** slice #2 = **INSS Benefícios Emitidos** sobre o padrão de pipeline + CI-gate já provado — começar por `/brainstorm` ou `/define` (regra: todo dev passa por SDD).
 
 ## Arquivos-chave
 
@@ -131,8 +133,8 @@ BRASIL2036/
 
 - **Python (`ingestion/`):** `uv` para ambiente; `ruff` (lint+format, line-length 100), `mypy --strict`, `pytest`. Rodar: `cd ingestion && uv run ruff check . && uv run mypy && uv run python -m pytest -q`.
 - **IaC (`infra/terraform/`):** Terraform ≥ 1.5, provider `google ~> 6`; `terraform fmt` + `validate` no CI; backend GCS.
-- **CI:** `.github/workflows/` — `infra.yml`, `data.yml`, `security.yml`. Pipeline-alvo completo em CONTEXTO §24. Gate obrigatório que falha = merge bloqueado.
-- **Branches:** `main` protegida, PR-only; `feature/*`, `fix/*`, `docs/*`, `chore/*`
+- **CI:** `.github/workflows/ci.yml` é o gate de merge (único required check = `ci-gate`); `infra.yml`/`data.yml`/`api-web.yml` só fazem deploy/apply pós-merge em push→`main`. Pipeline-alvo completo em CONTEXTO §24. Gate obrigatório que falha = merge bloqueado (SPEC-031/ADR-054).
+- **Branches:** `main` protegida (branch protection ativa 2026-09-04), PR-only; `feature/*`, `fix/*`, `docs/*`, `chore/*`
 - **Commits:** Conventional Commits
 - **Idioma:** artefatos de produto (CONTEXTO, PRD, ADR, SPEC) em PT-BR; arquivos de agente/harness (`CLAUDE.md`, `AGENTS.md`, `.claude/`) em inglês por design (ADR-032); código e comentários em inglês
 
