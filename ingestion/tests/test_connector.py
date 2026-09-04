@@ -73,6 +73,24 @@ def test_download_exhausts_retries(tmp_path: Path) -> None:
         conn.download(conn.discover(), str(tmp_path / "out.csv"))
 
 
+def test_download_file_scheme_reads_local(tmp_path: Path) -> None:
+    src = tmp_path / "fixture.csv"
+    src.write_bytes(SAMPLE_CSV)
+    session = FakeSession([FakeResponse(fail=True)])  # HTTP must not be touched
+    conn = DividaEstadosConnector(
+        session=session,
+        resource_url=f"file://{src}",
+        max_retries=3,
+        backoff_seconds=0.0,
+    )
+    dest = tmp_path / "out.csv"
+    result = conn.download(conn.discover(), str(dest))
+    assert dest.read_bytes() == SAMPLE_CSV
+    assert result.content_sha256 == hashlib.sha256(SAMPLE_CSV).hexdigest()
+    assert result.http_status == 200
+    assert session.calls == 0
+
+
 def test_validate_accepts_expected_header(tmp_path: Path) -> None:
     path = tmp_path / "ok.csv"
     path.write_bytes(SAMPLE_CSV)

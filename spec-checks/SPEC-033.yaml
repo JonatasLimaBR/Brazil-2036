@@ -1,0 +1,58 @@
+spec: SPEC-033
+
+checks:
+  files_exist:
+    - api/scripts/export_openapi.py
+    - api/openapi/openapi.json
+    - api/src/api/main.py
+    - ingestion/contracts/divida_consolidada_estados.yaml
+    - ingestion/reference/uf_ibge.csv
+    - ingestion/sql/silver/debt_state.sql
+    - ingestion/sql/gold/gold_debt_state_current.sql
+    - ingestion/scripts/verify_chain.py
+    - infra/terraform/versions.tf
+    - scripts/bootstrap.sh
+    - web/src/main.ts
+    - web/src/api-client/schema.d.ts
+
+  openapi_paths:
+    file: api/openapi/openapi.json
+    paths:
+      - "/v1/metrics/{metric_id}"
+      - "/v1/provenance/{metric_id}"
+
+  contract_has_rules:
+    file: ingestion/contracts/divida_consolidada_estados.yaml
+    patterns:
+      - 'count\(distinct state_ibge_code\) = 27'
+      - 'min:\s*0'
+      - 'evolution_policy'
+      - 'license'
+
+  grep_absent:
+    - path: web/src
+      pattern: "divida_consolidada_liquida"
+    - path: web/src
+      pattern: "332702923995"
+
+  no_static_keys:
+    roots:
+      - api
+      - ingestion
+      - infra
+      - scripts
+      - web
+
+  gates_manifest_complete:
+    file: .github/ci/gates.yaml
+    required_gates:
+      - format
+      - lint
+      - typecheck
+      - unit
+      - integration
+      - contracts
+      - security
+      - terraform
+      - spec-verify
+      - agent-eval

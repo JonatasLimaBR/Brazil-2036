@@ -1,0 +1,62 @@
+dataset: divida_consolidada_estados_fixture
+version: 1
+
+source:
+  catalog_url: ""
+  resource_url: "file://tests/integration/fixtures/divida_sample.csv"
+  organization: "COREM / STN"
+  license: "ODbL"
+  update_frequency: "annual"
+
+format:
+  type: csv
+  delimiter: ";"
+  decimal: ","
+  thousands: "."
+  encoding: "utf-8"
+
+source_columns:
+  - UF
+  - ANO
+  - VALOR
+
+keys:
+  - state_ibge_code
+  - reference_year
+
+required_fields:
+  state_ibge_code:
+    type: STRING
+    nullable: false
+  reference_year:
+    type: INT64
+    nullable: false
+  reference_date:
+    type: DATE
+    nullable: false
+  value:
+    type: NUMERIC
+    nullable: false
+    min: 0
+  unit:
+    type: STRING
+    nullable: false
+    allowed:
+      - BRL
+
+null_thresholds:
+  value: 0.0
+
+freshness:
+  max_age_days: 100000
+
+quality_rules:
+  - name: completeness_fixture_states
+    description: "3 states in the fixture (SP, RJ, DF)"
+    expr: "count(distinct state_ibge_code) = 3"
+  - name: non_negative_value
+    expr: "min(value) >= 0"
+  - name: provenance_coverage
+    expr: "count(gold) = count(provenance)"
+
+evolution_policy: additive_only

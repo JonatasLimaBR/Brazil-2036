@@ -11,8 +11,11 @@
 
 # Infrastructure as code                   -> platform-team
 /infra/                    @JonatasLimaBR
-/scripts/bootstrap.sh      @JonatasLimaBR
-/.github/workflows/        @JonatasLimaBR
+/scripts/                  @JonatasLimaBR
+/.github/                  @JonatasLimaBR
+
+# CI assurance                             -> platform-team
+/spec-checks/              @JonatasLimaBR
 
 # Data contracts                           -> data-team
 /ingestion/contracts/      @JonatasLimaBR

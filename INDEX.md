@@ -1,5 +1,8 @@
 # INDEX — BRASIL 2036 v5
 
+- `.github/ci/gates.yaml`
+- `spec-checks/SPEC-033.yaml`
+- `scripts/spec_verify.py`
 - `.claude/README.md`
 - `.claude/commands/agent-eval.md`
 - `.claude/commands/implement-spec.md`
@@ -77,6 +80,7 @@
 - `docs/adrs/ADR-051-frontend-stack-vite-typescript-for-public-landing.md`
 - `docs/adrs/ADR-052-sql-execution-for-walking-skeleton-refines-adr-007.md`
 - `docs/adrs/ADR-053-cloud-run-services-and-wif-bootstrap-outside-terraform.md`
+- `docs/adrs/ADR-054-ci-merge-gate-umbrella.md`
 - `docs/architecture/ARCHITECTURE.md`
 - `docs/discovery/01-USER-JOURNEYS.md`
 - `docs/discovery/02-AI-VALUE-RISK-MATRIX.md`

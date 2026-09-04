@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from pathlib import Path
 from typing import Protocol
 
 from ingestion.connectors.base import (
@@ -12,6 +13,7 @@ from ingestion.connectors.base import (
 
 EXPECTED_HEADER = "UF;ANO;VALOR"
 _BOM = "﻿"
+_FILE_SCHEME = "file://"
 
 
 class HttpResponse(Protocol):
@@ -71,6 +73,24 @@ class DividaEstadosConnector:
         }
 
     def download(self, ref: ResourceRef, dest: str) -> DownloadResult:
+        if ref.resource_url.startswith(_FILE_SCHEME):
+            return self._download_file(ref, dest)
+        return self._download_http(ref, dest)
+
+    def _download_file(self, ref: ResourceRef, dest: str) -> DownloadResult:
+        source = Path(ref.resource_url[len(_FILE_SCHEME) :])
+        data = source.read_bytes()
+        Path(dest).write_bytes(data)
+        return DownloadResult(
+            local_path=dest,
+            content_sha256=hashlib.sha256(data).hexdigest(),
+            http_status=200,
+            bytes_downloaded=len(data),
+            attempts=1,
+            attempt_errors=[],
+        )
+
+    def _download_http(self, ref: ResourceRef, dest: str) -> DownloadResult:
         errors: list[str] = []
 
         def _fetch() -> HttpResponse:

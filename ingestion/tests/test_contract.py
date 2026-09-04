@@ -9,11 +9,33 @@ from ingestion.contract import ContractViolation, DataContract
 CONTRACT_PATH = Path(__file__).parents[1] / "contracts" / "divida_consolidada_estados.yaml"
 
 UF_CODES = [
-    "11", "12", "13", "14", "15", "16", "17",
-    "21", "22", "23", "24", "25", "26", "27", "28", "29",
-    "31", "32", "33", "35",
-    "41", "42", "43",
-    "50", "51", "52", "53",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "21",
+    "22",
+    "23",
+    "24",
+    "25",
+    "26",
+    "27",
+    "28",
+    "29",
+    "31",
+    "32",
+    "33",
+    "35",
+    "41",
+    "42",
+    "43",
+    "50",
+    "51",
+    "52",
+    "53",
 ]
 
 
@@ -95,9 +117,7 @@ def test_gold_detects_provenance_gap() -> None:
 
 def test_gold_raise_if_broken() -> None:
     rows = _gold_rows(2022, UF_CODES[:5])
-    result = _contract().check_gold(
-        rows, latest_reference_year=2022, provenance_row_count=5
-    )
+    result = _contract().check_gold(rows, latest_reference_year=2022, provenance_row_count=5)
     try:
         result.raise_if_broken()
     except ContractViolation as exc:
