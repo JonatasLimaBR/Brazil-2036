@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** CI_ASSURANCE_GATES
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 1 (Define)
 - **Entrada:** requisito direto — `VERIFY_SPEC_MVP_WALKING_SKELETON` achado #7 + AT11 PARTIAL; `SPEC-031`; `SHIPPED_2026-09-03 §7` (follow-ups de alta prioridade)
 - **Criado:** 2026-09-04
@@ -197,3 +197,4 @@ para sempre).
 | 2026-09-04 | 1.0 | Criação a partir do achado #7 do `/verify-spec`, `SPEC-031`, `SHIPPED §7`. Clarity 14/15. Status → Ready for Design. Branch `feature/ci-assurance-gates`. | /define (Claude Sonnet 5) |
 | 2026-09-04 | 1.1 | Fase 2 concluída. D1–D6 (D1→ADR-054); manifesto de 22 itens. Status → ✅ Complete (Designed). | /design (Claude Sonnet 5) |
 | 2026-09-04 | 1.2 | Build concluída. Verificação local verde; prova do CI pendente do PR. Status → ✅ Complete (Built). | /build (Claude Sonnet 5) |
+| 2026-09-04 | 1.3 | `/verify-spec` independente = OVERALL PASS. PR #1 merged em `main` (squash). Shipped e arquivado. | /ship (Claude Sonnet 5) |
