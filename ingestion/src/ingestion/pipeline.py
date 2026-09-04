@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime as dt
 import logging
 import tempfile
 import uuid
@@ -155,7 +156,8 @@ def run(
         dataset_gold=config.bq_dataset_gold,
         gold_table=config.gold_table,
         provenance_table=config.provenance_table,
-        reference_year=reference_year,
+        metric_id=config.metric_id,
+        reference_date=dt.date(reference_year, 12, 31),
         source_url=config.resource_url,
         silver_transform="sql/silver/debt_state.sql",
         silver_transform_version=run_id,

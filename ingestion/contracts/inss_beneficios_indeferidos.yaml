@@ -1,0 +1,75 @@
+dataset: inss_beneficios_indeferidos
+version: 1
+
+source:
+  catalog_url: "https://dados.gov.br/dados/conjuntos-dados/beneficios-indeferidos-plano-de-dados-abertos-jun-2023-a-jun-2025"
+  resource_url_pattern: "https://dadosabertos.inss.gov.br/api/3/action/package_show?id=beneficios-indeferidos-plano-de-dados-abertos-jun-2023-a-jun-2025"
+  organization: "INSS"
+  license: "cc-by"
+  update_frequency: "monthly"
+
+format:
+  type: xlsx
+  encoding: "utf-8"
+  note: >
+    Row 0 of the sheet is a title, row 1 is the header, data starts row 2 --
+    confirmed against a real file. Converted to semicolon-delimited CSV by the
+    connector before this contract sees it (BigQuery LOAD DATA has no XLSX
+    source format). No monetary field exists in this dataset -- it is a
+    denial-count metric (Gold aggregates via COUNT, not SUM).
+
+source_columns:
+  - competencia_indeferimento
+  - especie_codigo
+  - especie_nome
+  - motivo_indeferimento
+  - dt_nascimento
+  - sexo
+  - clientela
+  - forma_filiacao
+  - uf
+  - dt_indeferimento
+  - ramo_atividade
+  - aps_codigo
+  - aps_nome
+  - dt_der
+
+keys:
+  - state_ibge_code
+  - especie_codigo
+  - reference_date
+
+required_fields:
+  state_ibge_code:
+    type: STRING
+    nullable: false
+  especie_codigo:
+    type: STRING
+    nullable: false
+  reference_date:
+    type: DATE
+    nullable: false
+  value:
+    type: NUMERIC
+    nullable: false
+    min: 0
+  unit:
+    type: STRING
+    nullable: false
+    allowed:
+      - count
+
+privacy:
+  never_expose:
+    - dt_nascimento
+  reason: >
+    dt_nascimento is a birth date -- quasi-identifying when combined with
+    municipality and month. Bronze may hold it; Silver/Gold/API must not.
+
+quality_rules:
+  - name: non_negative_value
+    expr: "min(value) >= 0"
+  - name: provenance_coverage
+    expr: "count(gold) = count(provenance)"
+
+evolution_policy: additive_only

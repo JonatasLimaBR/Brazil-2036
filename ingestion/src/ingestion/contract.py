@@ -90,6 +90,35 @@ class DataContract:
 
         return ContractResult("gold", not violations, violations)
 
+    def check_gold_period(
+        self,
+        rows: Sequence[Mapping[str, Any]],
+        *,
+        key_fields: Sequence[str],
+        value_field: str,
+        provenance_row_count: int,
+    ) -> ContractResult:
+        # Unlike check_gold, this does not assert a fixed distinct-entity count:
+        # a multi-dimension grain (UF x especie[x status] x month) has no single
+        # expected cardinality per period the way "27 states" does for the debt
+        # dataset -- some months legitimately have fewer distinct combinations.
+        violations: list[str] = []
+
+        for key in (*key_fields, value_field):
+            if any(r.get(key) in (None, "") for r in rows):
+                violations.append(f"null values in required field {key!r}")
+
+        if any(_as_decimal(r.get(value_field)) < 0 for r in rows):
+            violations.append(f"negative {value_field} found")
+
+        if provenance_row_count != len(rows):
+            violations.append(
+                f"provenance coverage mismatch: {provenance_row_count} provenance rows "
+                f"for {len(rows)} metric rows"
+            )
+
+        return ContractResult("gold_period", not violations, violations)
+
 
 def _expected_entity_count(quality_rules: Sequence[Mapping[str, Any]]) -> int:
     for rule in quality_rules:

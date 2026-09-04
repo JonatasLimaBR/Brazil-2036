@@ -1,28 +1,28 @@
-uf,state_ibge_code,state_name
-RO,11,Rondônia
-AC,12,Acre
-AM,13,Amazonas
-RR,14,Roraima
-PA,15,Pará
-AP,16,Amapá
-TO,17,Tocantins
-MA,21,Maranhão
-PI,22,Piauí
-CE,23,Ceará
-RN,24,Rio Grande do Norte
-PB,25,Paraíba
-PE,26,Pernambuco
-AL,27,Alagoas
-SE,28,Sergipe
-BA,29,Bahia
-MG,31,Minas Gerais
-ES,32,Espírito Santo
-RJ,33,Rio de Janeiro
-SP,35,São Paulo
-PR,41,Paraná
-SC,42,Santa Catarina
-RS,43,Rio Grande do Sul
-MS,50,Mato Grosso do Sul
-MT,51,Mato Grosso
-GO,52,Goiás
-DF,53,Distrito Federal
+uf,state_ibge_code,state_name,state_name_normalized
+RO,11,Rondônia,RONDONIA
+AC,12,Acre,ACRE
+AM,13,Amazonas,AMAZONAS
+RR,14,Roraima,RORAIMA
+PA,15,Pará,PARA
+AP,16,Amapá,AMAPA
+TO,17,Tocantins,TOCANTINS
+MA,21,Maranhão,MARANHAO
+PI,22,Piauí,PIAUI
+CE,23,Ceará,CEARA
+RN,24,Rio Grande do Norte,RIO GRANDE DO NORTE
+PB,25,Paraíba,PARAIBA
+PE,26,Pernambuco,PERNAMBUCO
+AL,27,Alagoas,ALAGOAS
+SE,28,Sergipe,SERGIPE
+BA,29,Bahia,BAHIA
+MG,31,Minas Gerais,MINAS GERAIS
+ES,32,Espírito Santo,ESPIRITO SANTO
+RJ,33,Rio de Janeiro,RIO DE JANEIRO
+SP,35,São Paulo,SAO PAULO
+PR,41,Paraná,PARANA
+SC,42,Santa Catarina,SANTA CATARINA
+RS,43,Rio Grande do Sul,RIO GRANDE DO SUL
+MS,50,Mato Grosso do Sul,MATO GROSSO DO SUL
+MT,51,Mato Grosso,MATO GROSSO
+GO,52,Goiás,GOIAS
+DF,53,Distrito Federal,DISTRITO FEDERAL
