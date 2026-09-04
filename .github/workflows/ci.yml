@@ -155,6 +155,21 @@ jobs:
             bq rm -r -f -d "$ds" || true
           done
 
+  fork-note:
+    needs: changes
+    if: >-
+      github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name != github.repository
+      && (needs.changes.outputs.ingestion == 'true'
+          || needs.changes.outputs.specs == 'true'
+          || needs.changes.outputs.infra == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "::notice::integration and terraform gates were skipped: fork PRs get no GCP"
+          echo "::notice::credentials by design. A maintainer must run CI from a branch in"
+          echo "::notice::${{ github.repository }} before merge."
+
   spec-verify:
     needs: changes
     runs-on: ubuntu-latest
@@ -177,10 +192,16 @@ jobs:
           GITLEAKS_ENABLE_SUMMARY: "true"
 
   ci-gate:
-    needs: [lint-typecheck-unit, web-check, terraform, integration, spec-verify, secret-scan]
+    needs: [changes, lint-typecheck-unit, web-check, terraform, integration, spec-verify, secret-scan]
     if: always()
     runs-on: ubuntu-latest
     steps:
+      - name: changes must have run
+        run: |
+          test "${{ needs.changes.result }}" = "success" || {
+            echo "changes job did not succeed (${{ needs.changes.result }}); gates were not evaluated"
+            exit 1
+          }
       - name: fail if any gate failed
         run: |
           bad=0

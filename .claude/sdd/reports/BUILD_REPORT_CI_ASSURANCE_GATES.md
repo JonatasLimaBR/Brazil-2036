@@ -116,3 +116,4 @@ Delegação via Task tool: nenhuma (agentes casados não têm ferramenta de escr
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-04 | 1.0 | Build completo em `feature/ci-assurance-gates`. `ci.yml` guarda-chuva + `ci-gate`, `spec_verify.py` + `spec-checks/SPEC-033.yaml` + `gates.yaml`, teste de integração BQ real + fixture, connector `file://`, config env overrides, workflows de deploy enxugados. 7 Autonomous Decisions. Verificação local verde; prova do CI pendente do PR. | /build (Claude Sonnet 5) |
+| 2026-09-04 | 1.1 | PR #1: `ci.yml` **verde ao vivo** (integration 1m7s contra BQ real; web-check/terraform skipped; ci-gate verde). Fix `GITHUB_TOKEN` no gitleaks. Branch protection → `required = [ci-gate]`. `/verify-spec` independente = OVERALL PASS; achados #1 (`ci-gate` guarda `changes`) e #2 (`fork-note`) corrigidos; #3 (byte cap) residual aceito. | /build (Claude Sonnet 5) |
