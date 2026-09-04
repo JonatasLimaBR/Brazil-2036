@@ -102,24 +102,43 @@ def test_inss_emitidos_pipeline_against_bigquery(  # type: ignore[no-untyped-def
     )
 
     assert result.status == "ok"
-    assert result.provenance_rows == 3  # SP, RJ, DF each contribute >=1 row
+    assert result.bronze_rows == 5
+    # Grain is UF x especie x month, not just UF: the 5 fixture rows span 3
+    # states but 5 distinct (state, especie) pairs, so Gold -- and provenance,
+    # 1 row per Gold row -- has 5 rows, not 3.
+    assert result.provenance_rows == 5
 
     gold = f"`{project}.{datasets['gold']}.gold_inss_beneficios_emitidos`"
     prov = f"`{project}.{datasets['gold']}.metric_provenance`"
     registry_table = f"`{project}.{datasets['control']}.dataset_registry`"
+
+    gold_count = _scalar(
+        bq, f"SELECT COUNT(*) AS n FROM {gold} WHERE reference_date = DATE('2026-06-01')"
+    )
+    assert gold_count == 5
+
+    # Join provenance -> registry only (not provenance -> gold): Gold's grain
+    # includes especie, which provenance does not carry as its own column, so
+    # a gold-to-provenance join on (state, date, metric) alone would fan out
+    # for any state with more than one especie in the fixture.
     lineage = list(
         bq.query(
-            f"SELECT g.state_ibge_code, p.source, p.bronze_object, r.resource_url "
-            f"FROM {gold} g "
-            f"JOIN {prov} p ON p.state_ibge_code = g.state_ibge_code "
-            f"  AND p.reference_date = g.reference_date AND p.metric_id = g.metric_id "
+            f"SELECT p.source, p.bronze_object, r.resource_url "
+            f"FROM {prov} p "
             f"JOIN {registry_table} r ON r.dataset_id = p.catalog_dataset_id "
-            "WHERE g.reference_date = DATE('2026-06-01')"
+            "WHERE p.reference_date = DATE('2026-06-01') "
+            "AND p.metric_id = 'inss_beneficios_emitidos'"
         ).result()
     )
-    assert len(lineage) >= 3
+    assert len(lineage) == 5
     assert all(row["source"].startswith("file://") for row in lineage)
     assert all(row["bronze_object"].startswith("gs://") for row in lineage)
+    assert all(row["resource_url"] for row in lineage)
+
+
+def _scalar(bq, sql: str):  # type: ignore[no-untyped-def]
+    rows = list(bq.query(sql).result())
+    return rows[0]["n"] if rows else None
 
 
 def _base_config():  # type: ignore[no-untyped-def]
