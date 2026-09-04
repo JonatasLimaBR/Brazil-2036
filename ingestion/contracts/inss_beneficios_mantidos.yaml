@@ -1,0 +1,86 @@
+dataset: inss_beneficios_mantidos
+version: 1
+
+source:
+  catalog_url: "https://dados.gov.br/dados/conjuntos-dados/beneficios-mantidos-plano-de-dados-abertos-jun-2023-a-jun-2025"
+  resource_url_pattern: "https://dadosabertos.inss.gov.br/api/3/action/package_show?id=beneficios-mantidos-plano-de-dados-abertos-jun-2023-a-jun-2025"
+  organization: "INSS"
+  license: "cc-by"
+  update_frequency: "monthly"
+
+format:
+  type: csv
+  delimiter: ";"
+  decimal: "."
+  encoding: "utf-8"
+  wrapped_in: mixed
+  note: >
+    3 sub-files per month (Ativos/Suspensos/Cessados); some published zipped,
+    some as a plain CSV -- confirmed against real files, not assumed. The
+    header row is comma-delimited but every data row is semicolon-delimited;
+    the connector normalizes the header before this contract sees the file.
+
+source_columns:
+  - especie_beneficio
+  - cid10
+  - clientela
+  - sexo
+  - forma_filiacao
+  - motivo_cessacao_suspensao
+  - grupo_situacao
+  - municipio_titular
+  - uf
+  - vinculo_dependente
+  - dt_nascimento_titular
+  - dt_cessacao_beneficio
+  - dt_despacho_beneficio
+  - dt_inicio_beneficio
+  - ramo_atividade
+  - tipo_beneficio
+  - valor_renda_mensal
+
+keys:
+  - state_ibge_code
+  - status_manutencao
+  - reference_date
+
+required_fields:
+  state_ibge_code:
+    type: STRING
+    nullable: false
+  status_manutencao:
+    type: STRING
+    nullable: false
+    allowed:
+      - ATIVO
+      - SUSPENSO
+      - CESSADO
+  reference_date:
+    type: DATE
+    nullable: false
+  value:
+    type: NUMERIC
+    nullable: false
+    min: 0
+  unit:
+    type: STRING
+    nullable: false
+    allowed:
+      - BRL
+
+privacy:
+  never_expose:
+    - cid10
+    - dt_nascimento_titular
+  reason: >
+    cid10 is an ICD-10 diagnosis code and dt_nascimento_titular is a birth
+    date -- both quasi-identifying / health-sensitive when combined with
+    municipality and month. Bronze may hold them; Silver/Gold/API must not.
+
+quality_rules:
+  - name: non_negative_value
+    expr: "min(value) >= 0"
+  - name: provenance_coverage
+    expr: "count(gold) = count(provenance)"
+
+evolution_policy: additive_only

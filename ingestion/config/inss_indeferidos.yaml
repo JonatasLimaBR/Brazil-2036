@@ -1,0 +1,48 @@
+dataset_id: inss_beneficios_indeferidos
+br2036_domain: inss
+br2036_module: M03
+
+catalog_url: "https://dados.gov.br/dados/conjuntos-dados/beneficios-indeferidos-plano-de-dados-abertos-jun-2023-a-jun-2025"
+organization: "INSS"
+license: "cc-by"
+
+metric_id: inss_beneficios_indeferidos
+unit: count
+
+contract_path: contracts/inss_beneficios_indeferidos.yaml
+
+gcp_project: ""
+raw_bucket: ""
+raw_prefix: inss
+
+bq_dataset_control: br2036_control
+bq_dataset_bronze: br2036_bronze
+bq_dataset_silver: br2036_silver
+bq_dataset_gold: br2036_gold
+
+bronze_table: inss_beneficios_indeferidos_raw
+bronze_columns:
+  - competencia_indeferimento
+  - especie_codigo
+  - especie_nome
+  - motivo_indeferimento
+  - dt_nascimento
+  - sexo
+  - clientela
+  - forma_filiacao
+  - uf
+  - dt_indeferimento
+  - ramo_atividade
+  - aps_codigo
+  - aps_nome
+  - dt_der
+field_delimiter: ";"
+
+silver_model: inss_beneficios_indeferidos
+gold_model: gold_inss_beneficios_indeferidos
+# The connector converts the source XLSX to CSV before returning (BigQuery
+# LOAD DATA has no XLSX source format) -- see InssIndeferidosConnector.download.
+file_ext: csv
+
+ckan_base_url: "https://dadosabertos.inss.gov.br"
+ckan_package_id: "beneficios-indeferidos-plano-de-dados-abertos-jun-2023-a-jun-2025"

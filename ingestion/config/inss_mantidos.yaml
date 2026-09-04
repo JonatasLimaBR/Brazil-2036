@@ -1,0 +1,51 @@
+dataset_id: inss_beneficios_mantidos
+br2036_domain: inss
+br2036_module: M03
+
+catalog_url: "https://dados.gov.br/dados/conjuntos-dados/beneficios-mantidos-plano-de-dados-abertos-jun-2023-a-jun-2025"
+organization: "INSS"
+license: "cc-by"
+
+metric_id: inss_beneficios_mantidos
+unit: BRL
+
+contract_path: contracts/inss_beneficios_mantidos.yaml
+
+gcp_project: ""
+raw_bucket: ""
+raw_prefix: inss
+
+bq_dataset_control: br2036_control
+bq_dataset_bronze: br2036_bronze
+bq_dataset_silver: br2036_silver
+bq_dataset_gold: br2036_gold
+
+bronze_table: inss_beneficios_mantidos_raw
+bronze_columns:
+  - especie_beneficio
+  - cid10
+  - clientela
+  - sexo
+  - forma_filiacao
+  - motivo_cessacao_suspensao
+  - grupo_situacao
+  - municipio_titular
+  - uf
+  - vinculo_dependente
+  - dt_nascimento_titular
+  - dt_cessacao_beneficio
+  - dt_despacho_beneficio
+  - dt_inicio_beneficio
+  - ramo_atividade
+  - tipo_beneficio
+  - valor_renda_mensal
+field_delimiter: ";"
+
+silver_model: inss_beneficios_mantidos
+gold_model: gold_inss_beneficios_mantidos
+
+# 3 CkanResource per month (Ativos/Suspensos/Cessados) share this one package;
+# the backfill loop processes each resource independently -- status_manutencao
+# is read from the grupo_situacao column, not from which resource was fetched.
+ckan_base_url: "https://dadosabertos.inss.gov.br"
+ckan_package_id: "beneficios-mantidos-plano-de-dados-abertos-jun-2023-a-jun-2025"

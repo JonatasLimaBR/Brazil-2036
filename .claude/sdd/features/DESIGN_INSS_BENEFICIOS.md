@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** INSS_BENEFICIOS
-- **Status:** Ready for Build
+- **Status:** 🔶 PR1 Built, PR2 pendente
 - **Fase:** 2 (Design)
 - **Entrada:** `.claude/sdd/features/DEFINE_INSS_BENEFICIOS.md` (Clarity 14/15)
 - **Criado:** 2026-09-04
@@ -711,3 +711,4 @@ backfill real, medir tempo/custo, registrar no BUILD_REPORT** → PR2: API (30�
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-04 | 1.0 | Criação a partir de `DEFINE_INSS_BENEFICIOS.md`. Descoberta real (§0) revogou suposições do Brainstorm/DEFINE (volume, formato, dicionário, janela temporal, URL). D1–D8 (oito decisões inline). Manifesto 36 itens. Status → Ready for Build. | /design (Claude Sonnet 5) |
+| 2026-09-04 | 1.1 | PR1 construído (29 dos 36 itens). Build encontrou e corrigiu 1 risco crítico não antecipado no D3 (tabelas compartilhadas `dataset_registry`/`metric_provenance`) e 2 bugs de escopo em SQL (filtro de período ausente; DELETE sem escopo por `source_uri` para Mantidos). Ver `BUILD_REPORT_INSS_BENEFICIOS.md` §4. PR2 pendente. Status → 🔶 PR1 Built. | /build (Claude Sonnet 5) |

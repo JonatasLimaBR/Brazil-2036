@@ -37,10 +37,14 @@ def test_ensure_uf_ibge_uses_create_or_replace_with_structs() -> None:
     assert "CREATE OR REPLACE TABLE `p.br2036_control.uf_ibge`" in sql
     assert "FROM UNNEST([" in sql
     assert "STRUCT('RO' AS uf, '11' AS state_ibge_code" in sql
+    assert "'RONDONIA' AS state_name_normalized" in sql
+    assert "'SAO PAULO' AS state_name_normalized" in sql
     assert "INSERT" not in sql and "DELETE" not in sql
 
 
-def test_upsert_dataset_registry_uses_create_or_replace_no_dml() -> None:
+def test_upsert_dataset_registry_merges_scoped_by_dataset_id() -> None:
+    # MERGE, not CREATE OR REPLACE: the table is shared across every dataset this
+    # project ingests, so a full-table replace would erase every other dataset's row.
     client = FakeBigQuery()
     upsert_dataset_registry(
         client,
@@ -58,10 +62,14 @@ def test_upsert_dataset_registry_uses_create_or_replace_no_dml() -> None:
             "br2036_module": "M02",
         },
     )
-    assert len(client.queries) == 1
-    sql = client.queries[0]
-    assert "CREATE OR REPLACE TABLE `p.br2036_control.dataset_registry` AS SELECT" in sql
-    assert "'divida_consolidada_estados' AS dataset_id" in sql
-    assert "'ODbL' AS license" in sql
-    assert "TRUE AS active" in sql and "CURRENT_TIMESTAMP() AS updated_at" in sql
-    assert "DELETE" not in sql and "INSERT" not in sql and "MERGE" not in sql
+    assert len(client.queries) == 2
+    create_sql, merge_sql = client.queries
+    assert "CREATE TABLE IF NOT EXISTS `p.br2036_control.dataset_registry`" in create_sql
+    assert "CREATE OR REPLACE" not in create_sql
+    assert "MERGE `p.br2036_control.dataset_registry` T USING" in merge_sql
+    assert "'divida_consolidada_estados' AS dataset_id" in merge_sql
+    assert "'ODbL' AS license" in merge_sql
+    assert "ON T.dataset_id = S.dataset_id" in merge_sql
+    assert "WHEN MATCHED THEN UPDATE SET" in merge_sql
+    assert "WHEN NOT MATCHED THEN INSERT" in merge_sql
+    assert "CREATE OR REPLACE" not in merge_sql

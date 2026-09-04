@@ -1,0 +1,49 @@
+dataset_id: inss_beneficios_emitidos
+br2036_domain: inss
+br2036_module: M03
+
+catalog_url: "https://dados.gov.br/dados/conjuntos-dados/inss-beneficios-emitidos"
+organization: "INSS"
+license: "cc-by"
+
+metric_id: inss_beneficios_emitidos
+unit: BRL
+
+contract_path: contracts/inss_beneficios_emitidos.yaml
+
+gcp_project: ""
+raw_bucket: ""
+raw_prefix: inss
+
+bq_dataset_control: br2036_control
+bq_dataset_bronze: br2036_bronze
+bq_dataset_silver: br2036_silver
+bq_dataset_gold: br2036_gold
+
+bronze_table: inss_beneficios_emitidos_raw
+bronze_columns:
+  - despacho
+  - sexo_recebedor
+  - clientela
+  - tipo_beneficio
+  - uf
+  - meio_pagamento
+  - banco
+  - municipio
+  - municipio_resid
+  - vl_liquido
+  - ramo_atividade
+  - Dt_Inicio_Validade
+  - especie
+  - especie_codigo_nome
+field_delimiter: ";"
+
+silver_model: inss_beneficios_emitidos
+gold_model: gold_inss_beneficios_emitidos
+# The connector already extracts the CSV out of the source ZIP before
+# returning (see InssEmitidosConnector.download) -- what actually lands in
+# the local temp file and in RAW is CSV content, so file_ext is csv, not zip.
+file_ext: csv
+
+ckan_base_url: "https://dadosabertos.inss.gov.br"
+ckan_package_id: "beneficios-emitidos-plano-de-dados-abertos-jun-2023-a-jun-2025"

@@ -1,0 +1,67 @@
+dataset: inss_beneficios_emitidos_fixture
+version: 1
+
+source:
+  catalog_url: ""
+  resource_url: "file://tests/integration/fixtures/inss_emitidos_sample.csv"
+  organization: "INSS"
+  license: "cc-by"
+  update_frequency: "monthly"
+
+format:
+  type: csv
+  delimiter: ";"
+  decimal: ","
+  encoding: "utf-8"
+
+source_columns:
+  - despacho
+  - sexo_recebedor
+  - clientela
+  - tipo_beneficio
+  - uf
+  - meio_pagamento
+  - banco
+  - municipio
+  - municipio_resid
+  - vl_liquido
+  - ramo_atividade
+  - Dt_Inicio_Validade
+  - especie
+  - especie_codigo_nome
+
+keys:
+  - state_ibge_code
+  - especie_codigo
+  - reference_date
+
+required_fields:
+  state_ibge_code:
+    type: STRING
+    nullable: false
+  especie_codigo:
+    type: STRING
+    nullable: false
+  reference_date:
+    type: DATE
+    nullable: false
+  value:
+    type: NUMERIC
+    nullable: false
+    min: 0
+  unit:
+    type: STRING
+    nullable: false
+    allowed:
+      - BRL
+
+quality_rules:
+  - name: completeness_fixture_states
+    description: "3 states in the fixture (SP, RJ, DF)"
+    expr: "count(distinct state_ibge_code) = 3"
+  - name: non_negative_value
+    expr: "min(value) >= 0"
+  - name: provenance_coverage
+    expr: "count(gold) = count(provenance)"
+
+evolution_policy: additive_only
