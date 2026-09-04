@@ -26,6 +26,22 @@ numbers, UTF-8, annual). Canonical metric: `divida_consolidada` (gross, PAF — 
 `raw.py`, `bronze.py`, `registry.py`, `provenance.py`, `pipeline.py`,
 `infra/terraform/**`, `.github/workflows/data.yml`.
 
+## Integration test (real BigQuery)
+
+`tests/integration/test_pipeline_bigquery.py` runs the whole pipeline against a real project
+using a committed fixture (`tests/integration/fixtures/divida_sample.csv`, read via
+`file://`). It creates ephemeral `citest_<id>_{control,bronze,silver,gold}` datasets (1h TTL)
+and drops them on teardown. Skipped unless `GCP_PROJECT` is set.
+
+```bash
+gcloud auth application-default login
+GCP_PROJECT=brasil2036-dev BQ_LOCATION=southamerica-east1 \
+  uv run --extra dev python -m pytest -q -m integration
+```
+
+In CI this is the `integration` job of `.github/workflows/ci.yml` (WIF auth, same-repo PRs and
+`main` only). The unit run excludes it by default (`addopts = -m "not integration"`).
+
 ## Develop
 
 ```bash

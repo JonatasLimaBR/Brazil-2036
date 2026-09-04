@@ -1,0 +1,44 @@
+# SPEC-031 blocking CI gates -> where each is realized.
+# Machine-readable so scripts/spec_verify.py can assert none is silently missing.
+# Every gate must be either status: active (with a job) or status: n/a (with a reason).
+
+gates:
+  format:
+    job: "ci / lint-typecheck-unit"
+    status: active
+    tool: "ruff format --check"
+  lint:
+    job: "ci / lint-typecheck-unit"
+    status: active
+    tool: "ruff check"
+  typecheck:
+    job: "ci / lint-typecheck-unit"
+    status: active
+    tool: "mypy --strict; tsc --noEmit"
+  unit:
+    job: "ci / lint-typecheck-unit"
+    status: active
+    tool: "pytest -m 'not integration'"
+  integration:
+    job: "ci / integration"
+    status: active
+    tool: "pytest -m integration against real BigQuery citest_* datasets"
+  contracts:
+    job: "ci / integration"
+    status: active
+    tool: "ingestion.contract checks run inside the integration pipeline"
+  security:
+    job: "ci / secret-scan"
+    status: active
+    tool: "gitleaks"
+  terraform:
+    job: "ci / terraform"
+    status: active
+    tool: "terraform fmt -check; terraform validate; terraform plan (WIF, read-only)"
+  spec-verify:
+    job: "ci / spec-verify"
+    status: active
+    tool: "scripts/spec_verify.py (mechanical floor; human /verify-spec still required before /ship)"
+  agent-eval:
+    status: n/a
+    reason: "no agent behavior in scope yet; ADR-036 applies once an agent exists"

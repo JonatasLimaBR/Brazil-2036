@@ -1,12 +1,9 @@
 name: data
 
+# Merge gates live in ci.yml (ADR-054). This workflow only deploys, post-merge.
 on:
   push:
     branches: [main]
-    paths:
-      - "ingestion/**"
-      - ".github/workflows/data.yml"
-  pull_request:
     paths:
       - "ingestion/**"
       - ".github/workflows/data.yml"
@@ -21,21 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  data-checks:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ingestion
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      - run: uv sync --extra dev
-      - run: uv run ruff check .
-      - run: uv run mypy
-      - run: uv run python -m pytest -q
-
   deploy-and-run:
-    needs: data-checks
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:

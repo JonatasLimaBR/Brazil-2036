@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** CI_ASSURANCE_GATES
-- **Status:** Ready for Build
+- **Status:** ✅ Complete (Built)
 - **Fase:** 2 (Design)
 - **Entrada:** `.claude/sdd/features/DEFINE_CI_ASSURANCE_GATES.md` (Clarity 14/15)
 - **Criado:** 2026-09-04
@@ -617,3 +617,4 @@ config/connector + testes (6–8) → fixtures + teste de integração (9–11) 
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-04 | 1.0 | Criação a partir de `DEFINE_CI_ASSURANCE_GATES.md`. D1–D6 (D1→ADR-054); manifesto 22 itens; OQ1–OQ7 resolvidas. Status → Ready for Build. | /design (Claude Sonnet 5) |
+| 2026-09-04 | 1.1 | Build concluída (24 itens; 7 Autonomous Decisions no BUILD_REPORT). Status → ✅ Complete (Built). | /build (Claude Sonnet 5) |

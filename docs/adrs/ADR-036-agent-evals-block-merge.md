@@ -3,6 +3,12 @@
 ## Status
 Accepted
 
+## Nota (2026-09-04)
+Enquanto não houver comportamento de agente em produção, o gate `agent-eval` é declarado
+`status: n/a` (com motivo) em `.github/ci/gates.yaml`, e `scripts/spec_verify.py` verifica que
+essa declaração existe — a ausência do gate é explícita, não silenciosa. Quando um agente entrar,
+mudar para `status: active` com um job real (ADR-054 / SPEC-031).
+
 ## Contexto
 Esta decisão é parte do baseline arquitetural do BRASIL 2036 e deve ser lida com o `CONTEXTO.md`.
 

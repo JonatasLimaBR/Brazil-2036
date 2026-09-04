@@ -1,0 +1,24 @@
+[project]
+name = "br2036-scripts"
+version = "0.1.0"
+description = "Repo-level CI helper scripts (spec-verify, etc.)"
+requires-python = ">=3.12"
+dependencies = ["pyyaml>=6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "ruff>=0.6", "mypy>=1.11", "types-PyYAML"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["spec_verify.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

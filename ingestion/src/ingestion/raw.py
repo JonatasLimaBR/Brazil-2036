@@ -51,9 +51,7 @@ def write_raw(
     blob = bucket.blob(object_name)
     created = not blob.exists()
     if created:
-        blob.upload_from_string(
-            data, content_type="text/csv", if_generation_match=0
-        )
+        blob.upload_from_string(data, content_type="text/csv", if_generation_match=0)
 
     manifest = {
         "source_uri": source_uri,

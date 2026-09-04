@@ -65,7 +65,5 @@ def source_columns(
         f"WHERE table_name = '{table}' ORDER BY ordinal_position",
     )
     return [
-        r["column_name"]
-        for r in rows
-        if not str(r["column_name"]).startswith(_TECHNICAL_PREFIX)
+        r["column_name"] for r in rows if not str(r["column_name"]).startswith(_TECHNICAL_PREFIX)
     ]

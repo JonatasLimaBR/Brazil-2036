@@ -1,12 +1,9 @@
 name: infra
 
+# fmt/validate/plan run in ci.yml (ADR-054). This workflow only applies, post-merge.
 on:
   push:
     branches: [main]
-    paths:
-      - "infra/terraform/**"
-      - ".github/workflows/infra.yml"
-  pull_request:
     paths:
       - "infra/terraform/**"
       - ".github/workflows/infra.yml"
@@ -15,7 +12,6 @@ on:
 permissions:
   contents: read
   id-token: write
-  pull-requests: write
 
 concurrency:
   group: infra-${{ github.ref }}

@@ -125,9 +125,7 @@ def run(
     placeholders = config.placeholders()
     run_sql(bq_client, render_file(sql_dir / "silver" / "debt_state.sql", placeholders))
 
-    silver_fqtn = (
-        f"`{config.gcp_project}.{config.bq_dataset_silver}.{config.silver_table}`"
-    )
+    silver_fqtn = f"`{config.gcp_project}.{config.bq_dataset_silver}.{config.silver_table}`"
     silver_count = scalar(bq_client, f"SELECT COUNT(*) FROM {silver_fqtn}")
     if int(silver_count or 0) != load.rows_loaded:
         raise PipelineError(
@@ -141,9 +139,7 @@ def run(
     )
 
     gold_fqtn = f"`{config.gcp_project}.{config.bq_dataset_gold}.{config.gold_table}`"
-    reference_year = int(
-        scalar(bq_client, f"SELECT MAX(reference_year) FROM {gold_fqtn}") or 0
-    )
+    reference_year = int(scalar(bq_client, f"SELECT MAX(reference_year) FROM {gold_fqtn}") or 0)
     result.reference_year = reference_year
 
     gold_rows = run_sql(

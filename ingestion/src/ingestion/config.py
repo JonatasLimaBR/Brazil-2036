@@ -69,11 +69,14 @@ def load_config(path: str | Path | None = None) -> Config:
     if not uf_ibge_path.exists():
         uf_ibge_path = (_REPO_INGESTION_ROOT / raw["uf_ibge_path"]).resolve()
 
+    def _env(name: str, default: str) -> str:
+        return os.environ.get(name, default)
+
     return Config(
         dataset_id=raw["dataset_id"],
         br2036_domain=raw["br2036_domain"],
         br2036_module=raw["br2036_module"],
-        resource_url=raw["resource_url"],
+        resource_url=_env("RESOURCE_URL", raw["resource_url"]),
         resource_format=raw["resource_format"],
         catalog_url=raw.get("catalog_url", ""),
         metric_id=raw["metric_id"],
@@ -81,13 +84,13 @@ def load_config(path: str | Path | None = None) -> Config:
         data_class=raw["data_class"],
         contract_path=contract_path,
         uf_ibge_path=uf_ibge_path,
-        gcp_project=os.environ.get("GCP_PROJECT", raw.get("gcp_project", "")),
-        raw_bucket=os.environ.get("RAW_BUCKET", raw.get("raw_bucket", "")),
-        raw_prefix=raw["raw_prefix"],
-        bq_dataset_control=raw["bq_dataset_control"],
-        bq_dataset_bronze=raw["bq_dataset_bronze"],
-        bq_dataset_silver=raw["bq_dataset_silver"],
-        bq_dataset_gold=raw["bq_dataset_gold"],
+        gcp_project=_env("GCP_PROJECT", raw.get("gcp_project", "")),
+        raw_bucket=_env("RAW_BUCKET", raw.get("raw_bucket", "")),
+        raw_prefix=_env("RAW_PREFIX", raw["raw_prefix"]),
+        bq_dataset_control=_env("BQ_DATASET_CONTROL", raw["bq_dataset_control"]),
+        bq_dataset_bronze=_env("BQ_DATASET_BRONZE", raw["bq_dataset_bronze"]),
+        bq_dataset_silver=_env("BQ_DATASET_SILVER", raw["bq_dataset_silver"]),
+        bq_dataset_gold=_env("BQ_DATASET_GOLD", raw["bq_dataset_gold"]),
         bronze_table=raw["bronze_table"],
         silver_table=raw["silver_table"],
         gold_table=raw["gold_table"],

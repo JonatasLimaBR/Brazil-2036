@@ -49,9 +49,7 @@ class BigQueryRepo:
             provenance=summary,
         )
 
-    def provenance(
-        self, metric_id: str, state_ibge_code: str
-    ) -> ProvenanceResponse | None:
+    def provenance(self, metric_id: str, state_ibge_code: str) -> ProvenanceResponse | None:
         prov = self._config.provenance_fqtn
         rows = self._run_query(
             "SELECT metric_id, state_ibge_code, reference_year, "

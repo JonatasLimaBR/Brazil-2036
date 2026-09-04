@@ -24,9 +24,7 @@ class FakeBigQuery:
         self.queries.append(query)
         return _FakeQueryJob(self._responder(query))
 
-    def insert_rows_json(
-        self, table: str, rows: Sequence[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
+    def insert_rows_json(self, table: str, rows: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
         self.inserted.append((table, list(rows)))
         return []
 
@@ -35,9 +33,31 @@ class FakeBigQuery:
 
 
 UF_CODES = [
-    "11", "12", "13", "14", "15", "16", "17",
-    "21", "22", "23", "24", "25", "26", "27", "28", "29",
-    "31", "32", "33", "35",
-    "41", "42", "43",
-    "50", "51", "52", "53",
+    "11",
+    "12",
+    "13",
+    "14",
+    "15",
+    "16",
+    "17",
+    "21",
+    "22",
+    "23",
+    "24",
+    "25",
+    "26",
+    "27",
+    "28",
+    "29",
+    "31",
+    "32",
+    "33",
+    "35",
+    "41",
+    "42",
+    "43",
+    "50",
+    "51",
+    "52",
+    "53",
 ]

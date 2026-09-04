@@ -1,0 +1,197 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      ingestion: ${{ steps.f.outputs.ingestion }}
+      api: ${{ steps.f.outputs.api }}
+      web: ${{ steps.f.outputs.web }}
+      infra: ${{ steps.f.outputs.infra }}
+      specs: ${{ steps.f.outputs.specs }}
+      scripts: ${{ steps.f.outputs.scripts }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: f
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            ingestion: ['ingestion/**']
+            api: ['api/**']
+            web: ['web/**', 'api/openapi/openapi.json']
+            infra: ['infra/terraform/**']
+            specs: ['docs/specs/**', 'spec-checks/**', '.github/ci/gates.yaml']
+            scripts: ['scripts/**']
+
+  lint-typecheck-unit:
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: ingestion
+        working-directory: ingestion
+        run: |
+          uv sync --extra dev
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run mypy
+          uv run python -m pytest -q
+      - name: api
+        working-directory: api
+        run: |
+          uv sync --extra dev
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run mypy
+          uv run python -m pytest -q
+      - name: scripts
+        working-directory: scripts
+        run: |
+          uv sync --extra dev
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run mypy
+          uv run python -m pytest -q
+      - name: openapi is up to date
+        working-directory: api
+        run: |
+          uv run python scripts/export_openapi.py
+          git diff --exit-code -- openapi/openapi.json
+
+  web-check:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - working-directory: web
+        run: |
+          npm ci
+          npm run gen:client
+          git diff --exit-code -- src/api-client/schema.d.ts
+          npm run typecheck
+          npm run build
+
+  terraform:
+    needs: changes
+    if: >-
+      needs.changes.outputs.infra == 'true'
+      && (github.event_name != 'pull_request'
+          || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend-config="bucket=${{ vars.GCP_TF_STATE_BUCKET }}"
+      - run: terraform validate
+      - run: |
+          terraform plan -no-color -input=false \
+            -var="project_id=${{ vars.GCP_PROJECT }}" \
+            -var="region=${{ vars.GCP_REGION }}" \
+            -var="github_repo=${{ github.repository }}"
+
+  integration:
+    needs: changes
+    if: >-
+      (needs.changes.outputs.ingestion == 'true' || needs.changes.outputs.specs == 'true')
+      && (github.event_name != 'pull_request'
+          || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: integration pipeline against real BigQuery
+        working-directory: ingestion
+        env:
+          GCP_PROJECT: ${{ vars.GCP_PROJECT }}
+          RAW_BUCKET: ${{ vars.GCP_PROJECT }}-raw
+          BQ_LOCATION: ${{ vars.GCP_REGION }}
+        run: uv run --extra dev python -m pytest -q -m integration
+      - name: sweep stray citest datasets (safety net)
+        if: always()
+        run: |
+          gcloud config set project "${{ vars.GCP_PROJECT }}" -q
+          for ds in $(bq ls --max_results=1000 --format=json \
+              | python -c "import json,sys;print('\n'.join(d['datasetReference']['datasetId'] for d in json.load(sys.stdin) if d['datasetReference']['datasetId'].startswith('citest_')))" 2>/dev/null || true); do
+            bq rm -r -f -d "$ds" || true
+          done
+
+  spec-verify:
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: spec-verify SPEC-033 (mechanical floor)
+        run: uv run --with pyyaml python scripts/spec_verify.py spec-checks/SPEC-033.yaml
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+          GITLEAKS_ENABLE_SUMMARY: "true"
+
+  ci-gate:
+    needs: [lint-typecheck-unit, web-check, terraform, integration, spec-verify, secret-scan]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: fail if any gate failed
+        run: |
+          bad=0
+          for r in \
+            "${{ needs.lint-typecheck-unit.result }}" \
+            "${{ needs.web-check.result }}" \
+            "${{ needs.terraform.result }}" \
+            "${{ needs.integration.result }}" \
+            "${{ needs.spec-verify.result }}" \
+            "${{ needs.secret-scan.result }}"; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "gate result: $r"; bad=1 ;;
+            esac
+          done
+          exit $bad

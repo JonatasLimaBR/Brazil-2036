@@ -1,5 +1,6 @@
 name: api-web
 
+# Merge gates live in ci.yml (ADR-054). This workflow only deploys, post-merge.
 on:
   push:
     branches: [main]
@@ -7,11 +8,6 @@ on:
       - "api/**"
       - "web/**"
       - "infra/terraform/cloud_run_services.tf"
-      - ".github/workflows/api-web.yml"
-  pull_request:
-    paths:
-      - "api/**"
-      - "web/**"
       - ".github/workflows/api-web.yml"
   workflow_dispatch:
 
@@ -24,40 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  api-web-checks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: api lint / types / tests
-        working-directory: api
-        run: |
-          uv sync --extra dev
-          uv run ruff check .
-          uv run mypy
-          uv run python -m pytest -q
-
-      - name: openapi is up to date
-        working-directory: api
-        run: |
-          uv run python scripts/export_openapi.py
-          git diff --exit-code -- openapi/openapi.json
-
-      - name: web client / typecheck / build
-        working-directory: web
-        run: |
-          npm ci
-          npm run gen:client
-          git diff --exit-code -- src/api-client/schema.d.ts
-          npm run typecheck
-          npm run build
-
   deploy:
-    needs: api-web-checks
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
