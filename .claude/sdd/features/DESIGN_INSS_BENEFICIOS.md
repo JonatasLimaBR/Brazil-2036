@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** INSS_BENEFICIOS
-- **Status:** 🔶 PR1+PR2 Built, backfill real pendente
+- **Status:** ✅ Complete (Built)
 - **Fase:** 2 (Design)
 - **Entrada:** `.claude/sdd/features/DEFINE_INSS_BENEFICIOS.md` (Clarity 14/15)
 - **Criado:** 2026-09-04
@@ -713,3 +713,4 @@ backfill real, medir tempo/custo, registrar no BUILD_REPORT** → PR2: API (30�
 | 2026-09-04 | 1.0 | Criação a partir de `DEFINE_INSS_BENEFICIOS.md`. Descoberta real (§0) revogou suposições do Brainstorm/DEFINE (volume, formato, dicionário, janela temporal, URL). D1–D8 (oito decisões inline). Manifesto 36 itens. Status → Ready for Build. | /design (Claude Sonnet 5) |
 | 2026-09-04 | 1.1 | PR1 construído (29 dos 36 itens). Build encontrou e corrigiu 1 risco crítico não antecipado no D3 (tabelas compartilhadas `dataset_registry`/`metric_provenance`) e 2 bugs de escopo em SQL (filtro de período ausente; DELETE sem escopo por `source_uri` para Mantidos). Ver `BUILD_REPORT_INSS_BENEFICIOS.md` §4. PR2 pendente. Status → 🔶 PR1 Built. | /build (Claude Sonnet 5) |
 | 2026-09-04 | 1.2 | PR1 mergeado, provado ao vivo contra BigQuery real. PR2 construído: R10/OQ1/OQ2 resolvidas de forma mais simples que o esboço original (agregado nacional, não grão UF×espécie completo — YAGNI, achado #10 do BUILD_REPORT). Só o backfill real falta. Status → 🔶 PR1+PR2 Built. | /build (Claude Sonnet 5) |
+| 2026-09-05 | 1.3 | Backfill real revelou que o schema do Emitidos muda com frequência real (4+ variações em <3 anos) — invalida a suposição de D2/D6 de que o padrão de header fixo bastaria para todo o histórico. Indeferidos 37/38 meses e Emitidos 1 mês (jun/2026) carregados e verificados; decisão explícita do usuário fecha o escopo do backfill aqui (Mantidos CI-proven only). Parser adaptativo por nome de coluna vira follow-up rastreado, não um D9. Status → ✅ Complete (Built). | /build (Claude Sonnet 5) |

@@ -7,8 +7,8 @@
 - **Entrada:** `.claude/sdd/features/DESIGN_INSS_BENEFICIOS.md` (v1.0)
 - **Branch:** PR1 `feature/inss-beneficios` (merged) · PR2 `feature/inss-beneficios-pr2` (merged)
 - **Data:** 2026-09-04 a 2026-09-05
-- **Status da build:** 🔶 **PR1+PR2 completos e mergeados. Backfill real: Indeferidos completo (37/38 meses); Emitidos e Mantidos ainda não iniciados.**
-- **Próximo passo:** backfill real de Emitidos e Mantidos (medir tempo/custo, começando por `--limit` pequeno) → `/verify-spec` → `/ship`.
+- **Status da build:** ✅ **PR1+PR2+backfill completos. Escopo do backfill fechado por decisão explícita do usuário (§4c) — mecanismo provado ao vivo em 2 dos 3 datasets, histórico real parcial aceito como suficiente.**
+- **Próximo passo:** `/verify-spec` → `/ship`.
 
 > Assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
 
@@ -159,23 +159,60 @@ Executado contra `brasil2036-dev` real, com confirmação explícita do usuário
 
 ---
 
-## 5. Blockers / trabalho restante
+## 4c. Backfill real — Emitidos (2026-09-05) e decisão de fechar o escopo
 
-- **Backfill real de Emitidos e Mantidos ainda não executado** — Indeferidos (o menor dos 3,
-  ~2,5 GB no total) está completo e verificado; Emitidos (~30 GB, arquivos de até 7,4 GB/mês) e
-  Mantidos (~60–90 GB, 3 sub-arquivos/mês) são ordens de grandeza maiores. Dado o ritmo observado em
-  Indeferidos (~2,5–3 min por arquivo de 67 MB), arquivos de GB inteiros devem levar
-  significativamente mais tempo por mês — a medir com `--limit 1` antes de comprometer a execução
-  completa, mesma disciplina que funcionou para Indeferidos.
-- **Até Emitidos/Mantidos rodarem, 2 dos 3 endpoints `/v1/metrics/{metric_id}/national` continuam
-  devolvendo 404 em produção** (`inss_beneficios_emitidos` e `inss_beneficios_mantidos`); o de
-  Indeferidos já responde com dado real. O módulo M03 mostra 1 número real + 2 "Indisponível" até lá.
+Tentativa de backfill real de Emitidos revelou um achado maior que uma simples inconsistência
+histórica: **o schema real do dataset mudou pelo menos 4 vezes entre jun/2023 e jul/2026**, e não
+é só "formato antigo vs. formato novo" — mudou entre **maio e julho de 2026**, dois meses
+recentes e consecutivos.
+
+| Período (aprox., confirmado ao vivo) | Formato |
+|---|---|
+| jun/2023 – ago/2025 | `Espécie` primeiro, 13 colunas, valores com padding de espaços (largura fixa), cp1252 |
+| set/2025 – jan/2026 | `Despacho` primeiro, 14 colunas, ainda com padding, `Espécie` duplicado |
+| maio/2026 | formato "limpo" (minúsculo, snake_case) — o que o conector já sabia ler (fixture do CI) |
+| julho/2026 | **outro formato ainda**: delimitador vírgula (não `;`), nomes de coluna diferentes (`sexo` não `sexo_recebedor`, `credito` não `vl_liquido`) |
+
+### Ação tomada
+1. `run_backfill()` ganhou `newest_first: bool` (PR #10) — processa do mês mais recente para o
+   mais antigo, para que `--limit` gaste banda em meses prováveis de bater com o schema suportado
+   em vez de arquivos históricos multi-GB garantidamente incompatíveis.
+2. Rodado `--newest-first --limit 10` real contra `brasil2036-dev`: **julho/2026 falhou**
+   (formato novo, não suportado); **junho/2026 carregou completo e verificado** antes de a
+   execução ser interrompida deliberadamente (ver decisão abaixo).
+3. **Resultado real confirmado**: 1.216 linhas Gold, **R$ 79.361.507.115,86** pagos em
+   benefícios naquele mês (número real, ordem de grandeza plausível para a folha nacional do
+   INSS), provenance 100% (1.216 linhas), dado da dívida confirmadamente intacto (27 linhas).
+
+### Decisão (confirmada explicitamente com o usuário)
+Dado que o schema muda com frequência real demais para um `EXPECTED_HEADER` fixo por dataset
+continuar sendo uma estratégia sustentável sem um parser adaptativo (detecção de coluna por nome,
+não por posição/header exato — escopo de engenharia novo, não um ajuste), o usuário escolheu:
+**aceitar o mecanismo provado ao vivo em 2 dos 3 datasets (Indeferidos 37/38 meses reais,
+Emitidos 1 mês real) e fechar o escopo do backfill aqui.** Mantidos não teve backfill real
+executado — seu mecanismo continua provado só via CI (fixture pequena, `SP;especie;mês` sintético).
+
+Isso é consistente com a filosofia de "walking skeleton" do projeto: provar a cadeia ponta a
+ponta com dado real, não exigir cobertura histórica exaustiva antes de fechar o ciclo.
+
+---
+
+## 5. Blockers / trabalho restante (após decisão de fechar o escopo do backfill)
+
+- **Parser adaptativo para Emitidos/Mantidos** — necessário para qualquer backfill histórico
+  futuro desses 2 datasets; precisa detectar colunas por nome (não por header exato) e tolerar
+  delimitador vírgula/ponto-e-vírgula. Escopo de engenharia próprio, não um ajuste pontual.
+- **Mantidos sem dado real carregado** — mecanismo provado só via CI; o endpoint
+  `/v1/metrics/inss_beneficios_mantidos/national` devolve 404 em produção até um backfill real
+  rodar (com o parser adaptativo acima, dado o risco confirmado de instabilidade de schema no
+  mesmo pipeline/época do governo).
+- **Emitidos com só 1 mês real carregado** (jun/2026) — suficiente como prova do mecanismo, mas
+  a maior parte da história (jun/2023–jul/2026, ~35 dos 37 meses) não está em Gold. O endpoint
+  responde com dado real só para o mês mais recente carregado.
 - **Gate `integration` cobre só Emitidos** (1 dos 3 datasets, por decisão do DESIGN §6) — a fixture
-  do CI continua sendo o único teste automatizado ponta a ponta para Emitidos; o backfill real de
-  Emitidos ainda não rodou fora do CI.
+  do CI segue sendo o teste automatizado ponta a ponta para Emitidos.
 - **Convergência de Mantidos (3 recursos/mês) validada só por raciocínio + teste unitário de
-  Bronze** (`test_load_partition_scopes_by_source_uri_not_just_month`) — ainda não por uma execução
-  real de backfill processando os 3 sub-arquivos de um mês em sequência.
+  Bronze** (`test_load_partition_scopes_by_source_uri_not_just_month`) — não por execução real.
 - **e2e do web (`npm run e2e`) não executado nesta sessão** — precisa de `preview` + API viva;
   roda no `api-web.yml` pós-deploy, mesmo padrão do card da dívida.
 - **Drill-down por UF/espécie na API não existe** — decisão deliberada (achado #10, YAGNI); só o
@@ -189,19 +226,20 @@ Executado contra `brasil2036-dev` real, com confirmação explícita do usuário
 
 | Arquivo | Status | Próximo |
 |---|---|---|
-| `DEFINE_INSS_BENEFICIOS.md` | 🔶 PR1+PR2 Built (não `✅ Complete (Built)` — backfill real pendente) | backfill real, depois `/verify-spec` + `/ship` |
-| `DESIGN_INSS_BENEFICIOS.md` | 🔶 PR1+PR2 Built (idem) | idem |
+| `DEFINE_INSS_BENEFICIOS.md` | ✅ Complete (Built) — escopo fechado por decisão explícita do usuário | `/verify-spec` → `/ship` |
+| `DESIGN_INSS_BENEFICIOS.md` | ✅ Complete (Built) (idem) | idem |
 
-Não avancei para `✅ Complete (Built)` porque isso sinalizaria prontidão para `/ship`, o que seria
-impreciso com o backfill real pendente (os 3 endpoints da API ainda devolvem 404 em produção sem
-ele) — mesmo padrão de disciplina de status do `MVP_WALKING_SKELETON` (2 PRs antes do ship).
+Avanço para `✅ Complete (Built)` porque o usuário confirmou explicitamente (§4c) que o mecanismo
+provado ao vivo em 2 dos 3 datasets — com achados reais documentados, não fabricados — é
+suficiente para fechar este ciclo. O histórico completo de Emitidos/Mantidos e o parser
+adaptativo ficam como follow-ups rastreados (§5), não como bloqueio ao `/ship`.
 
 ---
 
-## 7. Quality gate (PR1 + PR2 — falta só o backfill real)
+## 7. Quality gate (PR1 + PR2 + backfill — escopo fechado)
 
 - [x] Todos os itens do manifesto criados/modificados (38 de 36 — 2 a mais não previstos: `Config.metric_tables`, achado #12)
-- [x] `ruff` + `mypy --strict` + `pytest` verdes em `ingestion/` (64 testes) e `api/` (15 testes)
+- [x] `ruff` + `mypy --strict` + `pytest` verdes em `ingestion/` (71 testes) e `api/` (15 testes)
 - [x] `web/` typecheck + build verdes, sem valor hard-coded
 - [x] Sem TODO / sem segredo
 - [x] Atribuição de agente (§1/§1b) + Autonomous Decisions (§4) — incluindo 1 achado crítico corrigido
@@ -209,8 +247,10 @@ ele) — mesmo padrão de disciplina de status do `MVP_WALKING_SKELETON` (2 PRs 
 - [x] `terraform fmt` limpo
 - [x] Gate `integration` provado contra BigQuery real (PR #4, 2 execuções verdes)
 - [x] Rota da dívida comprovadamente não regride (`test_debt_route_unaffected_by_national_route`)
+- [x] Backfill real executado e medido — Indeferidos 37/38 meses reais; Emitidos 1 mês real
+      (jun/2026); Mantidos sem dado real (CI-proven only) — **escopo fechado por decisão explícita
+      do usuário (§4c)**, não um bloqueio pendente
 - [ ] `web/` e2e — pendente de deploy real (roda em `api-web.yml`)
-- [ ] Backfill real executado e medido — **único bloqueador restante para `/ship`**
 - [x] BUILD_REPORT gerado
 
 ---
@@ -222,3 +262,4 @@ ele) — mesmo padrão de disciplina de status do `MVP_WALKING_SKELETON` (2 PRs 
 | 2026-09-04 | 1.0 | PR1 (espinha de dados) completo em `feature/inss-beneficios`: 3 conectores com schema real confirmado, correção crítica de `registry.py`/`provenance.py` (tabelas compartilhadas), `pipeline_incremental.py` novo, `backfill.py` resumível, 3 contratos + 6 SQL + 3 configs, Terraform redimensionado. 9 Autonomous Decisions, 1 crítica. `ruff`+`mypy`+`pytest` verdes (64 testes). PR2 e backfill real pendentes. | /build (Claude Sonnet 5) |
 | 2026-09-04 | 1.1 | PR1 mergeado em `main` (#4), provado ao vivo contra BigQuery real. PR2 (API+web) completo em `feature/inss-beneficios-pr2`: rota `GET /v1/metrics/{metric_id}/national` (agregado nacional, resolvendo OQ1/OQ2 com YAGNI — achado #10), módulo M03 web (3 números, grace degradation), `Config.metric_tables` novo. `ruff`+`mypy`+`pytest` verdes em `api/` (15 testes) e `ingestion/`; `web` typecheck+build verdes. Rota da dívida comprovadamente intacta. Só o backfill histórico real falta para `/ship`. | /build (Claude Sonnet 5) |
 | 2026-09-05 | 1.2 | PR2 mergeado. Backfill real de Indeferidos executado contra `brasil2036-dev` (37/38 meses, confirmação explícita do usuário em 2 etapas). Achados #13–16: bug crítico de path (`_REPO_INGESTION_ROOT`) nunca detectado por teste unitário até rodar de verdade; `period_resolver` novo (nomes de arquivo de Indeferidos não têm padrão YYYYMM, período lido do conteúdo real); ineficiência de `limit` corrigida; 1 arquivo real com layout fora do padrão (jun/2024) rejeitado com segurança. Dado da dívida confirmadamente intacto em escala real (37 meses, não só 1). Emitidos/Mantidos ainda pendentes. | /build (Claude Sonnet 5) |
+| 2026-09-05 | 1.3 | Tentativa de backfill real de Emitidos encontrou MemoryError real em arquivo multi-GB (corrigido: detecção de encoding por amostra, sem decodificar o payload inteiro — PR #9) e um achado maior: o schema real do Emitidos mudou 4+ vezes entre jun/2023–jul/2026, inclusive entre maio e julho de 2026 (não é só histórico antigo instável). `newest_first` novo (PR #10) para gastar banda em meses prováveis, não histórico garantidamente incompatível. Junho/2026 carregado completo e verificado (1.216 linhas Gold, R$79,36 bi, provenance 100%, dívida intacta). **Decisão explícita do usuário: aceitar o mecanismo provado em 2 dos 3 datasets e fechar o escopo do backfill.** Status → ✅ Complete (Built). | /build (Claude Sonnet 5) |
