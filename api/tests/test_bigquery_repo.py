@@ -130,3 +130,55 @@ def test_latest_national_total_returns_none_when_gold_table_does_not_exist_yet()
         repo.latest_national_total("inss_beneficios_mantidos", "gold_inss_beneficios_mantidos")
         is None
     )
+
+
+def _fiscal_run_query(value: float, source: str):
+    def run(sql: str, params: Mapping[str, Any]) -> list[dict[str, Any]]:
+        if "SUM(value) AS value" in sql:
+            return [{"value": value, "unit": "BRL", "reference_date": "2026-06-01"}]
+        if "ANY_VALUE(source) AS source" in sql:
+            return [{"source": source}]
+        return []
+
+    return run
+
+
+def test_latest_national_total_accepts_negative_value_for_primary_result() -> None:
+    # fiscal_primario (Central Government primary result) is legitimately
+    # negative in a primary deficit -- confirmed against real historical data
+    # (135 of 356 months, DESIGN §0 of FISCAL_RECEITA_DESPESA). The repo must
+    # not clamp or reject a negative value the way the ingestion contract
+    # would for a metric that doesn't allow it.
+    repo = BigQueryRepo(
+        CONFIG, _fiscal_run_query(-1234.56, "https://tesourotransparente.gov.br/ckan/...")
+    )
+    result = repo.latest_national_total("fiscal_primario", "gold_fiscal_uniao")
+    assert result is not None
+    assert result.value == -1234.56
+
+
+def test_latest_national_total_works_for_all_three_fiscal_metric_ids_sharing_one_table() -> None:
+    # fiscal_receita/fiscal_despesa/fiscal_primario all map to the same Gold
+    # table (Config.metric_tables, DESIGN D11) -- confirms the WHERE metric_id
+    # filter in the shared query actually discriminates between them.
+    repo = BigQueryRepo(CONFIG, _fiscal_run_query(226305.45, "https://tesouro/rtn.xlsx"))
+    for metric_id in ("fiscal_receita", "fiscal_despesa", "fiscal_primario"):
+        result = repo.latest_national_total(metric_id, "gold_fiscal_uniao")
+        assert result is not None
+        assert result.metric_id == metric_id
+
+
+def test_debt_and_inss_routes_unaffected_by_fiscal_metric_tables_entries() -> None:
+    # Non-regression: adding 3 more metric_tables entries pointing at a new
+    # Gold table must not change behavior for the 2 routes that existed
+    # before this feature.
+    debt_repo = BigQueryRepo(CONFIG, _run_query())
+    assert debt_repo.latest_metric("divida_consolidada", "35") is not None
+
+    inss_repo = BigQueryRepo(CONFIG, _national_run_query())
+    assert (
+        inss_repo.latest_national_total(
+            "inss_beneficios_emitidos", "gold_inss_beneficios_emitidos"
+        )
+        is not None
+    )

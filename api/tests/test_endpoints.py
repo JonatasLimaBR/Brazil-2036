@@ -19,7 +19,12 @@ _CONFIG = Config(
     provenance_table="metric_provenance",
     default_metric_id="divida_consolidada",
     default_state_ibge_code="35",
-    metric_tables={"inss_beneficios_emitidos": "gold_inss_beneficios_emitidos"},
+    metric_tables={
+        "inss_beneficios_emitidos": "gold_inss_beneficios_emitidos",
+        "fiscal_receita": "gold_fiscal_uniao",
+        "fiscal_despesa": "gold_fiscal_uniao",
+        "fiscal_primario": "gold_fiscal_uniao",
+    },
 )
 
 _METRIC = MetricResponse(
@@ -167,6 +172,26 @@ def test_debt_route_unaffected_by_national_route() -> None:
     resp = _client(StubRepo(_METRIC, _PROV, _NATIONAL)).get("/v1/metrics/divida_consolidada")
     assert resp.status_code == 200
     assert resp.json()["state_ibge_code"] == "35"
+
+
+def test_national_metric_accepts_negative_value_for_fiscal_primario() -> None:
+    # fiscal_primario is legitimately negative in a primary deficit -- the
+    # route must serve it as-is, not clamp or reject it.
+    negative = NationalMetricResponse(
+        metric_id="fiscal_primario",
+        value=-1234.56,
+        unit="BRL",
+        reference_date="2026-05-01",
+        data_class="observed",
+        provenance=ProvenanceSummary(
+            source="https://tesouro/rtn.xlsx",
+            reference_date="2026-05-01",
+            trust_status="source_only",
+        ),
+    )
+    resp = _client(StubRepo(None, None, negative)).get("/v1/metrics/fiscal_primario/national")
+    assert resp.status_code == 200
+    assert resp.json()["value"] == -1234.56
 
 
 def test_openapi_has_all_paths() -> None:

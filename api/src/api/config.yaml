@@ -9,3 +9,6 @@ metric_tables:
   inss_beneficios_emitidos: gold_inss_beneficios_emitidos
   inss_beneficios_mantidos: gold_inss_beneficios_mantidos
   inss_beneficios_indeferidos: gold_inss_beneficios_indeferidos
+  fiscal_receita: gold_fiscal_uniao
+  fiscal_despesa: gold_fiscal_uniao
+  fiscal_primario: gold_fiscal_uniao

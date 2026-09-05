@@ -5,10 +5,10 @@
 - **Feature:** FISCAL_RECEITA_DESPESA
 - **Fase:** 3 (Build)
 - **Entrada:** `.claude/sdd/features/DESIGN_FISCAL_RECEITA_DESPESA.md` (v1.0)
-- **Branch:** PR1 `feature/fiscal-receita-despesa` (espinha de dados)
+- **Branch:** PR1 `feature/fiscal-receita-despesa` (merged, #15) · PR2 `feature/fiscal-receita-despesa-pr2` (API+web)
 - **Data:** 2026-09-05
-- **Status da build:** 🔶 PR1 completo — PR2 (API+web) construído na mesma sessão, aguardando commit/PR próprio
-- **Próximo passo:** merge de PR1 → PR2 → `/verify-spec` → `/ship`
+- **Status da build:** ✅ PR1+PR2 completos — backfill real pendente de confirmação do usuário
+- **Próximo passo:** `/verify-spec` → `/ship` (após confirmar/rodar o backfill real, ou fechar o escopo sem ele, mesmo padrão das 2 fatias anteriores)
 
 > Assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
 
@@ -158,7 +158,7 @@ confirmada explicitamente pelo usuário antes de executar.
 - [x] Atribuição de decisões autônomas (§4) — incluindo 1 achado crítico de código (`bronze.load()` não genérico) e 1 refinamento de interface (conector)
 - [x] Contratos e configs carregam sem erro
 - [x] Achado crítico do `/design` (D10, resultado primário negativo) coberto por teste unitário E de integração (fixture com 1 mês de déficit real)
-- [ ] Gate `integration` do `ci.yml` — vai rodar contra BigQuery real no PR, ainda não confirmado neste relatório
+- [x] Gate `integration` do `ci.yml` — rodou contra BigQuery real no PR #15 (2m37s), provou D10 (mês de déficit real aceito sem quarentena) ao vivo, não só contra `FakeBigQuery`
 - [ ] Backfill real — pendente confirmação explícita do usuário
 - [x] BUILD_REPORT gerado
 
@@ -169,3 +169,4 @@ confirmada explicitamente pelo usuário antes de executar.
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-05 | 1.0 | PR1 (espinha de dados) e PR2 (API+web) completos na mesma sessão de build. 2 achados técnicos não previstos pelo DESIGN corrigidos (`bronze.load()` não genérico; interface do conector). Backfill real pendente de confirmação do usuário. `ruff`+`mypy`+`pytest` verdes em `ingestion/` (92 testes) e `api/` (20 testes); `web/` typecheck+build+e2e (4/4, contra API real) verdes. | /build (Claude Sonnet 5) |
+| 2026-09-05 | 1.1 | PR1 mergeado (#15) — gate `integration` provou D10 ao vivo contra BigQuery real (mês de déficit real aceito, 2m37s). PR2 pronto para commit/PR. | /build (Claude Sonnet 5) |
