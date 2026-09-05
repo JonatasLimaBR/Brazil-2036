@@ -125,13 +125,15 @@ confirmada explicitamente pelo usuário antes de executar.
 
 ## 5. Blockers / trabalho restante
 
-- **Backfill real não executado** — mecanismo provado só via unit tests + gate `integration` (CI).
-  Rodar contra `brasil2036-dev` de verdade é decisão de custo/tempo a confirmar com o usuário,
-  mesmo padrão das 2 fatias anteriores.
-- **`ckan_package_id`/URL do recurso RTN nunca testados contra a API CKAN real do Tesouro
-  Transparente** (só contra uma fixture local e um arquivo baixado manualmente durante o
-  `/design`) — o gate `integration`/backfill real vai confirmar se `discover_resource()` funciona
-  de verdade contra o endpoint ao vivo.
+- **Backfill real executado com sucesso** (`ingestion/scripts/run_fiscal_uniao.py` contra
+  `brasil2036-dev`, confirmado pelo usuário): 355 meses (1997-01 a 2026-07), 1.065 linhas Gold =
+  1.065 linhas de provenance. Valores de jul/2026 conferidos linha a linha contra o arquivo-fonte
+  real inspecionado no `/design §0` (receita líquida R$ 226.305.454.555,69; despesa
+  R$ 215.522.022.371,60; primário R$ 10.783.432.184,10 — batem exatamente). `discover_resource()`
+  funcionou de verdade contra o endpoint CKAN real do Tesouro Transparente (não só contra a
+  fixture `file://`). Dívida (27 linhas de provenance) e INSS (1.216 + 15.142) confirmadamente
+  intactos após o backfill. Endpoints ao vivo (`GET /v1/metrics/fiscal_*/national`) servindo dado
+  real em produção.
 - **Sem quebra por categoria/função/órgão** — decisão deliberada do DEFINE (C6, total agregado),
   não um gap.
 - **Juros (`STORY-009.04`) fora de escopo** — decisão deliberada do Brainstorm, fonte de dado
@@ -159,7 +161,7 @@ confirmada explicitamente pelo usuário antes de executar.
 - [x] Contratos e configs carregam sem erro
 - [x] Achado crítico do `/design` (D10, resultado primário negativo) coberto por teste unitário E de integração (fixture com 1 mês de déficit real)
 - [x] Gate `integration` do `ci.yml` — rodou contra BigQuery real no PR #15 (2m37s), provou D10 (mês de déficit real aceito sem quarentena) ao vivo, não só contra `FakeBigQuery`
-- [ ] Backfill real — pendente confirmação explícita do usuário
+- [x] Backfill real executado e medido — 355 meses (1997-01 a 2026-07), 1.065 linhas Gold, valores conferidos manualmente contra o arquivo-fonte real; dívida (27) e INSS (1.216+15.142) confirmadamente intactos
 - [x] BUILD_REPORT gerado
 
 ---
@@ -170,3 +172,4 @@ confirmada explicitamente pelo usuário antes de executar.
 |---|---|---|---|
 | 2026-09-05 | 1.0 | PR1 (espinha de dados) e PR2 (API+web) completos na mesma sessão de build. 2 achados técnicos não previstos pelo DESIGN corrigidos (`bronze.load()` não genérico; interface do conector). Backfill real pendente de confirmação do usuário. `ruff`+`mypy`+`pytest` verdes em `ingestion/` (92 testes) e `api/` (20 testes); `web/` typecheck+build+e2e (4/4, contra API real) verdes. | /build (Claude Sonnet 5) |
 | 2026-09-05 | 1.1 | PR1 mergeado (#15) — gate `integration` provou D10 ao vivo contra BigQuery real (mês de déficit real aceito, 2m37s). PR2 pronto para commit/PR. | /build (Claude Sonnet 5) |
+| 2026-09-05 | 1.2 | PR2 mergeado (#16, após 1 correção de formatação pega pelo `lint-typecheck-unit`). Backfill real executado contra `brasil2036-dev`: 355 meses, 1.065 linhas Gold, valores conferidos contra o arquivo-fonte real. Dívida e INSS confirmadamente intactos. Endpoints ao vivo servindo dado real. | /build (Claude Sonnet 5) |
