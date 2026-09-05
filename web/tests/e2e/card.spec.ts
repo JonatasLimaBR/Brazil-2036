@@ -10,7 +10,7 @@ test("card renders the debt value from the API with a source link", async ({ pag
   const source = page.getByTestId("source");
   await expect(source).toHaveAttribute("href", /tesourotransparente\.gov\.br|dados\.gov\.br/);
 
-  await expect(page.locator(".data-class--observed")).toBeVisible();
+  await expect(page.locator("#card .data-class--observed")).toBeVisible();
 });
 
 test("INSS module renders without crashing for each of the 3 metrics", async ({ page }) => {
