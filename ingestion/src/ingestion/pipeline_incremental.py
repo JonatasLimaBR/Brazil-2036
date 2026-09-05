@@ -20,8 +20,8 @@ from ingestion.sql_render import render_file
 _GOLD_KEY_FIELDS = ("state_ibge_code", "reference_date")
 _GOLD_VALUE_FIELD = "value"
 
-_SQL_DIR = Path(__file__).resolve().parents[1].parent / "sql"
-_REPO_INGESTION_ROOT = Path(__file__).resolve().parents[1]
+_REPO_INGESTION_ROOT = Path(__file__).resolve().parents[1].parent
+_SQL_DIR = _REPO_INGESTION_ROOT / "sql"
 
 
 class IncrementalPipelineError(RuntimeError):

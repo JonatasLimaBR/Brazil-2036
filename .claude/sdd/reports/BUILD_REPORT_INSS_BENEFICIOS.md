@@ -5,10 +5,10 @@
 - **Feature:** INSS_BENEFICIOS
 - **Fase:** 3 (Build)
 - **Entrada:** `.claude/sdd/features/DESIGN_INSS_BENEFICIOS.md` (v1.0)
-- **Branch:** PR1 `feature/inss-beneficios` (merged) · PR2 `feature/inss-beneficios-pr2`
-- **Data:** 2026-09-04
-- **Status da build:** 🔶 **PR1 (espinha de dados) e PR2 (API+web) completos e verificados; só o backfill histórico real fica pendente.**
-- **Próximo passo:** abrir PR2 → `ci-gate` verde → rodar o backfill completo contra GCP real (medir tempo/custo) → `/verify-spec` → `/ship`.
+- **Branch:** PR1 `feature/inss-beneficios` (merged) · PR2 `feature/inss-beneficios-pr2` (merged)
+- **Data:** 2026-09-04 a 2026-09-05
+- **Status da build:** 🔶 **PR1+PR2 completos e mergeados. Backfill real: Indeferidos completo (37/38 meses); Emitidos e Mantidos ainda não iniciados.**
+- **Próximo passo:** backfill real de Emitidos e Mantidos (medir tempo/custo, começando por `--limit` pequeno) → `/verify-spec` → `/ship`.
 
 > Assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
 
@@ -132,26 +132,56 @@ mesma disciplina do MVP_WALKING_SKELETON.
 
 ---
 
+## 4b. Backfill real — Indeferidos (2026-09-05)
+
+Executado contra `brasil2036-dev` real, com confirmação explícita do usuário em 2 etapas: (1)
+`--limit 1` para provar o mecanismo, (2) histórico completo depois de verificado.
+
+### Achados novos, só visíveis rodando contra o CKAN real de verdade
+
+| # | Achado | Correção |
+|---|---|---|
+| 13 | **Bug crítico de path**: `_REPO_INGESTION_ROOT` em `pipeline_incremental.py` apontava 1 nível acima do correto (`ingestion/src` em vez de `ingestion/`) — `config.contract_path` nunca resolvia de verdade; nenhum teste unitário pegou isso porque nenhum verificava `contract_path.exists()` contra o layout real do repo (só contra `tmp_path` sintético). Só apareceu rodando de verdade. Corrigido; teste de regressão novo (`test_pipeline_incremental_config.py`) verifica os 3 configs reais. | Fix + teste |
+| 14 | **Nomes de arquivo de Indeferidos não têm padrão YYYYMM nenhum** (confirmado: 38/38 arquivos reais usam nome de mês em português, formatos inconsistentes, às vezes MMYYYY invertido) — `parse_period_from_url` (usado para Emitidos/Mantidos) não serve para este dataset. Resolvido com `period_resolver` novo e injetável em `run_backfill()`: para Indeferidos, baixa o arquivo e lê o período direto da própria coluna `competencia_indeferimento` (dado se autodescreve, mesmo espírito do D5). | `backfill.PeriodResolver` + resolver dedicado em `scripts/run_backfill.py` |
+| 15 | `limit` resolvia o período (caro para Indeferidos — baixa o arquivo inteiro) para **todos** os recursos antes de aplicar o limite, não só para os que seriam processados — 38 downloads em vez de 1 no teste `--limit 1`. | Reordenado: checa `limit` antes de chamar `period_resolver`; `break` implícito via `continue` no início do loop |
+| 16 | **1 arquivo real (Junho/2024) tem layout de coluna diferente dos outros 37** — `competencia_indeferimento` não está na primeira coluna nesse arquivo específico (nome de arquivo também foge do padrão: sem ano, "INDEFERIDOS+JUNHO+_DADOS+ABERTOS.xlsx"). O resolver corretamente **rejeitou** o arquivo (`skipped-unparseable`) em vez de gravar dado no mês errado. | Aceito como residual — 1 de 38 meses (97,4% de cobertura); corrigir exigiria detectar/tratar mais uma variante de layout, não vale o retorno para 1 mês |
+
+### Resultado real verificado (BigQuery, `brasil2036-dev`)
+
+- **37 de 38 meses carregados** (jun/2023–jul/2026, exceto jun/2024 — achado #16).
+- **15.142 linhas Gold**, **15.142 linhas de provenance** — cobertura de provenance 100% em toda a
+  história real carregada, não só no mês de teste.
+- **18.744.424 indeferimentos** somados no período (jun/2023–jul/2026) — número real, não estimado.
+- **Dado da dívida confirmadamente intacto** depois de processar 37 meses reais de um 2º dataset:
+  `metric_provenance` ainda com as 27 linhas de `divida_consolidada` — a correção crítica do achado
+  #1 (PR1) provada em escala real, não só no teste de 1 mês.
+- Tempo real: ~2,5–3 min/mês (arquivo XLSX ~67 MB) → **~100 min para as 37 execuções**.
+
+---
+
 ## 5. Blockers / trabalho restante
 
-- **Backfill real não executado** — precisa de `GCP_PROJECT`/WIF reais (indisponível nesta sessão
-  interativa) e é uma operação longa (~100–130 GB comprimidos, ~183 recursos) com custo/tempo não
-  triviais. Por princípio de não tomar ações caras/difíceis de reverter sem confirmação explícita,
-  **não foi disparado** — é o próximo passo concreto, de preferência via o workflow `data.yml`
-  (ou uma execução dedicada), com tempo/custo reais medidos e reportados (DESIGN §7.4).
-- **Até o backfill rodar, os 3 endpoints `/v1/metrics/{metric_id}/national` devolvem 404 em
-  produção** (Gold vazio) — o módulo M03 vai mostrar "Indisponível" nos 3 números até lá. Não é um
-  bug; é o estado real e esperado antes do backfill.
-- **Gate `integration` cobre só Emitidos** (1 dos 3 datasets, por decisão do DESIGN §6) — Mantidos e
-  Indeferidos têm cobertura unitária real (schemas confirmados, quirks tratados), mas não foram
-  exercitados ponta a ponta contra BigQuery real nesta sessão.
+- **Backfill real de Emitidos e Mantidos ainda não executado** — Indeferidos (o menor dos 3,
+  ~2,5 GB no total) está completo e verificado; Emitidos (~30 GB, arquivos de até 7,4 GB/mês) e
+  Mantidos (~60–90 GB, 3 sub-arquivos/mês) são ordens de grandeza maiores. Dado o ritmo observado em
+  Indeferidos (~2,5–3 min por arquivo de 67 MB), arquivos de GB inteiros devem levar
+  significativamente mais tempo por mês — a medir com `--limit 1` antes de comprometer a execução
+  completa, mesma disciplina que funcionou para Indeferidos.
+- **Até Emitidos/Mantidos rodarem, 2 dos 3 endpoints `/v1/metrics/{metric_id}/national` continuam
+  devolvendo 404 em produção** (`inss_beneficios_emitidos` e `inss_beneficios_mantidos`); o de
+  Indeferidos já responde com dado real. O módulo M03 mostra 1 número real + 2 "Indisponível" até lá.
+- **Gate `integration` cobre só Emitidos** (1 dos 3 datasets, por decisão do DESIGN §6) — a fixture
+  do CI continua sendo o único teste automatizado ponta a ponta para Emitidos; o backfill real de
+  Emitidos ainda não rodou fora do CI.
 - **Convergência de Mantidos (3 recursos/mês) validada só por raciocínio + teste unitário de
-  Bronze** (`test_load_partition_scopes_by_source_uri_not_just_month`) — não por uma execução real
-  de backfill processando os 3 sub-arquivos de um mês em sequência.
+  Bronze** (`test_load_partition_scopes_by_source_uri_not_just_month`) — ainda não por uma execução
+  real de backfill processando os 3 sub-arquivos de um mês em sequência.
 - **e2e do web (`npm run e2e`) não executado nesta sessão** — precisa de `preview` + API viva;
   roda no `api-web.yml` pós-deploy, mesmo padrão do card da dívida.
 - **Drill-down por UF/espécie na API não existe** — decisão deliberada (achado #10, YAGNI); só o
   agregado nacional está implementado. Extensível via `Config.metric_tables` sem quebrar nada.
+- **Junho/2024 de Indeferidos não carregado** (achado #16) — 1 arquivo real com layout de coluna
+  fora do padrão; residual aceito, 97,4% de cobertura histórica do dataset.
 
 ---
 
@@ -191,3 +221,4 @@ ele) — mesmo padrão de disciplina de status do `MVP_WALKING_SKELETON` (2 PRs 
 |---|---|---|---|
 | 2026-09-04 | 1.0 | PR1 (espinha de dados) completo em `feature/inss-beneficios`: 3 conectores com schema real confirmado, correção crítica de `registry.py`/`provenance.py` (tabelas compartilhadas), `pipeline_incremental.py` novo, `backfill.py` resumível, 3 contratos + 6 SQL + 3 configs, Terraform redimensionado. 9 Autonomous Decisions, 1 crítica. `ruff`+`mypy`+`pytest` verdes (64 testes). PR2 e backfill real pendentes. | /build (Claude Sonnet 5) |
 | 2026-09-04 | 1.1 | PR1 mergeado em `main` (#4), provado ao vivo contra BigQuery real. PR2 (API+web) completo em `feature/inss-beneficios-pr2`: rota `GET /v1/metrics/{metric_id}/national` (agregado nacional, resolvendo OQ1/OQ2 com YAGNI — achado #10), módulo M03 web (3 números, grace degradation), `Config.metric_tables` novo. `ruff`+`mypy`+`pytest` verdes em `api/` (15 testes) e `ingestion/`; `web` typecheck+build verdes. Rota da dívida comprovadamente intacta. Só o backfill histórico real falta para `/ship`. | /build (Claude Sonnet 5) |
+| 2026-09-05 | 1.2 | PR2 mergeado. Backfill real de Indeferidos executado contra `brasil2036-dev` (37/38 meses, confirmação explícita do usuário em 2 etapas). Achados #13–16: bug crítico de path (`_REPO_INGESTION_ROOT`) nunca detectado por teste unitário até rodar de verdade; `period_resolver` novo (nomes de arquivo de Indeferidos não têm padrão YYYYMM, período lido do conteúdo real); ineficiência de `limit` corrigida; 1 arquivo real com layout fora do padrão (jun/2024) rejeitado com segurança. Dado da dívida confirmadamente intacto em escala real (37 meses, não só 1). Emitidos/Mantidos ainda pendentes. | /build (Claude Sonnet 5) |

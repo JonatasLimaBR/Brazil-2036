@@ -129,6 +129,72 @@ def test_run_backfill_skips_already_loaded_and_resumes(monkeypatch) -> None:
     assert result.failed == 0
 
 
+def test_run_backfill_limit_bounds_pipeline_run_calls(monkeypatch) -> None:
+    resources = [_resource("202604", "r1"), _resource("202605", "r2"), _resource("202606", "r3")]
+    session = _FakeCkanSession(resources)
+    client = FakeBigQuery(lambda sql: [])
+    calls: list[dt.date] = []
+
+    def _fake_run(config, *, connector, storage_client, bq_client, reference_period, sql_dir=None):
+        calls.append(reference_period)
+        return IncrementalRunResult(
+            run_id="r", status="ok", reference_period=reference_period, bronze_rows=1
+        )
+
+    monkeypatch.setattr(pipeline_incremental, "run", _fake_run)
+
+    result = run_backfill(
+        ckan_session=session,
+        config=_config(),
+        connector_factory=lambda r: object(),  # type: ignore[return-value]
+        storage_client=object(),  # type: ignore[arg-type]
+        bq_client=client,
+        limit=2,
+    )
+
+    assert calls == [dt.date(2026, 4, 1), dt.date(2026, 5, 1)]
+    assert result.loaded == 2
+    assert sum(1 for o in result.outcomes if o.status == "skipped-limit-reached") == 1
+
+
+def test_run_backfill_uses_custom_period_resolver(monkeypatch) -> None:
+    # Indeferidos filenames carry no YYYYMM pattern at all (confirmed live) --
+    # a dataset like that must supply its own resolver instead of the default
+    # URL-based one.
+    resources = [
+        CkanResource(
+            resource_id="r1",
+            name="Indeferidos junho",
+            format="XLSX",
+            url="https://s3/INDEFERIDOS_JUNHO_2026.xlsx",
+            last_modified=None,
+        )
+    ]
+    session = _FakeCkanSession(resources)
+    client = FakeBigQuery(lambda sql: [])
+    calls: list[dt.date] = []
+
+    def _fake_run(config, *, connector, storage_client, bq_client, reference_period, sql_dir=None):
+        calls.append(reference_period)
+        return IncrementalRunResult(
+            run_id="r", status="ok", reference_period=reference_period, bronze_rows=1
+        )
+
+    monkeypatch.setattr(pipeline_incremental, "run", _fake_run)
+
+    result = run_backfill(
+        ckan_session=session,
+        config=_config(),
+        connector_factory=lambda r: object(),  # type: ignore[return-value]
+        storage_client=object(),  # type: ignore[arg-type]
+        bq_client=client,
+        period_resolver=lambda resource: dt.date(2026, 6, 1),
+    )
+
+    assert calls == [dt.date(2026, 6, 1)]
+    assert result.loaded == 1
+
+
 def test_run_backfill_isolates_a_single_resource_failure(monkeypatch) -> None:
     resources = [_resource("202605", "r1"), _resource("202606", "r2")]
     session = _FakeCkanSession(resources)
