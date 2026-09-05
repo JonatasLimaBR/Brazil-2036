@@ -86,6 +86,42 @@ def test_emitidos_validate_rejects_wrong_header(tmp_path) -> None:
         connector.validate(str(bad))
 
 
+def test_emitidos_download_detects_legacy_cp1252_without_rewriting_content(tmp_path) -> None:
+    # Confirmed live: the oldest real Emitidos file (2023-06) is cp1252, not
+    # UTF-8. Detecting this must not decode/re-encode the whole payload in
+    # Python (that MemoryErrors on real multi-GB files, confirmed live) --
+    # RAW keeps the original bytes as-is; BigQuery's LOAD DATA is told the
+    # real encoding instead (source_encoding on the result).
+    row = "DESPACHO;M;URBANA;NORMAL;SAO PAULO;X;Y;Z;Z;100,00;W;01/01/2023;21;PENSÃO POR MORTE"
+    csv_body = (EMITIDOS_HEADER + "\r\n" + row + "\r\n").encode("cp1252")
+    zip_bytes = _zip_of("D.SDA.PDA.003.EMI.202306.CSV", csv_body)
+    connector = InssEmitidosConnector(
+        session=_FakeSession(zip_bytes),
+        resource=_resource("https://s3/emitidos_202306.zip"),
+    )
+    dest = str(tmp_path / "out.csv")
+    result = connector.download(connector.discover(), dest)
+    connector.validate(dest)  # must not raise UnicodeDecodeError
+    assert result.source_encoding == "ISO-8859-1"
+    written = (tmp_path / "out.csv").read_bytes()
+    assert written == csv_body  # untouched -- not re-encoded
+
+
+def test_emitidos_download_detects_utf8(tmp_path) -> None:
+    csv_body = (
+        EMITIDOS_HEADER + "\r\nDESPACHO;M;URBANA;NORMAL;SAO PAULO;X;Y;Z;Z;100,00;"
+        "W;01/01/2026;41;X\r\n"
+    ).encode("utf-8")
+    zip_bytes = _zip_of("D.SDA.PDA.003.EMI.202606.CSV", csv_body)
+    connector = InssEmitidosConnector(
+        session=_FakeSession(zip_bytes),
+        resource=_resource("https://s3/emitidos.zip"),
+    )
+    dest = str(tmp_path / "out.csv")
+    result = connector.download(connector.discover(), dest)
+    assert result.source_encoding == "UTF-8"
+
+
 def test_mantidos_normalizes_comma_header_to_semicolon_and_reads_zip(tmp_path) -> None:
     header = ",".join(MANTIDOS_COLUMNS)
     row = (
@@ -104,6 +140,32 @@ def test_mantidos_normalizes_comma_header_to_semicolon_and_reads_zip(tmp_path) -
     connector.validate(dest)
     written = (tmp_path / "out.csv").read_text(encoding="utf-8")
     assert written.splitlines()[0] == ";".join(MANTIDOS_COLUMNS)
+
+
+def test_mantidos_detects_legacy_cp1252_without_rewriting_body(tmp_path) -> None:
+    # Header/delimiter normalization must not force a decode/re-encode of the
+    # multi-hundred-MB body (that MemoryErrors on real files, confirmed live
+    # on the sibling Emitidos connector) -- only the small header line is
+    # touched; the body's bytes, in whatever encoding they arrived in, pass
+    # through untouched, and BigQuery's LOAD DATA is told the real encoding.
+    header = ",".join(MANTIDOS_COLUMNS)
+    row = (
+        "AUXÍLIO-RECLUSÃO;ZERADO;URBANO;M;X;Y;SUSPENSO;1-A;SAO PAULO;FILHO;"
+        "1/1/1990;1/1/2020;1/1/2019;1/1/2018;X;NORMAL;100.00"
+    )
+    row_bytes = row.encode("cp1252")
+    body = header.encode("cp1252") + b"\n" + row_bytes + b"\n"
+    zip_bytes = _zip_of("mantidos.csv", body)
+    connector = InssMantidosConnector(
+        session=_FakeSession(zip_bytes),
+        resource=_resource("https://s3/mantidos_202306.zip"),
+    )
+    dest = str(tmp_path / "out.csv")
+    result = connector.download(connector.discover(), dest)
+    connector.validate(dest)  # must not raise UnicodeDecodeError
+    assert result.source_encoding == "ISO-8859-1"
+    written = (tmp_path / "out.csv").read_bytes()
+    assert row_bytes in written  # body bytes untouched, not re-encoded
 
 
 def test_mantidos_reads_plain_csv_not_zipped(tmp_path) -> None:

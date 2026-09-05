@@ -104,20 +104,32 @@ class InssEmitidosConnector:
             backoff_seconds=self._backoff_seconds,
             errors=errors,
         )
-        data = _extract_single_csv(response.content, source=ref.resource_url)
+        status_code = response.status_code
+        # Files run up to ~7+ GB decompressed; holding the compressed ZIP
+        # bytes alive alongside the extracted CSV nearly doubles peak memory
+        # for no reason once extraction is done, and this is a real
+        # constraint, not a hypothetical one (confirmed live: a full-file
+        # decode on top of this combination MemoryError'd on a 16 GB machine).
+        zip_bytes = response.content
+        del response
+        data = _extract_single_csv(zip_bytes, source=ref.resource_url)
+        del zip_bytes
+        encoding = _detect_encoding(data)
         Path(dest).write_bytes(data)
         return DownloadResult(
             local_path=dest,
             content_sha256=hashlib.sha256(data).hexdigest(),
-            http_status=response.status_code,
+            http_status=status_code,
             bytes_downloaded=len(data),
             attempts=len(errors) + 1,
             attempt_errors=errors,
+            source_encoding=encoding,
         )
 
     def validate(self, local_path: str) -> None:
-        with open(local_path, encoding="utf-8") as handle:
-            first_line = handle.readline().strip().lstrip(_BOM)
+        with open(local_path, "rb") as handle:
+            first_line_bytes = handle.readline()
+        first_line = _decode_sample(first_line_bytes).strip().lstrip(_BOM)
         if first_line != EXPECTED_HEADER:
             raise ConnectorError(
                 f"unexpected CSV header: {first_line!r} (expected {EXPECTED_HEADER!r})"
@@ -135,3 +147,29 @@ def _extract_single_csv(zip_bytes: bytes, *, source: str) -> bytes:
                 f"expected exactly 1 file inside ZIP from {source!r}, found {names}"
             )
         return archive.read(names[0])
+
+
+_SAMPLE_SIZE = 65536
+
+
+def _detect_encoding(data: bytes) -> str:
+    # Confirmed live: the oldest real Emitidos file (2023-06) is not UTF-8 --
+    # legacy cp1252, common in older Brazilian government exports; more recent
+    # months are UTF-8. Detected from a small sample, not a full-file decode:
+    # a 7+ GB file's decode (even just to validate, encoding kept or not)
+    # reliably MemoryErrors in a plain Python process (confirmed live).
+    # "ISO-8859-1" (BigQuery's only non-UTF-8 CSV encoding option) is passed
+    # straight to LOAD DATA so BigQuery's server-side loader decodes it
+    # instead of this process re-encoding gigabytes in memory.
+    try:
+        data[:_SAMPLE_SIZE].decode("utf-8")
+        return "UTF-8"
+    except UnicodeDecodeError:
+        return "ISO-8859-1"
+
+
+def _decode_sample(data: bytes) -> str:
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        return data.decode("cp1252")

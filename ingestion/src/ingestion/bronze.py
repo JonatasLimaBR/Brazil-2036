@@ -69,6 +69,7 @@ def load_partition(
     raw_uri: str,
     source_uri: str,
     row_hash: str,
+    encoding: str = "UTF-8",
 ) -> BronzeLoad:
     # DELETE+INSERT scoped by (_reference_period, _source_uri), not CREATE OR
     # REPLACE: this table accumulates one month per resource across a
@@ -95,7 +96,7 @@ def load_partition(
         client,
         f"LOAD DATA OVERWRITE {staging} ({col_defs}) "
         f"FROM FILES (format='CSV', field_delimiter='{field_delimiter}', "
-        f"skip_leading_rows=1, encoding='UTF-8', uris=['{raw_uri}'])",
+        f"skip_leading_rows=1, encoding='{encoding}', uris=['{raw_uri}'])",
     )
     run_sql(client, f"DELETE FROM {target} WHERE {scope}")
     select_cols = ", ".join(columns)
