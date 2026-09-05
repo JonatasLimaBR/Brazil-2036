@@ -11,8 +11,8 @@
 - **Clarity score:** 14/15 (HIGH)
 - **Branch:** a criar — `feature/inss-beneficios`
 - **Design:** `.claude/sdd/features/DESIGN_INSS_BENEFICIOS.md` (2026-09-04)
-- **Build:** `.claude/sdd/reports/BUILD_REPORT_INSS_BENEFICIOS.md` — 🔶 PR1 Built, PR2 pendente
-- **Próximo passo:** abrir PR1 → PR2 (API+web) → backfill real → `/verify-spec` → `/ship`
+- **Build:** `.claude/sdd/reports/BUILD_REPORT_INSS_BENEFICIOS.md` — 🔶 PR1+PR2 Built, backfill real pendente
+- **Próximo passo:** rodar o backfill histórico real (medir tempo/custo) → `/verify-spec` → `/ship`
 
 > Nota: assets do plugin SDD ausentes (`kb/_index.yaml`, `DEFINE_TEMPLATE.md`, `spec-linter` não
 > instalados) — documento segue a lista de seções obrigatórias do skill `sdd-define`, mesmo padrão
@@ -209,3 +209,4 @@ hardcoded a `(metric_id × UF × ano)` e não suporta isso ainda.
 | 2026-09-04 | 1.0 | Criação a partir de `BRAINSTORM_INSS_BENEFICIOS.md`. Clarity 14/15. Status → Ready for Design. | /define (Claude Sonnet 5) |
 | 2026-09-04 | 1.1 | Fase 2 concluída. Descoberta real revogou parcialmente R3 (dicionário de espécies — não existe, dado já se autodescreve); D1–D8 no DESIGN. Status → ✅ Complete (Designed). | /design (Claude Sonnet 5) |
 | 2026-09-04 | 1.2 | PR1 (espinha de dados) construído. Achado crítico corrigido: `registry.py`/`provenance.py` faziam `CREATE OR REPLACE` em tabelas compartilhadas — corrigido antes de tocar produção. PR2 e backfill real pendentes. Status → 🔶 PR1 Built. | /build (Claude Sonnet 5) |
+| 2026-09-04 | 1.3 | PR1 mergeado em `main`. PR2 (API+web) construído: rota de agregado nacional resolve OQ1/OQ2 com YAGNI; módulo M03 web. Só o backfill real falta para `/ship`. Status → 🔶 PR1+PR2 Built. | /build (Claude Sonnet 5) |

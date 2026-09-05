@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/metrics/{metric_id}/national": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get National Metric */
+        get: operations["get_national_metric_v1_metrics__metric_id__national_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/provenance/{metric_id}": {
         parameters: {
             query?: never;
@@ -81,6 +98,19 @@ export interface components {
             reference_year: number;
             /** State Ibge Code */
             state_ibge_code: string;
+            /** Unit */
+            unit: string;
+            /** Value */
+            value: number;
+        };
+        /** NationalMetricResponse */
+        NationalMetricResponse: {
+            data_class: components["schemas"]["DataClass"];
+            /** Metric Id */
+            metric_id: string;
+            provenance: components["schemas"]["ProvenanceSummary"];
+            /** Reference Date */
+            reference_date: string;
             /** Unit */
             unit: string;
             /** Value */
@@ -192,6 +222,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MetricResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_national_metric_v1_metrics__metric_id__national_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                metric_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NationalMetricResponse"];
                 };
             };
             /** @description Validation Error */

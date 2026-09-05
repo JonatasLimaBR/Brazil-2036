@@ -84,3 +84,32 @@ def test_provenance_full_chain() -> None:
 def test_provenance_missing_returns_none() -> None:
     repo = BigQueryRepo(CONFIG, _run_query(present=False))
     assert repo.provenance("divida_consolidada", "99") is None
+
+
+def _national_run_query(present: bool = True):
+    def run(sql: str, params: Mapping[str, Any]) -> list[dict[str, Any]]:
+        if not present:
+            return []
+        if "SUM(value) AS value" in sql:
+            return [{"value": 123456.78, "unit": "BRL", "reference_date": "2026-06-01"}]
+        if "ANY_VALUE(source) AS source" in sql:
+            return [{"source": "https://s3/inss_emitidos_202606.zip"}]
+        return []
+
+    return run
+
+
+def test_latest_national_total_sums_across_uf_and_especie() -> None:
+    repo = BigQueryRepo(CONFIG, _national_run_query())
+    result = repo.latest_national_total("inss_beneficios_emitidos", "gold_inss_beneficios_emitidos")
+    assert result is not None
+    assert result.value == 123456.78
+    assert result.unit == "BRL"
+    assert result.reference_date == "2026-06-01"
+    assert result.data_class.value == "observed"
+    assert result.provenance.source == "https://s3/inss_emitidos_202606.zip"
+
+
+def test_latest_national_total_missing_returns_none() -> None:
+    repo = BigQueryRepo(CONFIG, _national_run_query(present=False))
+    assert repo.latest_national_total("inss_beneficios_emitidos", "gold_inss_x") is None

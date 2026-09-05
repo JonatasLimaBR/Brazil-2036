@@ -5,10 +5,10 @@
 - **Feature:** INSS_BENEFICIOS
 - **Fase:** 3 (Build)
 - **Entrada:** `.claude/sdd/features/DESIGN_INSS_BENEFICIOS.md` (v1.0)
-- **Branch:** `feature/inss-beneficios`
+- **Branch:** PR1 `feature/inss-beneficios` (merged) · PR2 `feature/inss-beneficios-pr2`
 - **Data:** 2026-09-04
-- **Status da build:** 🔶 **PR1 completo (espinha de dados), PR2 (API+web) e o backfill real ainda não executados.**
-- **Próximo passo:** abrir PR1 → `ci-gate` verde → medir/reportar tempo real de 1 execução → PR2 (API+web) → rodar o backfill completo contra GCP real → `/verify-spec` → `/ship`.
+- **Status da build:** 🔶 **PR1 (espinha de dados) e PR2 (API+web) completos e verificados; só o backfill histórico real fica pendente.**
+- **Próximo passo:** abrir PR2 → `ci-gate` verde → rodar o backfill completo contra GCP real (medir tempo/custo) → `/verify-spec` → `/ship`.
 
 > Assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
 
@@ -50,8 +50,24 @@
 
 Delegação via Task tool: nenhuma (agentes casados não têm ferramenta de escrita nesta sessão; execução direta a partir dos padrões §5 do DESIGN, ajustados pelos achados abaixo).
 
-### PR2 (API + web) — não iniciado nesta sessão
-Itens 30–36 do manifesto do DESIGN (`bigquery_repo.py`, `models.py`, `main.py`, testes, módulo M03 web, cliente OpenAPI, e2e leve) permanecem pendentes. Dependem da Gold do PR1 já mergeada e (idealmente) de pelo menos 1 mês real carregado para validar contra dado de verdade.
+## 1b. Task execution (PR2 — API + web)
+
+| # | Arquivo | Ação | Agente | Nota |
+|---|---|---|---|---|
+| 30 | `api/src/api/bigquery_repo.py` | Modify | `python-developer`→`(direct)` | +`latest_national_total(metric_id, gold_table)` — desvio de escopo do R10/OQ1 (achado #10) |
+| 31 | `api/src/api/models.py` | Modify | `python-developer`→`(direct)` | +`NationalMetricResponse` |
+| 32 | `api/src/api/main.py` | Modify | `python-developer`→`(direct)` | +rota nova `GET /v1/metrics/{metric_id}/national` — aditiva, não toca `/v1/metrics/{metric_id}` da dívida |
+| 33 | `api/src/api/config.py`, `config.yaml` | Modify *(não previsto no manifesto original)* | `python-developer`→`(direct)` | +`metric_tables: dict[metric_id, gold_table]` — resolve qual Gold físico por `metric_id` |
+| 34 | `api/tests/test_bigquery_repo.py`, `test_endpoints.py` | Modify | `python-reviewer`→`(direct)` | +6 testes; 1 prova explicitamente que a rota da dívida não regride (C9) |
+| 35 | `api/openapi/openapi.json` | Modify | `(direct)` | Regenerado via `scripts/export_openapi.py` |
+| 36 | `web/src/inss.ts` | Create | `typescript-reviewer`→`(direct)` | Módulo M03, 1 fetch por metric_id, renderiza valor + `data_class` + link fonte, ou "Indisponível" |
+| 37 | `web/index.html`, `styles.css`, `main.ts` | Modify | `typescript-reviewer`→`(direct)` | Seção `#inss-module` + grid de 3 números |
+| 38 | `web/src/api-client/schema.d.ts` | Modify | `(direct)` | Regenerado via `npm run gen:client` |
+| 39 | `web/tests/e2e/card.spec.ts` | Modify | `python-reviewer`→`(direct)` | +teste smoke da renderização dos 3 números (achado #11 — não afirma valor real, dado que o backfill ainda não rodou) |
+
+### Resolução de OQ1/OQ2 (DEFINE, ainda abertas no DESIGN)
+- **OQ1** (generalizar `BigQueryRepo` vs. rota dedicada): resolvida como **rota nova + agregação nacional**, mais simples que o "grão mês+espécie completo" que o R10 original previa — ver achado #10.
+- **OQ2** (total nacional vs. UF-piloto): resolvida como **total nacional** (soma de todas as UF e espécies do mês mais recente), consistente com a decisão do Brainstorm ("1 módulo com os 3 números", não um por UF).
 
 ---
 
@@ -87,6 +103,12 @@ mesma disciplina do MVP_WALKING_SKELETON.
 | Configs carregam | `load_incremental_config()` nos 3 YAML novos | ✅ |
 | `terraform fmt` | `terraform fmt -check -diff` em `cloud_run.tf` | ✅ |
 | `integration` (BigQuery real) | PR #4, `ci.yml` `integration` job | ✅ **PASS ao vivo** — `status=ok`, 5 linhas Bronze/Gold/provenance, lineage fecha (`file://` → `gs://` → registry). 1ª tentativa pegou um bug real na asserção do teste (grão UF×espécie, não só UF — 5 linhas, não 3); corrigido e reexecutado, verde. |
+| `api/` lint+format | `ruff check .` + `ruff format --check .` | ✅ |
+| `api/` types (strict) | `uv run mypy` | ✅ (5 arquivos) |
+| `api/` unit | `uv run pytest -q` | ✅ **15 passed** (9 existentes da dívida + 6 novas de INSS) |
+| `web/` types | `npm run typecheck` | ✅ |
+| `web/` build | `npm run build` | ✅ 8,75 kB (gzip 3,33 kB) — sem valor numérico hard-coded |
+| `web/` e2e | `npm run e2e` | ⚠️ **não executado** — precisa de um servidor `preview` + API viva; roda no `api-web.yml` pós-deploy (mesmo padrão do card da dívida) |
 | Backfill real (183 recursos, ~100–130 GB) | — | ⚠️ **não executado** — operação longa/custosa; deliberadamente não disparada sem confirmação explícita do usuário (ver Blockers) |
 
 ---
@@ -104,24 +126,32 @@ mesma disciplina do MVP_WALKING_SKELETON.
 | 7 | Indeferidos não tem campo monetário na fonte real (só contagem de indeferimentos) | (a) forçar um `value` fictício; (b) `value = COUNT(*)`, `unit = 'count'` | (b) | Reflete o dado real; documentado no contrato (`allowed: [count]`). |
 | 8 | `bronze_check` da pipeline incremental comparava `config.bronze_columns` contra `contract.source_columns` — ambos estáticos, checagem circular (nunca pegaria drift real) | (a) manter; (b) reusar `bronze.source_columns()` (já existente, consulta `INFORMATION_SCHEMA.COLUMNS` real) | (b) | (a) nunca detectaria uma mudança real de schema na fonte; (b) reaproveita função já testada, sem código novo. |
 | 9 | Memória/timeout do Cloud Run Job (512Mi/900s) insuficientes para o maior arquivo real conhecido (1,2 GB comprimido, Mantidos Ativos) | (a) manter; (b) 4Gi/3600s | (b) | Dimensionado para 1 recurso confortavelmente; nota explícita de que o backfill completo (183 recursos numa execução só) provavelmente precisa de mais — a medir no primeiro run real. |
+| 10 | R10/OQ1 do DEFINE pedia "grão mês+espécie completo" na API — mas o módulo M03 (decisão do Brainstorm) só precisa de **1 número nacional por dataset** para o mês mais recente | (a) implementar o endpoint genérico UF×espécie×mês completo, mais superfície e complexidade; (b) endpoint de total nacional agregado (`SUM` de tudo), mais simples | (b) | YAGNI — a UI real só consome 1 agregado por dataset; drill-down por UF/espécie não tem consumidor ainda. `Config.metric_tables` deixa o caminho aberto para estender depois sem quebrar nada. |
+| 11 | Teste e2e do módulo M03: afirmar um valor real renderizado (como o card da dívida faz) exigiria dado real no Gold, que só existe após o backfill (ainda não rodado) | (a) afirmar um valor específico (falharia até o backfill rodar); (b) teste smoke — renderiza valor OU "Indisponível" com grace, nunca quebra | (b) | Honesto sobre o estado real dos dados; evita um teste que falharia por design até o backfill rodar. Vira teste de valor estrito depois, quando houver dado real. |
+| 12 | Achado #10 exigiu saber, por `metric_id`, qual tabela Gold física consultar — `Config` da API não tinha esse conceito (só 1 `gold_table` fixo, para a dívida) | (a) hardcode do nome da tabela INSS no código; (b) `metric_tables: dict[str,str]` novo em `Config`/`config.yaml` | (b) | Generaliza para qualquer metric_id futuro sem tocar código, só o YAML; mantém `gold_table`/`default_metric_id` da dívida intocados (C9). |
 
 ---
 
 ## 5. Blockers / trabalho restante
 
-- **PR2 (API + web) não iniciado** — extensão do `BigQueryRepo`/endpoint para grão mês+espécie
-  (G7/OQ1 do DEFINE), módulo M03 na Landing. Depende da Gold do PR1 já mergeada.
 - **Backfill real não executado** — precisa de `GCP_PROJECT`/WIF reais (indisponível nesta sessão
   interativa) e é uma operação longa (~100–130 GB comprimidos, ~183 recursos) com custo/tempo não
   triviais. Por princípio de não tomar ações caras/difíceis de reverter sem confirmação explícita,
   **não foi disparado** — é o próximo passo concreto, de preferência via o workflow `data.yml`
   (ou uma execução dedicada), com tempo/custo reais medidos e reportados (DESIGN §7.4).
+- **Até o backfill rodar, os 3 endpoints `/v1/metrics/{metric_id}/national` devolvem 404 em
+  produção** (Gold vazio) — o módulo M03 vai mostrar "Indisponível" nos 3 números até lá. Não é um
+  bug; é o estado real e esperado antes do backfill.
 - **Gate `integration` cobre só Emitidos** (1 dos 3 datasets, por decisão do DESIGN §6) — Mantidos e
   Indeferidos têm cobertura unitária real (schemas confirmados, quirks tratados), mas não foram
   exercitados ponta a ponta contra BigQuery real nesta sessão.
 - **Convergência de Mantidos (3 recursos/mês) validada só por raciocínio + teste unitário de
   Bronze** (`test_load_partition_scopes_by_source_uri_not_just_month`) — não por uma execução real
   de backfill processando os 3 sub-arquivos de um mês em sequência.
+- **e2e do web (`npm run e2e`) não executado nesta sessão** — precisa de `preview` + API viva;
+  roda no `api-web.yml` pós-deploy, mesmo padrão do card da dívida.
+- **Drill-down por UF/espécie na API não existe** — decisão deliberada (achado #10, YAGNI); só o
+  agregado nacional está implementado. Extensível via `Config.metric_tables` sem quebrar nada.
 
 ---
 
@@ -129,26 +159,28 @@ mesma disciplina do MVP_WALKING_SKELETON.
 
 | Arquivo | Status | Próximo |
 |---|---|---|
-| `DEFINE_INSS_BENEFICIOS.md` | 🔶 PR1 Built (não `✅ Complete (Built)` — PR2 pendente) | PR2, depois `/ship` |
-| `DESIGN_INSS_BENEFICIOS.md` | 🔶 PR1 Built (idem) | PR2, depois `/ship` |
+| `DEFINE_INSS_BENEFICIOS.md` | 🔶 PR1+PR2 Built (não `✅ Complete (Built)` — backfill real pendente) | backfill real, depois `/verify-spec` + `/ship` |
+| `DESIGN_INSS_BENEFICIOS.md` | 🔶 PR1+PR2 Built (idem) | idem |
 
 Não avancei para `✅ Complete (Built)` porque isso sinalizaria prontidão para `/ship`, o que seria
-impreciso com PR2 e o backfill real pendentes — mesmo padrão de disciplina de status do
-`MVP_WALKING_SKELETON` (2 PRs antes do ship).
+impreciso com o backfill real pendente (os 3 endpoints da API ainda devolvem 404 em produção sem
+ele) — mesmo padrão de disciplina de status do `MVP_WALKING_SKELETON` (2 PRs antes do ship).
 
 ---
 
-## 7. Quality gate (parcial — PR1)
+## 7. Quality gate (PR1 + PR2 — falta só o backfill real)
 
-- [x] Todos os itens do manifesto do PR1 criados/modificados (29, 1 dispensado por já existir)
-- [x] `ruff` + `mypy --strict` + `pytest` verdes (64 testes)
+- [x] Todos os itens do manifesto criados/modificados (38 de 36 — 2 a mais não previstos: `Config.metric_tables`, achado #12)
+- [x] `ruff` + `mypy --strict` + `pytest` verdes em `ingestion/` (64 testes) e `api/` (15 testes)
+- [x] `web/` typecheck + build verdes, sem valor hard-coded
 - [x] Sem TODO / sem segredo
-- [x] Atribuição de agente (§1) + Autonomous Decisions (§4) — incluindo 1 achado crítico corrigido
+- [x] Atribuição de agente (§1/§1b) + Autonomous Decisions (§4) — incluindo 1 achado crítico corrigido
 - [x] Contratos e configs carregam sem erro
 - [x] `terraform fmt` limpo
-- [ ] Gate `integration` provado contra BigQuery real — **pendente do PR** (mesmo padrão do CI_ASSURANCE_GATES)
-- [ ] PR2 (API+web)
-- [ ] Backfill real executado e medido
+- [x] Gate `integration` provado contra BigQuery real (PR #4, 2 execuções verdes)
+- [x] Rota da dívida comprovadamente não regride (`test_debt_route_unaffected_by_national_route`)
+- [ ] `web/` e2e — pendente de deploy real (roda em `api-web.yml`)
+- [ ] Backfill real executado e medido — **único bloqueador restante para `/ship`**
 - [x] BUILD_REPORT gerado
 
 ---
@@ -158,3 +190,4 @@ impreciso com PR2 e o backfill real pendentes — mesmo padrão de disciplina de
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-04 | 1.0 | PR1 (espinha de dados) completo em `feature/inss-beneficios`: 3 conectores com schema real confirmado, correção crítica de `registry.py`/`provenance.py` (tabelas compartilhadas), `pipeline_incremental.py` novo, `backfill.py` resumível, 3 contratos + 6 SQL + 3 configs, Terraform redimensionado. 9 Autonomous Decisions, 1 crítica. `ruff`+`mypy`+`pytest` verdes (64 testes). PR2 e backfill real pendentes. | /build (Claude Sonnet 5) |
+| 2026-09-04 | 1.1 | PR1 mergeado em `main` (#4), provado ao vivo contra BigQuery real. PR2 (API+web) completo em `feature/inss-beneficios-pr2`: rota `GET /v1/metrics/{metric_id}/national` (agregado nacional, resolvendo OQ1/OQ2 com YAGNI — achado #10), módulo M03 web (3 números, grace degradation), `Config.metric_tables` novo. `ruff`+`mypy`+`pytest` verdes em `api/` (15 testes) e `ingestion/`; `web` typecheck+build verdes. Rota da dívida comprovadamente intacta. Só o backfill histórico real falta para `/ship`. | /build (Claude Sonnet 5) |

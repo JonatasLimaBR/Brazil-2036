@@ -4,3 +4,8 @@ gold_table: gold_debt_state_current
 provenance_table: metric_provenance
 default_metric_id: divida_consolidada
 default_state_ibge_code: "35"
+
+metric_tables:
+  inss_beneficios_emitidos: gold_inss_beneficios_emitidos
+  inss_beneficios_mantidos: gold_inss_beneficios_mantidos
+  inss_beneficios_indeferidos: gold_inss_beneficios_indeferidos

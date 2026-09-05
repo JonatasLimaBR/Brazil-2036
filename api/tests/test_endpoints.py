@@ -5,7 +5,12 @@ from fastapi.testclient import TestClient
 
 from api.config import Config
 from api.main import app, get_config, get_repo
-from api.models import MetricResponse, ProvenanceResponse, ProvenanceSummary
+from api.models import (
+    MetricResponse,
+    NationalMetricResponse,
+    ProvenanceResponse,
+    ProvenanceSummary,
+)
 
 _CONFIG = Config(
     gcp_project="test",
@@ -14,6 +19,7 @@ _CONFIG = Config(
     provenance_table="metric_provenance",
     default_metric_id="divida_consolidada",
     default_state_ibge_code="35",
+    metric_tables={"inss_beneficios_emitidos": "gold_inss_beneficios_emitidos"},
 )
 
 _METRIC = MetricResponse(
@@ -47,16 +53,41 @@ _PROV = ProvenanceResponse(
 )
 
 
+_NATIONAL = NationalMetricResponse(
+    metric_id="inss_beneficios_emitidos",
+    value=123456.78,
+    unit="BRL",
+    reference_date="2026-06-01",
+    data_class="observed",
+    provenance=ProvenanceSummary(
+        source="https://s3/inss_emitidos_202606.zip",
+        reference_date="2026-06-01",
+        trust_status="source_only",
+    ),
+)
+
+
 class StubRepo:
-    def __init__(self, metric: MetricResponse | None, prov: ProvenanceResponse | None) -> None:
+    def __init__(
+        self,
+        metric: MetricResponse | None,
+        prov: ProvenanceResponse | None,
+        national: NationalMetricResponse | None = None,
+    ) -> None:
         self._metric = metric
         self._prov = prov
+        self._national = national
 
     def latest_metric(self, metric_id: str, state_ibge_code: str) -> MetricResponse | None:
         return self._metric
 
     def provenance(self, metric_id: str, state_ibge_code: str) -> ProvenanceResponse | None:
         return self._prov
+
+    def latest_national_total(
+        self, metric_id: str, gold_table: str
+    ) -> NationalMetricResponse | None:
+        return self._national
 
 
 def _client(repo: StubRepo) -> TestClient:
@@ -108,7 +139,38 @@ def test_provenance_404() -> None:
     assert resp.status_code == 404
 
 
-def test_openapi_has_both_paths() -> None:
+def test_national_metric_ok() -> None:
+    resp = _client(StubRepo(None, None, _NATIONAL)).get(
+        "/v1/metrics/inss_beneficios_emitidos/national"
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["value"] == 123456.78
+    assert body["reference_date"] == "2026-06-01"
+    assert body["data_class"] == "observed"
+    assert body["provenance"]["source"] == "https://s3/inss_emitidos_202606.zip"
+
+
+def test_national_metric_unknown_metric_404() -> None:
+    resp = _client(StubRepo(None, None, _NATIONAL)).get("/v1/metrics/unknown_metric/national")
+    assert resp.status_code == 404
+
+
+def test_national_metric_no_data_404() -> None:
+    resp = _client(StubRepo(None, None, None)).get("/v1/metrics/inss_beneficios_emitidos/national")
+    assert resp.status_code == 404
+
+
+def test_debt_route_unaffected_by_national_route() -> None:
+    # C9 (DEFINE): the national route is additive and must not change the
+    # debt dataset's existing per-state response shape or behavior.
+    resp = _client(StubRepo(_METRIC, _PROV, _NATIONAL)).get("/v1/metrics/divida_consolidada")
+    assert resp.status_code == 200
+    assert resp.json()["state_ibge_code"] == "35"
+
+
+def test_openapi_has_all_paths() -> None:
     schema = app.openapi()
     assert "/v1/metrics/{metric_id}" in schema["paths"]
+    assert "/v1/metrics/{metric_id}/national" in schema["paths"]
     assert "/v1/provenance/{metric_id}" in schema["paths"]

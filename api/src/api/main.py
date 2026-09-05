@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.bigquery_repo import BigQueryRepo, build_bigquery_run_query
 from api.config import Config, load_config
-from api.models import MetricResponse, ProvenanceResponse
+from api.models import MetricResponse, NationalMetricResponse, ProvenanceResponse
 
 app = FastAPI(
     title="BRASIL 2036 — Metrics API",
@@ -54,6 +54,21 @@ def get_metric(
 ) -> MetricResponse:
     state = state_ibge_code or config.default_state_ibge_code
     result = repo.latest_metric(metric_id, state)
+    if result is None:
+        raise HTTPException(status_code=404, detail="metric not found")
+    return result
+
+
+@app.get("/v1/metrics/{metric_id}/national", response_model=NationalMetricResponse)
+def get_national_metric(
+    metric_id: str,
+    repo: RepoDep,
+    config: ConfigDep,
+) -> NationalMetricResponse:
+    gold_table = config.metric_tables.get(metric_id)
+    if gold_table is None:
+        raise HTTPException(status_code=404, detail="metric not found")
+    result = repo.latest_national_total(metric_id, gold_table)
     if result is None:
         raise HTTPException(status_code=404, detail="metric not found")
     return result

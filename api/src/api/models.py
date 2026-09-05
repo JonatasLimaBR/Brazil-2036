@@ -30,6 +30,15 @@ class MetricResponse(BaseModel):
     provenance: ProvenanceSummary
 
 
+class NationalMetricResponse(BaseModel):
+    metric_id: str
+    value: float
+    unit: str
+    reference_date: str
+    data_class: DataClass
+    provenance: ProvenanceSummary
+
+
 class ProvenanceResponse(BaseModel):
     metric_id: str
     state_ibge_code: str

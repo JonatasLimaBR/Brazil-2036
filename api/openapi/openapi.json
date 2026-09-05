@@ -69,6 +69,42 @@
         "title": "MetricResponse",
         "type": "object"
       },
+      "NationalMetricResponse": {
+        "properties": {
+          "data_class": {
+            "$ref": "#/components/schemas/DataClass"
+          },
+          "metric_id": {
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ProvenanceSummary"
+          },
+          "reference_date": {
+            "title": "Reference Date",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "metric_id",
+          "value",
+          "unit",
+          "reference_date",
+          "data_class",
+          "provenance"
+        ],
+        "title": "NationalMetricResponse",
+        "type": "object"
+      },
       "ProvenanceResponse": {
         "properties": {
           "bronze_object": {
@@ -286,6 +322,45 @@
           }
         },
         "summary": "Get Metric"
+      }
+    },
+    "/v1/metrics/{metric_id}/national": {
+      "get": {
+        "operationId": "get_national_metric_v1_metrics__metric_id__national_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "metric_id",
+            "required": true,
+            "schema": {
+              "title": "Metric Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NationalMetricResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get National Metric"
       }
     },
     "/v1/provenance/{metric_id}": {

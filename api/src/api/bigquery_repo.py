@@ -7,6 +7,7 @@ from api.config import Config
 from api.models import (
     DataClass,
     MetricResponse,
+    NationalMetricResponse,
     ProvenanceResponse,
     ProvenanceSummary,
 )
@@ -77,6 +78,55 @@ class BigQueryRepo:
             source_resource_url=row["source_resource_url"],
             catalog_dataset_id=row["catalog_dataset_id"],
             producing_organization=row["producing_organization"],
+            trust_status=_TRUST_STATUS,
+        )
+
+    def latest_national_total(
+        self, metric_id: str, gold_table: str
+    ) -> NationalMetricResponse | None:
+        # National aggregate (PRD-005 M03): sums value across every UF and
+        # especie for the metric's most recent month. Additive to
+        # latest_metric/gold_table above -- gold_table is resolved by the
+        # caller from Config.metric_tables, one physical Gold table per
+        # metric_id, so this never touches the debt route's table.
+        gold = f"`{self._config.gcp_project}.{self._config.bq_dataset_gold}.{gold_table}`"
+        rows = self._run_query(
+            "SELECT SUM(value) AS value, ANY_VALUE(unit) AS unit, "
+            "CAST(MAX(reference_date) AS STRING) AS reference_date "
+            f"FROM {gold} WHERE metric_id = @metric_id "
+            f"AND reference_date = (SELECT MAX(reference_date) FROM {gold} "
+            "WHERE metric_id = @metric_id)",
+            {"metric_id": metric_id},
+        )
+        if not rows or rows[0]["value"] is None:
+            return None
+        row = rows[0]
+        summary = self._national_provenance_summary(metric_id, row["reference_date"])
+        if summary is None:
+            return None
+        return NationalMetricResponse(
+            metric_id=metric_id,
+            value=float(row["value"]),
+            unit=row["unit"],
+            reference_date=row["reference_date"],
+            data_class=DataClass.observed,
+            provenance=summary,
+        )
+
+    def _national_provenance_summary(
+        self, metric_id: str, reference_date: str
+    ) -> ProvenanceSummary | None:
+        prov = self._config.provenance_fqtn
+        rows = self._run_query(
+            f"SELECT ANY_VALUE(source) AS source FROM {prov} "
+            "WHERE metric_id = @metric_id AND reference_date = DATE(@ref_date)",
+            {"metric_id": metric_id, "ref_date": reference_date},
+        )
+        if not rows or not rows[0]["source"]:
+            return None
+        return ProvenanceSummary(
+            source=rows[0]["source"],
+            reference_date=reference_date,
             trust_status=_TRUST_STATUS,
         )
 
