@@ -7,8 +7,8 @@
 - **Entrada:** `.claude/sdd/features/DESIGN_FISCAL_RECEITA_DESPESA.md` (v1.0)
 - **Branch:** PR1 `feature/fiscal-receita-despesa` (merged, #15) · PR2 `feature/fiscal-receita-despesa-pr2` (merged, #16)
 - **Data:** 2026-09-05
-- **Status da build:** ✅ PR1+PR2+backfill real completos. `/verify-spec` independente = OVERALL PASS (confiança 0.93).
-- **Próximo passo:** `/ship`
+- **Status da build:** ✅ Shipped — PR1+PR2+backfill real completos; `/verify-spec` independente = OVERALL PASS (confiança 0.93).
+- **Próximo passo:** nenhum — feature arquivada. Próxima feature via `/brainstorm` ou `/define`.
 
 > Assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
 

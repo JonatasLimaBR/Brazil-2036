@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** FISCAL_RECEITA_DESPESA
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 2 (Design)
 - **Entrada:** `.claude/sdd/features/DEFINE_FISCAL_RECEITA_DESPESA.md` (Clarity 14/15)
 - **Criado:** 2026-09-05
@@ -630,3 +630,4 @@ Pronto para `/build .claude/sdd/features/DESIGN_FISCAL_RECEITA_DESPESA.md`.
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-05 | 1.0 | Criação a partir de `DEFINE_FISCAL_RECEITA_DESPESA.md`. Descoberta real (§0) resolveu OQ1-OQ5; revisou C5 do DEFINE (1 tabela Gold, não 2 — D2) após confirmar que as 3 métricas vêm do mesmo arquivo/grão; achado crítico D10 (38% dos meses reais têm resultado primário negativo, contrato hoje rejeita incondicionalmente). 11 decisões inline (D1-D11). Manifesto 21 itens. Status → Ready for Build. | /design (Claude Sonnet 5) |
+| 2026-09-05 | 1.1 | Build completo (PR1+PR2+backfill real); `/verify-spec` independente = OVERALL PASS. Shipped and archived. | /ship (Claude Sonnet 5) |

@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** FISCAL_RECEITA_DESPESA
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 1 (Define)
 - **Entrada:** `.claude/sdd/features/BRAINSTORM_FISCAL_RECEITA_DESPESA.md` (Ready for Define)
 - **Criado:** 2026-09-05
@@ -199,3 +199,4 @@ ingestão adicional.
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-05 | 1.0 | Criação a partir de `BRAINSTORM_FISCAL_RECEITA_DESPESA.md`. Clarity 14/15. Status → Ready for Design. | /define (Claude Sonnet 5) |
+| 2026-09-05 | 1.1 | PR1+PR2+backfill real completos; `/verify-spec` independente = OVERALL PASS. Shipped and archived. | /ship (Claude Sonnet 5) |

@@ -1,7 +1,7 @@
 # BRAINSTORM — FISCAL_RECEITA_DESPESA
 
 - **Feature:** FISCAL_RECEITA_DESPESA
-- **Status:** ✅ Complete (Defined)
+- **Status:** ✅ Shipped
 - **Fase:** 0 (Brainstorm)
 - **Criado:** 2026-09-05
 - **Idioma:** PT-BR (alinhado a `docs/discovery/`)
