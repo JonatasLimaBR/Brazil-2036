@@ -197,6 +197,38 @@ ponta com dado real, não exigir cobertura histórica exaustiva antes de fechar 
 
 ---
 
+## 4d. `/verify-spec` independente (2026-09-05)
+
+Sessão nova, read-only, sem contexto do build. Inspecionou o código diretamente (não confiou nas
+alegações deste relatório), reproduziu os testes (`ruff`/`mypy`/`pytest` de `ingestion/`, `api/`,
+`web/`) e consultou o BigQuery real (`brasil2036-dev`) e os endpoints ao vivo da API.
+
+**Veredito: OVERALL PASS.**
+
+- **Correção crítica (achado #1) confirmada de verdade**, não só pelo código — o revisor
+  confirmou ao vivo no BigQuery que `metric_provenance` tem exatamente 27 linhas de
+  `divida_consolidada` depois de 16.358 linhas novas de INSS terem sido escritas.
+- **Todos os números do BUILD_REPORT batem exatamente** com uma consulta independente ao
+  BigQuery real (linhas de Gold, soma em R$ até o centavo, contagem de meses) — sem fabricação.
+- **Rota da dívida confirmadamente não regride** (`GET /v1/metrics/divida_consolidada` → 200 ao
+  vivo).
+- **2 achados novos:**
+  - **[E1 — ERROR, corrigido nesta rodada]** `GET /v1/metrics/inss_beneficios_mantidos/national`
+    devolvia **500**, não 404, porque `gold_inss_beneficios_mantidos` nem existe (Mantidos nunca
+    rodou de verdade) e `latest_national_total()` não tratava esse caso. Corrigido:
+    `api/src/api/bigquery_repo.py` agora captura `google.api_core.exceptions.NotFound` e devolve
+    `None` (→ 404), igual a qualquer outro "sem dado para este metric_id". Teste novo
+    (`test_latest_national_total_returns_none_when_gold_table_does_not_exist_yet`) cobre o caso.
+  - **[W1 — WARNING, aceito como desvio documentado]** `InssIndeferidosConnector.download()`
+    grava em RAW o **CSV convertido**, não os bytes originais do XLSX — um desvio real do D6 do
+    DESIGN ("RAW guarda o artefato original real") que não tinha sido registrado como decisão
+    autônoma. Aceito: converter XLSX→CSV antes de qualquer coisa é necessário porque
+    `LOAD DATA` do BigQuery não aceita XLSX; manter os dois artefatos (original + convertido)
+    exigiria um segundo objeto em RAW por mês — escopo extra para um ganho de fidelidade marginal
+    neste dataset. Registrado aqui como a decisão explícita que faltava.
+
+---
+
 ## 5. Blockers / trabalho restante (após decisão de fechar o escopo do backfill)
 
 - **Parser adaptativo para Emitidos/Mantidos** — necessário para qualquer backfill histórico

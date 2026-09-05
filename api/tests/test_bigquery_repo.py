@@ -113,3 +113,20 @@ def test_latest_national_total_sums_across_uf_and_especie() -> None:
 def test_latest_national_total_missing_returns_none() -> None:
     repo = BigQueryRepo(CONFIG, _national_run_query(present=False))
     assert repo.latest_national_total("inss_beneficios_emitidos", "gold_inss_x") is None
+
+
+def test_latest_national_total_returns_none_when_gold_table_does_not_exist_yet() -> None:
+    # A metric_tables entry can exist before its backfill has ever run (e.g.
+    # Mantidos), so the Gold table itself may not exist. Found by an
+    # independent /verify-spec review hitting the live endpoint and getting a
+    # 500 instead of the documented 404.
+    from google.api_core.exceptions import NotFound
+
+    def run(sql: str, params: Mapping[str, Any]) -> list[dict[str, Any]]:
+        raise NotFound("gold_inss_beneficios_mantidos not found")
+
+    repo = BigQueryRepo(CONFIG, run)
+    assert (
+        repo.latest_national_total("inss_beneficios_mantidos", "gold_inss_beneficios_mantidos")
+        is None
+    )
