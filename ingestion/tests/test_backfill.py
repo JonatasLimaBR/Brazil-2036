@@ -129,6 +129,42 @@ def test_run_backfill_skips_already_loaded_and_resumes(monkeypatch) -> None:
     assert result.failed == 0
 
 
+def test_run_backfill_newest_first_processes_reverse_order(monkeypatch) -> None:
+    # CKAN lists resources oldest-first; Emitidos confirmed live to use a
+    # different, unsupported schema in older months, so --newest-first lets
+    # --limit bound recent (likely valid) months instead of wasting bandwidth
+    # on guaranteed-to-fail multi-GB historical downloads.
+    resources = [
+        _resource("202604", "r1"),
+        _resource("202605", "r2"),
+        _resource("202606", "r3"),
+    ]
+    session = _FakeCkanSession(resources)
+    client = FakeBigQuery(lambda sql: [])
+    calls: list[dt.date] = []
+
+    def _fake_run(config, *, connector, storage_client, bq_client, reference_period, sql_dir=None):
+        calls.append(reference_period)
+        return IncrementalRunResult(
+            run_id="r", status="ok", reference_period=reference_period, bronze_rows=1
+        )
+
+    monkeypatch.setattr(pipeline_incremental, "run", _fake_run)
+
+    result = run_backfill(
+        ckan_session=session,
+        config=_config(),
+        connector_factory=lambda r: object(),  # type: ignore[return-value]
+        storage_client=object(),  # type: ignore[arg-type]
+        bq_client=client,
+        limit=2,
+        newest_first=True,
+    )
+
+    assert calls == [dt.date(2026, 6, 1), dt.date(2026, 5, 1)]
+    assert result.loaded == 2
+
+
 def test_run_backfill_limit_bounds_pipeline_run_calls(monkeypatch) -> None:
     resources = [_resource("202604", "r1"), _resource("202605", "r2"), _resource("202606", "r3")]
     session = _FakeCkanSession(resources)
