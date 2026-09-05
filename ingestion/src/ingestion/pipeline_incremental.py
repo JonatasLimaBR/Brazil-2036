@@ -181,6 +181,7 @@ def run(
         raw_uri=raw_object.uri,
         source_uri=ref.resource_url,
         row_hash=raw_object.content_sha256,
+        encoding=download.source_encoding,
     )
     result.bronze_rows = load.rows_loaded
 

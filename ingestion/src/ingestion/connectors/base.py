@@ -22,6 +22,15 @@ class DownloadResult:
     bytes_downloaded: int
     attempts: int
     attempt_errors: list[str] = field(default_factory=list)
+    # BigQuery LOAD DATA encoding for this file's content ("UTF-8" or
+    # "ISO-8859-1"). Detected cheaply from a small sample, not by decoding the
+    # whole payload: some real INSS exports run into the multi-GB range, and a
+    # full-file decode/re-encode to normalize legacy cp1252 to UTF-8 in Python
+    # memory reliably MemoryErrors on files that size (confirmed live). Bytes
+    # in cp1252's 0x80-0x9F range are rare enough in Portuguese text that
+    # ISO-8859-1 (BigQuery's only non-UTF-8 CSV option) is an acceptable
+    # stand-in and lets BigQuery's server-side loader do the decode instead.
+    source_encoding: str = "UTF-8"
 
 
 @runtime_checkable
