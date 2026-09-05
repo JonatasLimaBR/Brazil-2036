@@ -31,19 +31,28 @@ def load(
     raw_uri: str,
     source_uri: str,
     row_hash: str,
+    columns: Sequence[str] = BRONZE_COLUMNS,
+    field_delimiter: str = ";",
 ) -> BronzeLoad:
+    # columns/field_delimiter default to the debt dataset's original hardcoded
+    # shape (UF, ANO, VALOR ";"-delimited) so existing callers are unaffected.
+    # Parameterized the same way load_partition() already is, for datasets
+    # whose whole history arrives in one file with a different column set
+    # (e.g. the Tesouro Nacional wide monthly series).
     staging = _fqtn(project, dataset_bronze, f"{table}_stg")
     target = _fqtn(project, dataset_bronze, table)
+    col_defs = ", ".join(f"{c} STRING" for c in columns)
+    select_cols = ", ".join(columns)
 
     run_sql(
         client,
-        f"LOAD DATA OVERWRITE {staging} (UF STRING, ANO STRING, VALOR STRING) "
-        "FROM FILES (format='CSV', field_delimiter=';', skip_leading_rows=1, "
+        f"LOAD DATA OVERWRITE {staging} ({col_defs}) "
+        f"FROM FILES (format='CSV', field_delimiter='{field_delimiter}', skip_leading_rows=1, "
         f"encoding='UTF-8', uris=['{raw_uri}'])",
     )
     run_sql(
         client,
-        f"CREATE OR REPLACE TABLE {target} AS SELECT UF, ANO, VALOR, "
+        f"CREATE OR REPLACE TABLE {target} AS SELECT {select_cols}, "
         f"{sql_literal(source_uri)} AS _source_uri, "
         "CURRENT_TIMESTAMP() AS _ingested_at, "
         f"{sql_literal(row_hash)} AS _row_hash FROM {staging}",

@@ -97,18 +97,25 @@ class DataContract:
         key_fields: Sequence[str],
         value_field: str,
         provenance_row_count: int,
+        allow_negative: bool = False,
     ) -> ContractResult:
         # Unlike check_gold, this does not assert a fixed distinct-entity count:
         # a multi-dimension grain (UF x especie[x status] x month) has no single
         # expected cardinality per period the way "27 states" does for the debt
         # dataset -- some months legitimately have fewer distinct combinations.
+        #
+        # allow_negative defaults to False (debt/INSS values are never negative
+        # in practice) but the Central Government primary result is legitimately
+        # negative in a primary deficit -- 135 of 356 real historical months are,
+        # including recent ones. Without this escape hatch, every deficit month
+        # would quarantine as if it were a parsing error.
         violations: list[str] = []
 
         for key in (*key_fields, value_field):
             if any(r.get(key) in (None, "") for r in rows):
                 violations.append(f"null values in required field {key!r}")
 
-        if any(_as_decimal(r.get(value_field)) < 0 for r in rows):
+        if not allow_negative and any(_as_decimal(r.get(value_field)) < 0 for r in rows):
             violations.append(f"negative {value_field} found")
 
         if provenance_row_count != len(rows):
