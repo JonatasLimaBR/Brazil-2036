@@ -124,3 +124,45 @@ def test_gold_raise_if_broken() -> None:
         assert "gold contract broken" in str(exc)
     else:
         raise AssertionError("expected ContractViolation")
+
+
+def _period_rows(value: object) -> list[dict[str, object]]:
+    return [
+        {"state_ibge_code": "BR", "reference_date": dt.date(2026, 6, 1), "value": value},
+    ]
+
+
+def test_gold_period_rejects_negative_value_by_default() -> None:
+    result = _contract().check_gold_period(
+        _period_rows(Decimal("-1234.56")),
+        key_fields=("state_ibge_code", "reference_date"),
+        value_field="value",
+        provenance_row_count=1,
+    )
+    assert not result.ok
+    assert any("negative" in v for v in result.violations)
+
+
+def test_gold_period_allow_negative_accepts_negative_value() -> None:
+    # fiscal_primario (Central Government primary result) is legitimately
+    # negative in a primary deficit -- 135 of 356 real historical months are.
+    result = _contract().check_gold_period(
+        _period_rows(Decimal("-1234.56")),
+        key_fields=("state_ibge_code", "reference_date"),
+        value_field="value",
+        provenance_row_count=1,
+        allow_negative=True,
+    )
+    assert result.ok, result.violations
+
+
+def test_gold_period_allow_negative_still_catches_nulls() -> None:
+    result = _contract().check_gold_period(
+        [{"state_ibge_code": "BR", "reference_date": None, "value": Decimal("-1")}],
+        key_fields=("state_ibge_code", "reference_date"),
+        value_field="value",
+        provenance_row_count=1,
+        allow_negative=True,
+    )
+    assert not result.ok
+    assert any("null values" in v for v in result.violations)

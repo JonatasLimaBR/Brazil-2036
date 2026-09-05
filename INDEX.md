@@ -82,6 +82,7 @@
 - `docs/adrs/ADR-053-cloud-run-services-and-wif-bootstrap-outside-terraform.md`
 - `docs/adrs/ADR-054-ci-merge-gate-umbrella.md`
 - `docs/adrs/ADR-055-inss-incremental-partitioned-ingestion.md`
+- `docs/adrs/ADR-056-fiscal-uniao-wide-series-ingestion.md`
 - `docs/architecture/ARCHITECTURE.md`
 - `docs/discovery/01-USER-JOURNEYS.md`
 - `docs/discovery/02-AI-VALUE-RISK-MATRIX.md`

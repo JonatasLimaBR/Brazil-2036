@@ -46,3 +46,31 @@ def test_write_from_gold_deletes_and_inserts_scoped_by_metric_and_period() -> No
     assert "CREATE OR REPLACE" not in create_sql
     assert "CREATE OR REPLACE" not in insert_sql
     assert "COUNT(*)" in count_sql
+
+
+def test_write_from_gold_with_reference_date_none_scopes_by_metric_id_only() -> None:
+    # A source that republishes its entire history every run (Tesouro Nacional
+    # wide monthly series) has no single period to scope by -- every period is
+    # recomputed at once, so provenance for that metric_id is replaced whole.
+    client = FakeBigQuery(_responder)
+    n = write_from_gold(
+        client,
+        project="p",
+        dataset_gold="br2036_gold",
+        gold_table="gold_fiscal_uniao",
+        provenance_table="metric_provenance",
+        metric_id="fiscal_primario",
+        reference_date=None,
+        source_url="https://tesouro/rtn.xlsx",
+        silver_transform="sql/silver/fiscal_uniao.sql",
+        silver_transform_version="run123",
+        bronze_object="gs://p-raw/fiscal/abc.csv",
+        catalog_dataset_id="fiscal_uniao",
+        producing_organization="Tesouro Nacional / CESEF",
+        run_id="run123",
+    )
+    assert n == 27
+    _, delete_sql, insert_sql, _ = client.queries
+    scope = "metric_id = 'fiscal_primario'"
+    assert delete_sql == f"DELETE FROM `p.br2036_gold.metric_provenance` WHERE {scope}"
+    assert f"FROM `p.br2036_gold.gold_fiscal_uniao` WHERE {scope}" in insert_sql

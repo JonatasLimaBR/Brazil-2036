@@ -1,0 +1,39 @@
+dataset_id: fiscal_uniao
+br2036_domain: fiscal
+br2036_module: M02
+
+catalog_url: "https://www.tesourotransparente.gov.br/ckan/dataset/resultado-do-tesouro-nacional"
+organization: "Tesouro Nacional / CESEF"
+license: "ODbL"
+
+metric_ids:
+  - fiscal_receita
+  - fiscal_despesa
+  - fiscal_primario
+unit: BRL
+allow_negative_metric_ids:
+  - fiscal_primario
+
+contract_path: contracts/fiscal_uniao.yaml
+
+gcp_project: ""
+raw_bucket: ""
+raw_prefix: fiscal
+
+bq_dataset_control: br2036_control
+bq_dataset_bronze: br2036_bronze
+bq_dataset_silver: br2036_silver
+bq_dataset_gold: br2036_gold
+
+bronze_table: fiscal_uniao_raw
+bronze_columns:
+  - metric_id
+  - reference_period
+  - value_millions
+field_delimiter: ","
+
+silver_model: fiscal_uniao
+gold_model: gold_fiscal_uniao
+
+ckan_base_url: "https://www.tesourotransparente.gov.br/ckan"
+ckan_package_id: "ab56485b-9c40-4efb-8563-9ce3e1973c4b"

@@ -1,0 +1,66 @@
+dataset: fiscal_uniao
+version: 1
+
+source:
+  catalog_url: "https://www.tesourotransparente.gov.br/ckan/dataset/resultado-do-tesouro-nacional"
+  resource_name: "Resultado do Tesouro Nacional - Série Histórica - Mensal"
+  organization: "Tesouro Nacional / CESEF"
+  license: "ODbL"
+  update_frequency: "monthly"
+
+format:
+  type: xlsx
+  encoding: "utf-8"
+  note: >
+    Wide monthly report (27 sheets); sheet "1.2" ("Resultado Primário do
+    Governo Central - Brasil - Mensal") has 1 row per rubric x 1 column per
+    month, R$ millions, current values. Confirmed against a real downloaded
+    file (DESIGN §0). The connector pivots 3 target rows (Receita Líquida,
+    Despesa Total, Resultado Primário) into a long CSV before Bronze -- RAW
+    keeps the original XLSX unmodified (DESIGN D6), the pivoted CSV is a
+    separate RAW object Bronze actually loads from.
+
+source_columns:
+  - metric_id
+  - reference_period
+  - value_millions
+
+keys:
+  - state_ibge_code
+  - metric_id
+  - reference_date
+
+required_fields:
+  state_ibge_code:
+    type: STRING
+    nullable: false
+    note: "constant 'BR' sentinel -- no territorial dimension in this source"
+  metric_id:
+    type: STRING
+    nullable: false
+    allowed:
+      - fiscal_receita
+      - fiscal_despesa
+      - fiscal_primario
+  reference_date:
+    type: DATE
+    nullable: false
+  value:
+    type: NUMERIC
+    nullable: false
+    note: >
+      fiscal_receita/fiscal_despesa are always >= 0 in the real series;
+      fiscal_primario is legitimately negative in a primary deficit (135 of
+      356 real historical months). Enforced per-metric_id in code
+      (contract.check_gold_period(allow_negative=...)), not here.
+  unit:
+    type: STRING
+    nullable: false
+    allowed:
+      - BRL
+
+quality_rules:
+  - name: provenance_coverage
+    expr: "count(gold) = count(provenance)"
+
+evolution_policy: additive_only

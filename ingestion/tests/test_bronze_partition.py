@@ -4,7 +4,7 @@ import datetime as dt
 
 from _fakes import FakeBigQuery
 
-from ingestion.bronze import load_partition
+from ingestion.bronze import load, load_partition
 
 
 def _responder(sql: str) -> list[dict[str, object]]:
@@ -97,4 +97,41 @@ def test_load_partition_scopes_by_source_uri_not_just_month() -> None:
     assert len(delete_queries) == 2
     assert "mantidos_ativos_202606.zip" in delete_queries[0]
     assert "mantidos_suspensos_202606.csv" in delete_queries[1]
-    assert delete_queries[0] != delete_queries[1]
+
+
+def test_load_default_columns_match_original_debt_shape() -> None:
+    # columns/field_delimiter default to the debt dataset's original hardcoded
+    # shape so this generalization is a no-op for the existing caller.
+    client = FakeBigQuery(_responder)
+    load(
+        client,
+        project="p",
+        dataset_bronze="br2036_bronze",
+        table="divida_estados_raw",
+        raw_uri="gs://p-raw/divida_estados/abc.csv",
+        source_uri="https://tesouro/x.csv",
+        row_hash="abc",
+    )
+    load_sql, create_sql, _count_sql = client.queries
+    assert "UF STRING, ANO STRING, VALOR STRING" in load_sql
+    assert "field_delimiter=';'" in load_sql
+    assert "SELECT UF, ANO, VALOR," in create_sql
+
+
+def test_load_with_custom_columns_is_not_hardcoded_to_debt_shape() -> None:
+    client = FakeBigQuery(_responder)
+    load(
+        client,
+        project="p",
+        dataset_bronze="br2036_bronze",
+        table="fiscal_uniao_raw",
+        raw_uri="gs://p-raw/fiscal/abc.csv",
+        source_uri="https://tesouro/rtn.xlsx",
+        row_hash="abc",
+        columns=("metric_id", "reference_period", "value_millions"),
+        field_delimiter=",",
+    )
+    load_sql, create_sql, _count_sql = client.queries
+    assert "metric_id STRING, reference_period STRING, value_millions STRING" in load_sql
+    assert "field_delimiter=','" in load_sql
+    assert "SELECT metric_id, reference_period, value_millions," in create_sql

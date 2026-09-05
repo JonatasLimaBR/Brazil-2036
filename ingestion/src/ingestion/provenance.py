@@ -27,7 +27,7 @@ def write_from_gold(
     gold_table: str,
     provenance_table: str,
     metric_id: str,
-    reference_date: dt.date,
+    reference_date: dt.date | None,
     source_url: str,
     silver_transform: str,
     silver_transform_version: str,
@@ -39,12 +39,21 @@ def write_from_gold(
     # DELETE+INSERT scoped by (metric_id, reference_date), not CREATE OR REPLACE:
     # metric_provenance is shared by every metric this project produces. A full-table
     # replace here would erase every other metric's (and every other period's) rows.
+    #
+    # reference_date=None widens the scope to the whole metric_id (no date
+    # filter): for a source that republishes its entire history in one file
+    # every run (e.g. the Tesouro Nacional wide monthly series), there is no
+    # single period to scope by -- the run recomputes every period at once, so
+    # provenance for that metric_id is replaced atomically in one statement.
     gold = f"`{project}.{dataset_gold}.{gold_table}`"
     prov = f"`{project}.{dataset_gold}.{provenance_table}`"
     gold_object = f"{project}.{dataset_gold}.{gold_table}"
     metric_lit = sql_literal(metric_id)
-    date_lit = sql_literal(reference_date.isoformat())
-    scope = f"metric_id = {metric_lit} AND reference_date = DATE({date_lit})"
+    if reference_date is None:
+        scope = f"metric_id = {metric_lit}"
+    else:
+        date_lit = sql_literal(reference_date.isoformat())
+        scope = f"metric_id = {metric_lit} AND reference_date = DATE({date_lit})"
 
     run_sql(client, f"CREATE TABLE IF NOT EXISTS {prov} ({_SCHEMA})")
     run_sql(client, f"DELETE FROM {prov} WHERE {scope}")
