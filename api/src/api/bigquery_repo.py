@@ -89,15 +89,26 @@ class BigQueryRepo:
         # latest_metric/gold_table above -- gold_table is resolved by the
         # caller from Config.metric_tables, one physical Gold table per
         # metric_id, so this never touches the debt route's table.
+        #
+        # NotFound is caught, not left to propagate: a metric_tables entry can
+        # exist (e.g. Mantidos) before its backfill has ever run, so the Gold
+        # table itself may not exist yet. Without this, that case 500s instead
+        # of 404ing like every other "no data for this metric" case (found by
+        # an independent /verify-spec review hitting the live endpoint).
+        from google.api_core.exceptions import NotFound
+
         gold = f"`{self._config.gcp_project}.{self._config.bq_dataset_gold}.{gold_table}`"
-        rows = self._run_query(
-            "SELECT SUM(value) AS value, ANY_VALUE(unit) AS unit, "
-            "CAST(MAX(reference_date) AS STRING) AS reference_date "
-            f"FROM {gold} WHERE metric_id = @metric_id "
-            f"AND reference_date = (SELECT MAX(reference_date) FROM {gold} "
-            "WHERE metric_id = @metric_id)",
-            {"metric_id": metric_id},
-        )
+        try:
+            rows = self._run_query(
+                "SELECT SUM(value) AS value, ANY_VALUE(unit) AS unit, "
+                "CAST(MAX(reference_date) AS STRING) AS reference_date "
+                f"FROM {gold} WHERE metric_id = @metric_id "
+                f"AND reference_date = (SELECT MAX(reference_date) FROM {gold} "
+                "WHERE metric_id = @metric_id)",
+                {"metric_id": metric_id},
+            )
+        except NotFound:
+            return None
         if not rows or rows[0]["value"] is None:
             return None
         row = rows[0]
