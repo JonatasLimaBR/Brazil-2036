@@ -177,8 +177,6 @@ def test_debt_and_inss_routes_unaffected_by_fiscal_metric_tables_entries() -> No
 
     inss_repo = BigQueryRepo(CONFIG, _national_run_query())
     assert (
-        inss_repo.latest_national_total(
-            "inss_beneficios_emitidos", "gold_inss_beneficios_emitidos"
-        )
+        inss_repo.latest_national_total("inss_beneficios_emitidos", "gold_inss_beneficios_emitidos")
         is not None
     )
