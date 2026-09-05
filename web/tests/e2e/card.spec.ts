@@ -37,6 +37,24 @@ test("INSS module renders without crashing for each of the 3 metrics", async ({ 
   }
 });
 
+test("Fiscal module renders without crashing for each of the 3 metrics", async ({ page }) => {
+  // No real backfill has run yet for fiscal_receita/fiscal_despesa/
+  // fiscal_primario, so the API may 404 and the module renders
+  // "Indisponível" -- same graceful-degradation contract as the INSS module
+  // above, not yet the strict "value must render" assertion.
+  await page.goto("/");
+
+  await expect(page.getByText("Fiscal & DebtLab")).toBeVisible();
+
+  for (const id of ["fiscal_receita", "fiscal_despesa", "fiscal_primario"]) {
+    const article = page.getByTestId(`fiscal-${id}`);
+    await expect(article).toBeVisible({ timeout: 20_000 });
+    const hasValue = await page.getByTestId(`fiscal-${id}-value`).count();
+    const hasError = await article.locator(".error").count();
+    expect(hasValue + hasError, `${id} must render a value or an error, not neither`).toBe(1);
+  }
+});
+
 test("no debt figure is hardcoded in the served bundle", async ({ request }) => {
   const html = await (await request.get("/")).text();
   const scriptMatch = html.match(/src="([^"]*assets\/[^"]+\.js)"/);

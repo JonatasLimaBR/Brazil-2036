@@ -1,5 +1,6 @@
 import createClient from "openapi-fetch";
 import type { paths } from "./api-client/schema";
+import { renderFiscalModule } from "./fiscal";
 import { renderInssModule } from "./inss";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
@@ -43,3 +44,4 @@ async function load(): Promise<void> {
 
 void load();
 void renderInssModule();
+void renderFiscalModule();

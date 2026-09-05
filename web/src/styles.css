@@ -100,20 +100,23 @@ h2 {
   margin: 2rem 0 1rem;
 }
 
-.inss-module {
+.inss-module,
+.fiscal-module {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: 1rem;
 }
 
-.inss-number {
+.inss-number,
+.fiscal-number {
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 1.25rem;
 }
 
-.inss-label {
+.inss-label,
+.fiscal-label {
   margin: 0.5rem 0 0;
   color: var(--muted);
   font-size: 0.9rem;
