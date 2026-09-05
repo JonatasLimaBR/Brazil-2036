@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** INSS_BENEFICIOS
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 1 (Define)
 - **Entrada:** `.claude/sdd/features/BRAINSTORM_INSS_BENEFICIOS.md` (Ready for Define)
 - **Criado:** 2026-09-04
@@ -211,3 +211,4 @@ hardcoded a `(metric_id × UF × ano)` e não suporta isso ainda.
 | 2026-09-04 | 1.2 | PR1 (espinha de dados) construído. Achado crítico corrigido: `registry.py`/`provenance.py` faziam `CREATE OR REPLACE` em tabelas compartilhadas — corrigido antes de tocar produção. PR2 e backfill real pendentes. Status → 🔶 PR1 Built. | /build (Claude Sonnet 5) |
 | 2026-09-04 | 1.3 | PR1 mergeado em `main`. PR2 (API+web) construído: rota de agregado nacional resolve OQ1/OQ2 com YAGNI; módulo M03 web. Só o backfill real falta para `/ship`. Status → 🔶 PR1+PR2 Built. | /build (Claude Sonnet 5) |
 | 2026-09-05 | 1.4 | Backfill real: Indeferidos 37/38 meses, Emitidos 1 mês (jun/2026), ambos verificados contra BigQuery real com a dívida intacta. Achado maior: schema do Emitidos muda com frequência real (4+ variações em <3 anos). Decisão explícita do usuário: aceitar o mecanismo provado e fechar o escopo do backfill (Mantidos sem dado real, CI-proven only). Status → ✅ Complete (Built). | /build (Claude Sonnet 5) |
+| 2026-09-05 | 1.5 | `/verify-spec` independente = OVERALL PASS; achado E1 corrigido, W1 aceito como desvio documentado. Shipped and archived. | /ship (Claude Sonnet 5) |

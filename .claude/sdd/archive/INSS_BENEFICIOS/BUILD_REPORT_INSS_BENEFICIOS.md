@@ -7,8 +7,8 @@
 - **Entrada:** `.claude/sdd/features/DESIGN_INSS_BENEFICIOS.md` (v1.0)
 - **Branch:** PR1 `feature/inss-beneficios` (merged) · PR2 `feature/inss-beneficios-pr2` (merged)
 - **Data:** 2026-09-04 a 2026-09-05
-- **Status da build:** ✅ **PR1+PR2+backfill completos. Escopo do backfill fechado por decisão explícita do usuário (§4c) — mecanismo provado ao vivo em 2 dos 3 datasets, histórico real parcial aceito como suficiente.**
-- **Próximo passo:** `/verify-spec` → `/ship`.
+- **Status da build:** ✅ Shipped — PR1+PR2+backfill completos; `/verify-spec` independente = OVERALL PASS (E1 corrigido, W1 aceito). Escopo do backfill fechado por decisão explícita do usuário (§4c) — mecanismo provado ao vivo em 2 dos 3 datasets, histórico real parcial aceito como suficiente.
+- **Próximo passo:** nenhum — feature arquivada. Próxima feature via `/brainstorm` ou `/define`.
 
 > Assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
 

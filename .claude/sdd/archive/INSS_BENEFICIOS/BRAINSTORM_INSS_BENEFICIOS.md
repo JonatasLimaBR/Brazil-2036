@@ -1,7 +1,7 @@
 # BRAINSTORM — INSS_BENEFICIOS
 
 - **Feature:** INSS_BENEFICIOS
-- **Status:** ✅ Complete (Defined)
+- **Status:** ✅ Shipped
 - **Fase:** 0 (Brainstorm)
 - **Criado:** 2026-09-04
 - **Idioma:** PT-BR (alinhado a `docs/discovery/`)
