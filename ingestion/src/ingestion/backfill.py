@@ -58,6 +58,10 @@ def parse_period_from_url(url: str) -> dt.date:
     return dt.date(year, month, 1)
 
 
+def _default_period_resolver(resource: CkanResource) -> dt.date:
+    return parse_period_from_url(resource.url)
+
+
 def loaded_periods(
     bq_client: BigQueryClient, *, project: str, dataset_bronze: str, table: str
 ) -> set[str]:
@@ -69,6 +73,9 @@ def loaded_periods(
     return {str(r["partition_id"]) for r in rows}
 
 
+PeriodResolver = Callable[[CkanResource], dt.date]
+
+
 def run_backfill(
     *,
     ckan_session: HttpGet,
@@ -76,7 +83,20 @@ def run_backfill(
     connector_factory: Callable[[CkanResource], Connector],
     storage_client: StorageClient,
     bq_client: BigQueryClient,
+    limit: int | None = None,
+    period_resolver: PeriodResolver = _default_period_resolver,
 ) -> BackfillResult:
+    # limit bounds how many NOT-yet-loaded resources this call processes (a
+    # cautious first real run against production GCP measures cost/time on a
+    # handful of months before committing to the full multi-year history --
+    # DESIGN §7.4 / BUILD_REPORT blocker). None processes every resource found.
+    #
+    # period_resolver defaults to parsing YYYYMM out of the resource URL
+    # (works for Emitidos/Mantidos, confirmed against real filenames). It does
+    # NOT work for Indeferidos -- its filenames use Portuguese month names in
+    # inconsistent formats with no YYYYMM pattern at all (confirmed live: 38/38
+    # real filenames unparseable). Datasets like that must pass a resolver that
+    # derives the period some other way (e.g. from the file's own content).
     result = BackfillResult(dataset_id=config.dataset_id)
     registry.ensure_uf_ibge(
         bq_client,
@@ -95,9 +115,20 @@ def run_backfill(
         table=config.bronze_table,
     )
 
+    processed = 0
     for resource in resources:
+        # Checked before period_resolver, not after: a resolver can be
+        # expensive (Indeferidos downloads the whole file just to read its
+        # period), so once the limit is reached the loop must stop calling it
+        # at all, not merely skip acting on the result.
+        if limit is not None and processed >= limit:
+            result.outcomes.append(
+                ResourceOutcome(resource.resource_id, None, "skipped-limit-reached")
+            )
+            continue
+
         try:
-            period = parse_period_from_url(resource.url)
+            period = period_resolver(resource)
         except ValueError as exc:
             result.outcomes.append(
                 ResourceOutcome(resource.resource_id, None, "skipped-unparseable", str(exc))
@@ -110,6 +141,7 @@ def run_backfill(
                 ResourceOutcome(resource.resource_id, period, "skipped-already-loaded")
             )
             continue
+        processed += 1
 
         connector = connector_factory(resource)
         try:
