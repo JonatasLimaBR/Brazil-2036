@@ -66,6 +66,17 @@ def main() -> int:
         default=None,
         help="max NOT-yet-loaded resources to process (omit for full history)",
     )
+    parser.add_argument(
+        "--newest-first",
+        action="store_true",
+        help=(
+            "process the most recent resources first (CKAN lists oldest-first). "
+            "Use this when older months use a different, unsupported source "
+            "schema -- confirmed real for Emitidos (changed at least twice "
+            "between 2023 and 2026) -- so --limit bounds recent, likely-valid "
+            "months instead of guaranteed-to-fail multi-GB historical ones."
+        ),
+    )
     args = parser.parse_args()
 
     config_file, connector_cls = _DATASETS[args.dataset]
@@ -89,6 +100,7 @@ def main() -> int:
         storage_client=storage_client,
         bq_client=bq_client,
         limit=args.limit,
+        newest_first=args.newest_first,
         **kwargs,
     )
 

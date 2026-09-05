@@ -85,6 +85,7 @@ def run_backfill(
     bq_client: BigQueryClient,
     limit: int | None = None,
     period_resolver: PeriodResolver = _default_period_resolver,
+    newest_first: bool = False,
 ) -> BackfillResult:
     # limit bounds how many NOT-yet-loaded resources this call processes (a
     # cautious first real run against production GCP measures cost/time on a
@@ -97,6 +98,13 @@ def run_backfill(
     # inconsistent formats with no YYYYMM pattern at all (confirmed live: 38/38
     # real filenames unparseable). Datasets like that must pass a resolver that
     # derives the period some other way (e.g. from the file's own content).
+    #
+    # newest_first matters because the source's own schema is not stable
+    # across its history: Emitidos changed column layout at least twice
+    # between 2023 and 2026 (confirmed live), so "oldest first" with a limit
+    # would spend real download bandwidth on multi-GB files guaranteed to
+    # fail validation before ever reaching a month in the current, supported
+    # schema. CKAN lists resources oldest-first, so this reverses that.
     result = BackfillResult(dataset_id=config.dataset_id)
     registry.ensure_uf_ibge(
         bq_client,
@@ -108,6 +116,8 @@ def run_backfill(
     resources = list_resources(
         ckan_session, base_url=config.ckan_base_url, package_id=config.ckan_package_id
     )
+    if newest_first:
+        resources = list(reversed(resources))
     already = loaded_periods(
         bq_client,
         project=config.gcp_project,
