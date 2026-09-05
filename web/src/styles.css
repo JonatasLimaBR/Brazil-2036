@@ -94,3 +94,27 @@ a:focus-visible {
   color: #b3261e;
   margin: 0;
 }
+
+h2 {
+  font-size: 1.1rem;
+  margin: 2rem 0 1rem;
+}
+
+.inss-module {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+}
+
+.inss-number {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.inss-label {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}

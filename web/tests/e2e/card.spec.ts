@@ -13,6 +13,30 @@ test("card renders the debt value from the API with a source link", async ({ pag
   await expect(page.locator(".data-class--observed")).toBeVisible();
 });
 
+test("INSS module renders without crashing for each of the 3 metrics", async ({ page }) => {
+  // The historical backfill for INSS_BENEFICIOS has not run yet (BUILD_REPORT
+  // blocker), so Gold may have no rows for these metric_ids -- the API then
+  // returns 404 and the module renders "Indisponível", not a value. This test
+  // asserts the module wires up and degrades gracefully either way; it is not
+  // yet the strict "value must render" assertion the debt card test makes
+  // above, because there is no real data to assert on until the backfill runs.
+  await page.goto("/");
+
+  await expect(page.getByText("Previdência & INSS")).toBeVisible();
+
+  for (const id of [
+    "inss_beneficios_emitidos",
+    "inss_beneficios_mantidos",
+    "inss_beneficios_indeferidos",
+  ]) {
+    const article = page.getByTestId(`inss-${id}`);
+    await expect(article).toBeVisible({ timeout: 20_000 });
+    const hasValue = await page.getByTestId(`inss-${id}-value`).count();
+    const hasError = await article.locator(".error").count();
+    expect(hasValue + hasError, `${id} must render a value or an error, not neither`).toBe(1);
+  }
+});
+
 test("no debt figure is hardcoded in the served bundle", async ({ request }) => {
   const html = await (await request.get("/")).text();
   const scriptMatch = html.match(/src="([^"]*assets\/[^"]+\.js)"/);

@@ -1,5 +1,6 @@
 import createClient from "openapi-fetch";
 import type { paths } from "./api-client/schema";
+import { renderInssModule } from "./inss";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
 const METRIC_ID = "divida_consolidada";
@@ -41,3 +42,4 @@ async function load(): Promise<void> {
 }
 
 void load();
+void renderInssModule();

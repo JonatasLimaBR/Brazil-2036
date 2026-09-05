@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,10 @@ class Config:
     provenance_table: str
     default_metric_id: str
     default_state_ibge_code: str
+    # metric_id -> Gold table name, for metrics served by the national-total
+    # route (INSS: PRD-005/SPEC-011) instead of the per-state debt route.
+    # Additive: does not affect gold_table/default_metric_id above.
+    metric_tables: Mapping[str, str] = field(default_factory=dict)
 
     @property
     def gold_fqtn(self) -> str:
@@ -38,4 +43,5 @@ def load_config(path: str | Path | None = None) -> Config:
         provenance_table=raw["provenance_table"],
         default_metric_id=raw["default_metric_id"],
         default_state_ibge_code=str(raw["default_state_ibge_code"]),
+        metric_tables=dict(raw.get("metric_tables", {})),
     )
