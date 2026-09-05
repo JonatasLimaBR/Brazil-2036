@@ -5,10 +5,10 @@
 - **Feature:** FISCAL_RECEITA_DESPESA
 - **Fase:** 3 (Build)
 - **Entrada:** `.claude/sdd/features/DESIGN_FISCAL_RECEITA_DESPESA.md` (v1.0)
-- **Branch:** PR1 `feature/fiscal-receita-despesa` (merged, #15) · PR2 `feature/fiscal-receita-despesa-pr2` (API+web)
+- **Branch:** PR1 `feature/fiscal-receita-despesa` (merged, #15) · PR2 `feature/fiscal-receita-despesa-pr2` (merged, #16)
 - **Data:** 2026-09-05
-- **Status da build:** ✅ PR1+PR2 completos — backfill real pendente de confirmação do usuário
-- **Próximo passo:** `/verify-spec` → `/ship` (após confirmar/rodar o backfill real, ou fechar o escopo sem ele, mesmo padrão das 2 fatias anteriores)
+- **Status da build:** ✅ PR1+PR2+backfill real completos. `/verify-spec` independente = OVERALL PASS (confiança 0.93).
+- **Próximo passo:** `/ship`
 
 > Assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
 
@@ -123,6 +123,36 @@ confirmada explicitamente pelo usuário antes de executar.
 
 ---
 
+## 4b. `/verify-spec` independente (2026-09-05)
+
+Sessão nova, read-only, sem contexto do build. Inspecionou o código diretamente, reproduziu
+`ruff`/`mypy`/`pytest` de `ingestion/`/`api/` e `typecheck`/`build` de `web/`, consultou o
+BigQuery real (`brasil2036-dev`) e bateu nos 4 endpoints ao vivo (3 fiscais + 1 de não-regressão
+da dívida).
+
+**Veredito: OVERALL PASS — confiança 0.93.**
+
+- Todos os 11 acceptance tests (AT1–AT11) e os 7 critérios de sucesso (S1–S7) do DEFINE = PASS,
+  com evidência concreta (query real, comando rodado, diff de código) — não apenas confiança nos
+  documentos.
+- Confirmado ao vivo: 1.065 linhas Gold = 1.065 linhas de provenance; jul/2026 internamente
+  consistente (`receita − despesa = primário` bate até o centavo); dívida e INSS confirmadamente
+  intactos; `pipeline.py`/`pipeline_incremental.py` não tocados; zero mudança em
+  `main.py`/`bigquery_repo.py` (AT6); os 2 achados críticos do build (`allow_negative`,
+  generalização de `bronze.load()`) — reais e corretamente escopados.
+- **Revisão de escopo do AT8 (C5→D2, 2 tabelas→1) tratada como decisão legítima e documentada**,
+  não como desvio silencioso — aceita.
+- **1 achado WARNING (não-bloqueante, residual pré-existente):** a suíte e2e do módulo fiscal
+  (`card.spec.ts`) só afirma "valor ou erro, não nem um nem outro" — não afirma que um valor real
+  aparece, porque o teste foi escrito antes da confirmação do backfill. Mesmo padrão já aceito
+  para o módulo INSS; fortalecer a asserção (exigir valor real, como o card da dívida já faz) é
+  um follow-up de baixa prioridade, não bloqueia o `/ship`.
+- Nenhum achado CRITICAL ou ERROR. Nenhuma regra inegociável do `CLAUDE.md` violada (sem segredo,
+  sem alteração de produção fora do fluxo PR/CI, provenance 100%, `data_class='observed'` em toda
+  linha fiscal, nenhum gate de CI enfraquecido).
+
+---
+
 ## 5. Blockers / trabalho restante
 
 - **Backfill real executado com sucesso** (`ingestion/scripts/run_fiscal_uniao.py` contra
@@ -173,3 +203,4 @@ confirmada explicitamente pelo usuário antes de executar.
 | 2026-09-05 | 1.0 | PR1 (espinha de dados) e PR2 (API+web) completos na mesma sessão de build. 2 achados técnicos não previstos pelo DESIGN corrigidos (`bronze.load()` não genérico; interface do conector). Backfill real pendente de confirmação do usuário. `ruff`+`mypy`+`pytest` verdes em `ingestion/` (92 testes) e `api/` (20 testes); `web/` typecheck+build+e2e (4/4, contra API real) verdes. | /build (Claude Sonnet 5) |
 | 2026-09-05 | 1.1 | PR1 mergeado (#15) — gate `integration` provou D10 ao vivo contra BigQuery real (mês de déficit real aceito, 2m37s). PR2 pronto para commit/PR. | /build (Claude Sonnet 5) |
 | 2026-09-05 | 1.2 | PR2 mergeado (#16, após 1 correção de formatação pega pelo `lint-typecheck-unit`). Backfill real executado contra `brasil2036-dev`: 355 meses, 1.065 linhas Gold, valores conferidos contra o arquivo-fonte real. Dívida e INSS confirmadamente intactos. Endpoints ao vivo servindo dado real. | /build (Claude Sonnet 5) |
+| 2026-09-05 | 1.3 | `/verify-spec` independente = OVERALL PASS (confiança 0.93), todos os AT1–AT11/S1–S7 aprovados com evidência ao vivo; 1 achado WARNING não-bloqueante (e2e fiscal com asserção fraca, mesmo padrão já aceito no INSS) registrado como follow-up. Pronto para `/ship`. | /build (Claude Sonnet 5) |
