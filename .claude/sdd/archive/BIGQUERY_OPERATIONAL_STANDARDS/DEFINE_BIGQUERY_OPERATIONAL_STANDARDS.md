@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** BIGQUERY_OPERATIONAL_STANDARDS
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 1 (Define)
 - **Entrada:** `.claude/sdd/features/BRAINSTORM_BIGQUERY_OPERATIONAL_STANDARDS.md` (Ready for Define)
 - **Criado:** 2026-09-06
@@ -197,3 +197,4 @@ pelas Constraints C1 e pelos Acceptance Tests AT1–AT4).
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-06 | 1.0 | Criação a partir de `BRAINSTORM_BIGQUERY_OPERATIONAL_STANDARDS.md`. Clarity 13/15. Status → Ready for Design. | /define (Claude Sonnet 5) |
+| 2026-09-06 | 1.1 | `/verify-spec` independente = OVERALL PASS (~92%); achado WARNING corrigido. Shipped and archived. | /ship (Claude Sonnet 5) |

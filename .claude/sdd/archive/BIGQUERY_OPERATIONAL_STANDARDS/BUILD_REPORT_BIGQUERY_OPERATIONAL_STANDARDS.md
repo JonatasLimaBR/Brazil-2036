@@ -7,8 +7,8 @@
 - **Entrada:** `.claude/sdd/features/DESIGN_BIGQUERY_OPERATIONAL_STANDARDS.md` (v1.0)
 - **Branch:** `chore/bigquery-operational-standards`
 - **Data:** 2026-09-06
-- **Status da build:** ✅ Completo. `/verify-spec` independente = OVERALL PASS (~92%), 1 achado WARNING corrigido (§5).
-- **Próximo passo:** `/ship`
+- **Status da build:** ✅ Shipped. `/verify-spec` independente = OVERALL PASS (~92%), 1 achado WARNING corrigido (§4b).
+- **Próximo passo:** nenhum — feature arquivada. Próxima feature via `/brainstorm` ou `/define`.
 
 > Assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
 
