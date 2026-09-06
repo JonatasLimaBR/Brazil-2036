@@ -36,9 +36,12 @@ Toda tabela Silver/Gold nova DEVE:
 - `CLUSTER BY` a(s) chave(s) de negócio mais usada(s) em filtro/agrupamento.
 
 Precedente real (não teórico): `gold_debt_state_current` (`PARTITION BY reference_date CLUSTER BY
-state_ibge_code`), `gold_inss_beneficios_*` (idem + `especie_codigo`), `gold_fiscal_uniao`
-(idem + `metric_id`). Revisão de PR deve rejeitar uma tabela Silver/Gold nova sem essas cláusulas,
-salvo justificativa explícita registrada em ADR.
+state_ibge_code`); `gold_inss_beneficios_emitidos`/`_indeferidos` (idem + `especie_codigo`);
+`gold_inss_beneficios_mantidos` (idem + `status_manutencao`, não `especie_codigo` — o campo de
+clustering é a chave de negócio mais usada em filtro/agrupamento *daquela* tabela, não
+necessariamente igual entre tabelas do mesmo domínio); `gold_fiscal_uniao` (idem + `metric_id`).
+Revisão de PR deve rejeitar uma tabela Silver/Gold nova sem essas cláusulas, salvo justificativa
+explícita registrada em ADR.
 
 ## 3. Retenção / lifecycle por camada
 

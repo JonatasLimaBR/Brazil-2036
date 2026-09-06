@@ -7,8 +7,8 @@
 - **Entrada:** `.claude/sdd/features/DESIGN_BIGQUERY_OPERATIONAL_STANDARDS.md` (v1.0)
 - **Branch:** `chore/bigquery-operational-standards`
 - **Data:** 2026-09-06
-- **Status da build:** ✅ Completo — 1 PR só (sem dependência entre pacotes `ingestion/`/`api/`, diferente das 3 fatias de dados anteriores).
-- **Próximo passo:** `/verify-spec` → `/ship`
+- **Status da build:** ✅ Completo. `/verify-spec` independente = OVERALL PASS (~92%), 1 achado WARNING corrigido (§5).
+- **Próximo passo:** `/ship`
 
 > Assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
 
@@ -63,11 +63,69 @@ quebra nenhuma query real do projeto (S2/AT3 do DEFINE).
 
 ---
 
+## 3b. Achado real não planejado: bug em `verify_chain.py` (corrigido, PR #21)
+
+O merge do PR desta feature (#20) disparou o job automático `data.yml` (roda o pipeline da
+dívida em produção a cada push que toca `ingestion/**`). O passo final, "verify provenance
+chain" (`ingestion/scripts/verify_chain.py`), **falhou de verdade**: `provenance coverage 63 !=
+gold rows 27`.
+
+**Não é um bug desta feature** — é um bug pré-existente no script, exposto agora porque
+`metric_provenance` é compartilhada (`ADR-055`) e o backfill real da fatia `FISCAL_RECEITA_DESPESA`
+(1997–2026) tem linhas no mesmo `reference_year` da dívida (2022): a query do script contava
+`COUNT(*)` em `metric_provenance` filtrando só por `reference_year`, sem filtrar `metric_id` —
+somava 27 linhas da dívida + 36 linhas fiscais (12 meses × 3 métricas) = 63.
+
+Corrigido com um filtro `--metric-id` explícito (default `divida_consolidada`, mantendo o uso
+atual). Verificado contra `brasil2036-dev` real antes e depois da correção (query manual
+reproduziu o 63 exato do CI; a versão corrigida retornou 27; o script rodado de ponta a ponta
+contra produção imprimiu `OK reference_year=2022 entities=27 provenance_rows=27`). Mergeado
+como PR #21, e o `data.yml` seguinte confirmou o passo verde em produção real.
+
+Sem teste automatizado dedicado (mesmo padrão de `run_backfill.py`/`run_fiscal_uniao.py` —
+scripts em `ingestion/scripts/` não têm cobertura de teste unitário neste projeto; a verificação
+foi por execução real contra produção, documentada acima).
+
+---
+
 ## 4. Blockers / trabalho restante
 
 Nenhum. Todos os MUST (G1-G8) e o SHOULD (G9, retenção documentada no `SPEC-034 §3`) do DEFINE
 foram entregues. G10 (COULD — nota no `CLAUDE.md` apontando o SPEC) será feito no `/ship`, junto
 da sincronização padrão de `CLAUDE.md`.
+
+---
+
+## 4b. `/verify-spec` independente (2026-09-06)
+
+Sessão nova, read-only, sem contexto do build. Inspecionou o código real, rodou `ruff`/`mypy`/
+`pytest` de verdade, grepeou todo `run_sql`/`scalar` call site de `ingestion/` para confirmar
+cobertura de 100% (AT1), comparou o `SPEC-034` contra as 10 SQL reais existentes (AT5), e
+consultou `brasil2036-dev` para reproduzir de forma independente o bug/correção do
+`verify_chain.py` (`§3b`).
+
+**Veredito: OVERALL PASS — confiança ~92%.**
+
+- AT1, AT2, AT3, AT5 (com ressalva), AT6, AT7, AT8 e S1, S2, S4, S5, S6, S7 = PASS, com evidência
+  concreta (grep real, query real contra BigQuery, `gh pr view` confirmando `ci-gate: SUCCESS`
+  nos PRs #20 e #21).
+- Reproduziu de forma independente o achado do `§3b`: consultou `metric_provenance` real e
+  confirmou `27 (dívida) + 12+12+12 (fiscal) = 63`, exatamente o número da falha real; rodou
+  `verify_chain.py` corrigido contra produção e confirmou `OK ... provenance_rows=27`.
+- **1 achado WARNING real (AT4/S3): o DESIGN prometia um teste provando a falha acima do cap
+  ("AT4 usa um cap artificialmente baixo... para provar a falha"), mas `test_bigquery_io.py`
+  original só testava que o valor do cap chegava ao `job_config` — nunca que excedê-lo realmente
+  falha.** Corrigido nesta rodada: `_RejectingFakeBigQuery` (fake que modela o comportamento real
+  do BigQuery — rejeita antes de executar quando o tamanho estimado excede o cap) +
+  `test_run_sql_propagates_bigquery_rejection_above_the_cap` /
+  `test_scalar_propagates_bigquery_rejection_above_the_cap`, confirmando que a exceção
+  (`google.api_core.exceptions.BadRequest`) propaga sem ser engolida ou mascarada.
+- **1 achado INFO (cosmético): `SPEC-034 §2`** dizia que todo `gold_inss_beneficios_*` clusteriza
+  por `especie_codigo`, mas `gold_inss_beneficios_mantidos` na verdade clusteriza por
+  `status_manutencao`. Corrigido — o texto agora nomeia cada tabela individualmente e explicita
+  que o campo de clustering é a chave de negócio mais usada *daquela* tabela, não
+  necessariamente igual entre tabelas do mesmo domínio.
+- Nenhum achado CRITICAL ou ERROR. Nenhuma regra inegociável do `CLAUDE.md` violada.
 
 ---
 
@@ -83,7 +141,7 @@ da sincronização padrão de `CLAUDE.md`.
 ## 6. Quality gate
 
 - [x] Todos os itens do manifesto criados/modificados (11 de 11)
-- [x] `ruff` + `mypy --strict` + `pytest` verdes em `ingestion/` (99 testes) e `api/` (21 testes)
+- [x] `ruff` + `mypy --strict` + `pytest` verdes em `ingestion/` (101 testes, +2 do achado do `/verify-spec`) e `api/` (21 testes)
 - [x] Sem TODO / sem segredo
 - [x] Atribuição de decisões autônomas (§3)
 - [x] `SPEC-034`/`ADR-057` refletem a convenção real já em uso, não uma regra inventada (C3 do DEFINE)
@@ -98,3 +156,4 @@ da sincronização padrão de `CLAUDE.md`.
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-06 | 1.0 | Build completo em 1 PR (sem dependência entre pacotes). 11 de 11 itens do manifesto entregues sem achado técnico novo (investigação real já feita na Fase 2). `ruff`+`mypy`+`pytest` verdes em `ingestion/` (99 testes, +7) e `api/` (21 testes, +1). Status → Ready for `/verify-spec`. | /build (Claude Sonnet 5) |
+| 2026-09-06 | 1.1 | Achado real não planejado: bug pré-existente em `verify_chain.py` exposto pelo backfill fiscal real, corrigido e verificado contra produção (`§3b`, PR #21). `/verify-spec` independente = OVERALL PASS (~92%); achado WARNING (AT4/S3 não exercitado de verdade) corrigido com `_RejectingFakeBigQuery` + 2 testes novos; achado INFO cosmético em `SPEC-034 §2` corrigido. `ingestion/` 101 testes. Pronto para `/ship`. | /build (Claude Sonnet 5) |
