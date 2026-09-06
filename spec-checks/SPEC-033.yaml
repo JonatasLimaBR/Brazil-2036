@@ -12,7 +12,7 @@ checks:
     - ingestion/scripts/verify_chain.py
     - infra/terraform/versions.tf
     - scripts/bootstrap.sh
-    - web/src/main.ts
+    - web/src/lib/metrics.ts
     - web/src/api-client/schema.d.ts
 
   openapi_paths:
