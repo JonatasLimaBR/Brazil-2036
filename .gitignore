@@ -13,5 +13,6 @@ build/
 CLAUDE.md.bak.*
 dist/
 node_modules/
+web/.astro/
 web/playwright-report/
 web/test-results/

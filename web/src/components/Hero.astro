@@ -1,0 +1,29 @@
+---
+const badges = [
+  { label: "IA + Dados Públicos" },
+  { label: "GCP Native" },
+  { label: "Multiagente" },
+  { label: "Simulação 2036" },
+  { label: "Landing Page desde o início", highlight: true },
+];
+---
+
+<section id="visao-geral" class="hero">
+  <div>
+    <p class="hero__eyebrow">BRASIL 2036 — Nos Trilhos</p>
+    <p class="hero__subtitle">Plataforma Nacional de Inteligência Econômica, Fiscal e Social</p>
+    <h1 class="hero__title">Transformando dados públicos em decisões para o futuro do Brasil</h1>
+    <p class="hero__lead">
+      Uma plataforma nacional para integrar dados públicos, prever cenários, simular políticas
+      públicas e apoiar decisões estratégicas em economia, fiscal, previdência, municípios,
+      saúde, educação e investimento público.
+    </p>
+    <ul class="badges">
+      {
+        badges.map((badge) => (
+          <li class={`badge ${badge.highlight ? "badge--highlight" : ""}`}>{badge.label}</li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
