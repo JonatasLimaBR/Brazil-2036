@@ -4,6 +4,7 @@ import argparse
 import sys
 
 EXPECTED_ENTITIES = 27
+DEFAULT_METRIC_ID = "divida_consolidada"
 
 
 def main() -> int:
@@ -12,6 +13,7 @@ def main() -> int:
     parser.add_argument("--gold-dataset", default="br2036_gold")
     parser.add_argument("--gold-table", default="gold_debt_state_current")
     parser.add_argument("--provenance-table", default="metric_provenance")
+    parser.add_argument("--metric-id", default=DEFAULT_METRIC_ID)
     args = parser.parse_args()
 
     from google.cloud import bigquery
@@ -19,6 +21,7 @@ def main() -> int:
     client = bigquery.Client(project=args.project)
     gold = f"`{args.project}.{args.gold_dataset}.{args.gold_table}`"
     prov = f"`{args.project}.{args.gold_dataset}.{args.provenance_table}`"
+    metric_lit = args.metric_id.replace("'", "\\'")
 
     row = next(
         iter(
@@ -34,7 +37,15 @@ def main() -> int:
                      WHERE reference_year = y.ry) AS gold_nulls,
                   (SELECT COUNTIF(value < 0) FROM {gold}, y
                      WHERE reference_year = y.ry) AS negatives,
-                  (SELECT COUNT(*) FROM {prov}, y WHERE reference_year = y.ry) AS prov_rows
+                  -- metric_provenance is shared by every metric this project
+                  -- produces (registry.py/provenance.py, ADR-055): counting
+                  -- every row for this reference_year without scoping by
+                  -- metric_id double-counts any other metric whose rows
+                  -- happen to share the same reference_year (found live: the
+                  -- FISCAL_RECEITA_DESPESA backfill spans 1997-2026 and
+                  -- collided with the debt dataset's 2022).
+                  (SELECT COUNT(*) FROM {prov}, y
+                     WHERE reference_year = y.ry AND metric_id = '{metric_lit}') AS prov_rows
                 """
             ).result()
         )
