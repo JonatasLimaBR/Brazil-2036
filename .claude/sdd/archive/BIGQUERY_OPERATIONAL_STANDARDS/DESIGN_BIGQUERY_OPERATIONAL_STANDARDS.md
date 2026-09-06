@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** BIGQUERY_OPERATIONAL_STANDARDS
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 2 (Design)
 - **Entrada:** `.claude/sdd/features/DEFINE_BIGQUERY_OPERATIONAL_STANDARDS.md` (Clarity 13/15)
 - **Criado:** 2026-09-06
@@ -389,3 +389,4 @@ Pronto para `/build .claude/sdd/features/DESIGN_BIGQUERY_OPERATIONAL_STANDARDS.m
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-06 | 1.0 | Criação a partir de `DEFINE_BIGQUERY_OPERATIONAL_STANDARDS.md`. Descoberta real (§0) resolveu OQ1-OQ3 via pesquisa na documentação oficial do BigQuery (batch loading é grátis; estimativa de tabela clusterizada é upper bound). 5 decisões inline (D1-D5), incluindo D3 (bronze.py opta por não ter cap — achado que evita quebrar cargas de arquivo grande real, já visto no INSS). Manifesto 11 itens. Status → Ready for Build. | /design (Claude Sonnet 5) |
+| 2026-09-06 | 1.1 | Build completo; `/verify-spec` independente = OVERALL PASS. Shipped and archived. | /ship (Claude Sonnet 5) |

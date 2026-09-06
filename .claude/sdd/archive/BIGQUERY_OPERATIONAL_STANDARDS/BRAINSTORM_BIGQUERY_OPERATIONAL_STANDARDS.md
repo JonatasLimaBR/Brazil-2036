@@ -1,7 +1,7 @@
 # BRAINSTORM — BIGQUERY_OPERATIONAL_STANDARDS
 
 - **Feature:** BIGQUERY_OPERATIONAL_STANDARDS
-- **Status:** ✅ Complete (Defined)
+- **Status:** ✅ Shipped
 
 - **Fase:** 0 (Brainstorm)
 - **Criado:** 2026-09-06
