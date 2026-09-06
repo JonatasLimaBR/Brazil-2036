@@ -83,6 +83,7 @@
 - `docs/adrs/ADR-054-ci-merge-gate-umbrella.md`
 - `docs/adrs/ADR-055-inss-incremental-partitioned-ingestion.md`
 - `docs/adrs/ADR-056-fiscal-uniao-wide-series-ingestion.md`
+- `docs/adrs/ADR-057-bigquery-cost-guardrail.md`
 - `docs/architecture/ARCHITECTURE.md`
 - `docs/discovery/01-USER-JOURNEYS.md`
 - `docs/discovery/02-AI-VALUE-RISK-MATRIX.md`
@@ -155,3 +156,4 @@
 - `docs/specs/SPEC-031-CI-GATES.md`
 - `docs/specs/SPEC-032-REPO-GOVERNANCE.md`
 - `docs/specs/SPEC-033-MVP-WALKING-SKELETON.md`
+- `docs/specs/SPEC-034-BIGQUERY-OPERATIONAL-STANDARDS.md`
