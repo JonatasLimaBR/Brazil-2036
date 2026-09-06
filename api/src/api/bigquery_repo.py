@@ -160,6 +160,15 @@ class BigQueryRepo:
         )
 
 
+# 1 GiB -- same value and rationale as ingestion/src/ingestion/bigquery_io.py
+# (ADR-057): generous for every table this project serves today, but catches
+# a gross mistake before it becomes real cost. Duplicated, not imported: api/
+# and ingestion/ are independently deployed packages with no shared library
+# today, and introducing one for a single constant would be over-engineering
+# for this feature's scope (DESIGN D2).
+DEFAULT_MAX_BYTES_BILLED = 1_073_741_824
+
+
 def build_bigquery_run_query(project: str) -> RunQuery:
     from google.cloud import bigquery
 
@@ -174,7 +183,10 @@ def build_bigquery_run_query(project: str) -> RunQuery:
             )
             for name, value in params.items()
         ]
-        job_config = bigquery.QueryJobConfig(query_parameters=job_params)
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=job_params,
+            maximum_bytes_billed=DEFAULT_MAX_BYTES_BILLED,
+        )
         return [dict(row) for row in client.query(sql, job_config=job_config).result()]
 
     return run_query

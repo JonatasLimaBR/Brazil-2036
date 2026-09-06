@@ -135,3 +135,39 @@ def test_load_with_custom_columns_is_not_hardcoded_to_debt_shape() -> None:
     assert "metric_id STRING, reference_period STRING, value_millions STRING" in load_sql
     assert "field_delimiter=','" in load_sql
     assert "SELECT metric_id, reference_period, value_millions," in create_sql
+
+
+def test_load_has_no_bytes_billed_cap() -> None:
+    # DESIGN D3 / ADR-057: LOAD DATA is billed as a free batch load, not as
+    # bytes processed -- a query-cost cap here is a mismatched control and
+    # could reject a legitimately large source file (a real one has already
+    # been seen in the 7+ GB range for INSS Emitidos). Every run_sql/scalar
+    # call inside load() must opt out of the default cap.
+    client = FakeBigQuery(_responder)
+    load(
+        client,
+        project="p",
+        dataset_bronze="br2036_bronze",
+        table="divida_estados_raw",
+        raw_uri="gs://p-raw/divida_estados/abc.csv",
+        source_uri="https://tesouro/x.csv",
+        row_hash="abc",
+    )
+    assert client.job_configs == [None, None, None]
+
+
+def test_load_partition_has_no_bytes_billed_cap() -> None:
+    client = FakeBigQuery(_responder)
+    load_partition(
+        client,
+        project="p",
+        dataset_bronze="br2036_bronze",
+        table="inss_beneficios_emitidos_raw",
+        columns=("uf",),
+        field_delimiter=";",
+        reference_period=dt.date(2026, 6, 1),
+        raw_uri="gs://p-raw/x.csv",
+        source_uri="https://s3/x.zip",
+        row_hash="h1",
+    )
+    assert client.job_configs == [None, None, None, None, None]

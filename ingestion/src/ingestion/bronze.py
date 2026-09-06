@@ -39,6 +39,14 @@ def load(
     # Parameterized the same way load_partition() already is, for datasets
     # whose whole history arrives in one file with a different column set
     # (e.g. the Tesouro Nacional wide monthly series).
+    #
+    # maximum_bytes_billed=None throughout this function (ADR-057, DESIGN D3):
+    # LOAD DATA is billed as a batch load (free), not as bytes processed, so
+    # the query-cost cap is a mismatched control here -- and a real source
+    # file has already been seen in the 7+ GB range (INSS Emitidos). Applying
+    # the cap only to some of these statements and not others would be worse
+    # than applying it to none: the load could succeed uncapped and then a
+    # later step on the same (large) table fail.
     staging = _fqtn(project, dataset_bronze, f"{table}_stg")
     target = _fqtn(project, dataset_bronze, table)
     col_defs = ", ".join(f"{c} STRING" for c in columns)
@@ -49,6 +57,7 @@ def load(
         f"LOAD DATA OVERWRITE {staging} ({col_defs}) "
         f"FROM FILES (format='CSV', field_delimiter='{field_delimiter}', skip_leading_rows=1, "
         f"encoding='UTF-8', uris=['{raw_uri}'])",
+        maximum_bytes_billed=None,
     )
     run_sql(
         client,
@@ -56,8 +65,9 @@ def load(
         f"{sql_literal(source_uri)} AS _source_uri, "
         "CURRENT_TIMESTAMP() AS _ingested_at, "
         f"{sql_literal(row_hash)} AS _row_hash FROM {staging}",
+        maximum_bytes_billed=None,
     )
-    counted = scalar(client, f"SELECT COUNT(*) FROM {target}")
+    counted = scalar(client, f"SELECT COUNT(*) FROM {target}", maximum_bytes_billed=None)
     return BronzeLoad(
         table=f"{project}.{dataset_bronze}.{table}",
         rows_loaded=int(counted or 0),
@@ -95,19 +105,25 @@ def load_partition(
     source_lit = sql_literal(source_uri)
     scope = f"_reference_period = DATE({period_lit}) AND _source_uri = {source_lit}"
 
+    # maximum_bytes_billed=None throughout (ADR-057, DESIGN D3) -- same
+    # rationale as load() above: LOAD DATA is a free batch load, not a
+    # bytes-processed query, and this function's whole point is ingesting a
+    # per-period source file that can legitimately be large.
     run_sql(
         client,
         f"CREATE TABLE IF NOT EXISTS {target} ({col_defs}, "
         "_source_uri STRING, _ingested_at TIMESTAMP, _row_hash STRING, "
         "_reference_period DATE) PARTITION BY _reference_period",
+        maximum_bytes_billed=None,
     )
     run_sql(
         client,
         f"LOAD DATA OVERWRITE {staging} ({col_defs}) "
         f"FROM FILES (format='CSV', field_delimiter='{field_delimiter}', "
         f"skip_leading_rows=1, encoding='{encoding}', uris=['{raw_uri}'])",
+        maximum_bytes_billed=None,
     )
-    run_sql(client, f"DELETE FROM {target} WHERE {scope}")
+    run_sql(client, f"DELETE FROM {target} WHERE {scope}", maximum_bytes_billed=None)
     select_cols = ", ".join(columns)
     run_sql(
         client,
@@ -117,8 +133,11 @@ def load_partition(
         f"{sql_literal(row_hash)} AS _row_hash, "
         f"DATE({period_lit}) AS _reference_period "
         f"FROM {staging}",
+        maximum_bytes_billed=None,
     )
-    counted = scalar(client, f"SELECT COUNT(*) FROM {target} WHERE {scope}")
+    counted = scalar(
+        client, f"SELECT COUNT(*) FROM {target} WHERE {scope}", maximum_bytes_billed=None
+    )
     return BronzeLoad(
         table=f"{project}.{dataset_bronze}.{table}",
         rows_loaded=int(counted or 0),

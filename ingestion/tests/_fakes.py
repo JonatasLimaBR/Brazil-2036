@@ -18,10 +18,12 @@ class FakeBigQuery:
     def __init__(self, responder: Callable[[str], Rows] | None = None) -> None:
         self.queries: list[str] = []
         self.inserted: list[tuple[str, Rows]] = []
+        self.job_configs: list[Any] = []
         self._responder = responder or (lambda _sql: [])
 
-    def query(self, query: str) -> _FakeQueryJob:
+    def query(self, query: str, job_config: Any = None) -> _FakeQueryJob:
         self.queries.append(query)
+        self.job_configs.append(job_config)
         return _FakeQueryJob(self._responder(query))
 
     def insert_rows_json(self, table: str, rows: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:

@@ -180,3 +180,24 @@ def test_debt_and_inss_routes_unaffected_by_fiscal_metric_tables_entries() -> No
         inss_repo.latest_national_total("inss_beneficios_emitidos", "gold_inss_beneficios_emitidos")
         is not None
     )
+
+
+def test_build_bigquery_run_query_applies_cost_cap() -> None:
+    # ADR-057 / DESIGN D2: every query issued by the API must carry a
+    # maximum_bytes_billed guardrail, same value and rationale as
+    # ingestion/src/ingestion/bigquery_io.py.
+    from unittest.mock import MagicMock, patch
+
+    from api.bigquery_repo import DEFAULT_MAX_BYTES_BILLED, build_bigquery_run_query
+
+    with patch("google.cloud.bigquery.Client") as mock_client_cls:
+        mock_client = MagicMock()
+        mock_client.query.return_value.result.return_value = []
+        mock_client_cls.return_value = mock_client
+
+        run_query = build_bigquery_run_query("brasil2036-dev")
+        run_query("SELECT 1", {})
+
+        _sql, kwargs = mock_client.query.call_args
+        job_config = kwargs["job_config"]
+        assert job_config.maximum_bytes_billed == DEFAULT_MAX_BYTES_BILLED
