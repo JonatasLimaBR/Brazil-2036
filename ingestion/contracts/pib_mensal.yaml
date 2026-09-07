@@ -1,0 +1,57 @@
+dataset: pib_mensal
+version: 1
+
+source:
+  catalog_url: "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4380/dados"
+  resource_name: "PIB mensal - Valores correntes (R$ milhoes)"
+  organization: "Banco Central do Brasil (BCB)"
+  license: "Dados abertos do governo federal"
+  update_frequency: "monthly"
+
+format:
+  type: json
+  encoding: "utf-8"
+  note: >
+    BCB SGS series 4380 -- public API, no auth. Confirmed real during
+    /design: [{"data": "01/07/2026", "valor": "1167869.0"}, ...], full
+    history in one response, no pagination. R$ milhoes as published,
+    converted to BRL absolute in Silver (DESIGN, same convention as
+    fiscal_uniao).
+
+source_columns:
+  - reference_period
+  - value
+
+keys:
+  - state_ibge_code
+  - metric_id
+  - reference_date
+
+required_fields:
+  state_ibge_code:
+    type: STRING
+    nullable: false
+    note: "constant 'BR' sentinel -- no territorial dimension in this source"
+  metric_id:
+    type: STRING
+    nullable: false
+    allowed:
+      - pib_mensal
+  reference_date:
+    type: DATE
+    nullable: false
+  value:
+    type: NUMERIC
+    nullable: false
+    note: "nominal monthly GDP, always >= 0"
+  unit:
+    type: STRING
+    nullable: false
+    allowed:
+      - BRL
+
+quality_rules:
+  - name: provenance_coverage
+    expr: "count(gold) = count(provenance)"
+
+evolution_policy: additive_only
