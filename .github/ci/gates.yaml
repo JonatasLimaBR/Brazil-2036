@@ -12,9 +12,9 @@ gates:
     status: active
     tool: "ruff check"
   typecheck:
-    job: "ci / lint-typecheck-unit"
+    job: "ci / lint-typecheck-unit; ci / web-check"
     status: active
-    tool: "mypy --strict; tsc --noEmit"
+    tool: "mypy --strict (api/ingestion); astro check (web)"
   unit:
     job: "ci / lint-typecheck-unit"
     status: active

@@ -168,7 +168,8 @@ export const ARCHITECTURE_STATUS: StatusEntry[] = [
     id: "iam-seguranca",
     label: "IAM & Segurança",
     status: "real",
-    evidence: "WIF, sem chave estatica, ADR-040, Terraform real",
+    evidence:
+      "WIF real (ADR-040), pool/provider provisionados via scripts/bootstrap.sh (gcloud), nao via Terraform ainda; infra/terraform/iam.tf tem outros recursos IAM reais",
   },
   {
     id: "observabilidade",

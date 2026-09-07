@@ -7,8 +7,8 @@
 - **Entrada:** `.claude/sdd/features/DESIGN_LANDING_PAGE_ASTRO.md` (v1.0)
 - **Branch:** PR1 `feature/landing-page-astro`
 - **Data:** 2026-09-06
-- **Status da build:** ✅ PR1 + PR2 completos — pronto para `/verify-spec`
-- **Próximo passo:** `/verify-spec` (sessão nova, read-only) → `/ship`
+- **Status da build:** ✅ PR1 + PR2 + achados do `/verify-spec` corrigidos — pronto para `/ship`
+- **Próximo passo:** `/ship`
 
 > Assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
 
@@ -140,8 +140,29 @@ verifica — só reduz o escopo de busca ao painel de dados, que é a intenção
 
 ## 5. Blockers / trabalho restante
 
-Nenhum. PR1 e PR2 completos, verificados localmente contra a API real de produção. Segue para
-`/verify-spec` (sessão nova, read-only) antes do `/ship`.
+Nenhum. PR1, PR2 e os achados do `/verify-spec` independente estão corrigidos e verificados.
+
+---
+
+## 5b. `/verify-spec` independente — achados e correções
+
+Rodado em sessão nova (subagente `general-purpose`, read-only), verificado ao vivo contra CI real
+(PRs #25/#26), API de produção e um `curl` direto por métrica. **Veredito: OVERALL PASS WITH
+FINDINGS** — nenhum valor numérico ou selo de status fabricado encontrado. 6 achados:
+
+| # | Achado | Ação |
+|---|---|---|
+| 1 | Âncora `#contato` (Nav "Contato" + FooterCta "Solicitar Demonstração") não apontava para nenhum elemento real — link morto | **Corrigido**: `id="contato"` adicionado ao `<div class="footer-cta">`; "Solicitar Demonstração" reapontado para `#dados-reais` (destino real e não-circular — mostra a capacidade real da plataforma) |
+| 2 | Mockup tem 2 CTAs no nav ("Ver Roadmap" + "Explorar Plataforma"), só 1 foi implementado no PR1, sem nota de desvio deliberado | **Corrigido**: `Nav.astro` ganhou o 2º CTA "Ver Roadmap" → `#roadmap`, com estilo secundário (`nav__cta--secondary`) em `global.css` |
+| 3 | `status.ts`: evidência do componente "IAM & Segurança" citava "Terraform real" para o WIF, mas o pool/provider é provisionado via `scripts/bootstrap.sh` (`gcloud`), não Terraform — imprecisão herdada do `DESIGN §0.6`, não introduzida no build | **Corrigido**: evidência reescrita para citar a fonte real (`bootstrap.sh` para o WIF, `infra/terraform/iam.tf` para os demais recursos IAM reais — confirmado que o arquivo existe com recursos reais) |
+| 4 | `.github/ci/gates.yaml`: campo `tool` do gate `typecheck` dizia `"mypy --strict; tsc --noEmit"` — desatualizado desde que o `web` passou a rodar `astro check` (não `tsc --noEmit` puro), e o job real é `web-check`, não só `lint-typecheck-unit` | **Corrigido**: `job`/`tool` atualizados para refletir os 2 jobs/ferramentas reais |
+| 5 | Comentários pré-existentes em `card.spec.ts` (INSS/fiscal) dizem que não há dado real ainda para asserção forte — hoje há dado real para a maioria dos `metric_id`s | **Não corrigido nesta fatia** — pré-existente (não introduzido por `LANDING_PAGE_ASTRO`), já rastreado como achado de baixa prioridade em `FISCAL_RECEITA_DESPESA SHIPPED §7`; só o locator foi tocado aqui (achado #5 do build), não a asserção em si |
+| 6 | Limitação de ambiente do próprio revisor: `npm ci`/`typecheck`/`build` locais falharam com `EPERM` num binário nativo — não é defeito do projeto | Sem ação; revisor compensou com evidência do CI real (PR #25/#26 verdes) e do deploy pós-merge real (`api-web`, e2e 5/5) |
+
+Verificado após as correções: `npm run typecheck` (0 erros), `npm run build`, e `npm run e2e`
+localmente contra a API real de produção — **5/5 passam**. O reinstall de `node_modules` também
+corrigiu um efeito colateral do próprio subagente de verificação (tentativas de `npm ci` que
+falharam por `EPERM` deixaram `node_modules/` num estado parcial/quebrado nesta máquina).
 
 ---
 
@@ -160,3 +181,4 @@ Nenhum. PR1 e PR2 completos, verificados localmente contra a API real de produç
 |---|---|---|---|
 | 2026-09-06 | 1.0 | PR1 completo: migração Astro, painel de dados reais, ADR-058. 3 achados técnicos de build corrigidos (versão do Astro, cache nginx, regex e2e). `typecheck`/`build`/`e2e` (4/4 contra API real de produção) verdes. | /build (Claude Sonnet 5) |
 | 2026-09-06 | 1.1 | PR2 completo: `status.ts` (3 constantes, 35 entradas, `evidence` obrigatória) + 6 componentes editoriais/status-aware + `index.astro` monta as 10 seções. 2 achados corrigidos (`SPEC-033.yaml` apontava pro `main.ts` deletado; colisão de `getByText` entre `ModuleGrid` e `DataPanel`). `typecheck`/`build`/`e2e` (5/5, incluindo o novo teste de `evidence`) verdes contra API real de produção. Verificação visual por screenshot. Status → pronto para `/verify-spec`. | /build (Claude Sonnet 5) |
+| 2026-09-07 | 1.2 | `/verify-spec` independente (sessão nova, read-only) = OVERALL PASS WITH FINDINGS, nenhum valor/selo fabricado. 4 achados corrigidos (âncora `#contato` morta; CTA "Ver Roadmap" ausente; evidência do IAM/WIF imprecisa; `gates.yaml` desatualizado); 1 achado pré-existente aceito como já rastreado; 1 achado é limitação de ambiente do revisor. `typecheck`/`build`/`e2e` (5/5) reverificados contra API real de produção após as correções. Status → pronto para `/ship`. | /build (Claude Sonnet 5) |
