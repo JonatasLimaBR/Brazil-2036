@@ -1,4 +1,5 @@
 ---
+import Icon, { type IconName } from "./Icon.astro";
 import { MODULE_STATUS, type Status } from "../data/status";
 
 const STATUS_LABEL: Record<Status, string> = {
@@ -6,18 +7,42 @@ const STATUS_LABEL: Record<Status, string> = {
   parcial: "Parcial",
   planejado: "Planejado",
 };
+
+const MODULE_ICON: Record<string, { icon: IconName; color: "green" | "yellow" | "blue" }> = {
+  "macro-twin": { icon: "globe", color: "blue" },
+  "fiscal-debt": { icon: "bank", color: "green" },
+  "previdencia-inss": { icon: "users", color: "yellow" },
+  "trabalho-renda": { icon: "briefcase", color: "blue" },
+  produtividade: { icon: "gear", color: "green" },
+  saude: { icon: "heart", color: "yellow" },
+  educacao: { icon: "cap", color: "blue" },
+  "estados-municipios": { icon: "pin", color: "green" },
+  "compras-publicas": { icon: "cart", color: "yellow" },
+  "investimento-publico": { icon: "trending", color: "blue" },
+  tributacao: { icon: "scale", color: "green" },
+  "fraude-anomalias": { icon: "shield", color: "yellow" },
+  "policy-lab": { icon: "flask", color: "blue" },
+  "command-center": { icon: "monitor", color: "green" },
+  "agent-center": { icon: "cpu", color: "yellow" },
+};
 ---
 
 <section id="modulos">
   <h2 class="section-title">O que a plataforma terá</h2>
   <div class="module-grid">
     {
-      MODULE_STATUS.map((entry) => (
-        <article class="module-card" data-status-id={entry.id} data-evidence={entry.evidence}>
-          <span class={`status-badge status-badge--${entry.status}`}>{STATUS_LABEL[entry.status]}</span>
-          <h3>{entry.label}</h3>
-        </article>
-      ))
+      MODULE_STATUS.map((entry) => {
+        const { icon, color } = MODULE_ICON[entry.id] ?? { icon: "sparkle", color: "blue" };
+        return (
+          <article class="module-card" data-status-id={entry.id} data-evidence={entry.evidence}>
+            <span class={`status-badge status-badge--${entry.status}`}>{STATUS_LABEL[entry.status]}</span>
+            <div class={`icon-badge icon-badge--${color}`}>
+              <Icon name={icon} />
+            </div>
+            <h3>{entry.label}</h3>
+          </article>
+        );
+      })
     }
   </div>
 </section>

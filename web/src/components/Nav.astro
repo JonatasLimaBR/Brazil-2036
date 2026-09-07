@@ -10,7 +10,22 @@ const links = [
 ---
 
 <header class="nav">
-  <a class="nav__brand" href="#visao-geral">BRASIL 2036</a>
+  <a class="nav__brand" href="#visao-geral">
+    <svg
+      class="logo-mark"
+      width="30"
+      height="30"
+      viewBox="0 0 32 32"
+      fill="none"
+      stroke-width="3"
+      stroke-linecap="round"
+    >
+      <path d="M6 27 L14 5" stroke="#1b7a3d" />
+      <path d="M12 27 L20 5" stroke="#f0c419" />
+      <path d="M18 27 L26 5" stroke="#1c3f94" />
+    </svg>
+    BRASIL 2036
+  </a>
   <ul class="nav__links">
     {
       links.map((link) => (
