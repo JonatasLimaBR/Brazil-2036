@@ -1,0 +1,23 @@
+---
+import { MODULE_STATUS, type Status } from "../data/status";
+
+const STATUS_LABEL: Record<Status, string> = {
+  real: "Real",
+  parcial: "Parcial",
+  planejado: "Planejado",
+};
+---
+
+<section id="modulos">
+  <h2 class="section-title">O que a plataforma terá</h2>
+  <div class="module-grid">
+    {
+      MODULE_STATUS.map((entry) => (
+        <article class="module-card" data-status-id={entry.id} data-evidence={entry.evidence}>
+          <span class={`status-badge status-badge--${entry.status}`}>{STATUS_LABEL[entry.status]}</span>
+          <h3>{entry.label}</h3>
+        </article>
+      ))
+    }
+  </div>
+</section>

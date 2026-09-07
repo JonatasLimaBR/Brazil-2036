@@ -1,0 +1,40 @@
+---
+import { ROADMAP_PHASES, type PhaseStatus } from "../data/status";
+
+const STATUS_LABEL: Record<PhaseStatus, string> = {
+  concluida: "Concluída",
+  em_andamento: "Em andamento",
+  nao_iniciada: "Não iniciada",
+};
+
+const BADGE_CLASS: Record<PhaseStatus, string> = {
+  concluida: "status-badge--real",
+  em_andamento: "status-badge--parcial",
+  nao_iniciada: "status-badge--planejado",
+};
+---
+
+<section id="roadmap">
+  <h2 class="section-title">Roadmap do projeto</h2>
+  <div class="roadmap">
+    {
+      ROADMAP_PHASES.map((phase) => (
+        <article
+          class="roadmap__phase"
+          data-status={phase.status}
+          data-status-id={phase.id}
+          data-evidence={phase.evidence}
+        >
+          <span class="roadmap__number">{phase.number}</span>
+          <h3>
+            Fase {phase.number} — {phase.label}
+          </h3>
+          <span class={`status-badge ${BADGE_CLASS[phase.status]}`}>{STATUS_LABEL[phase.status]}</span>
+          <ul>
+            {phase.items.map((item) => <li>{item}</li>)}
+          </ul>
+        </article>
+      ))
+    }
+  </div>
+</section>

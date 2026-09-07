@@ -1,0 +1,17 @@
+---
+const benefits = [
+  "Decisão orientada por dados",
+  "Sustentabilidade fiscal",
+  "Eficiência do INSS",
+  "Monitoramento municipal",
+  "Simulação de políticas públicas",
+  "Redução de riscos",
+];
+---
+
+<section>
+  <h2 class="section-title">Benefícios esperados</h2>
+  <div class="card-grid">
+    {benefits.map((label) => <article class="simple-card"><h3>{label}</h3></article>)}
+  </div>
+</section>

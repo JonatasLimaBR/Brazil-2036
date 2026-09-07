@@ -1,0 +1,35 @@
+---
+const items = [
+  {
+    label: "Integrar",
+    description:
+      "Unir e padronizar dados de órgãos públicos, estados e municípios em uma base confiável e segura.",
+  },
+  {
+    label: "Entender",
+    description: "Gerar inteligência econômica, fiscal, social e territorial com visão 360° do Brasil.",
+  },
+  {
+    label: "Prever",
+    description: "Construir cenários e projeções causais com IA e modelos avançados de simulação.",
+  },
+  {
+    label: "Agir",
+    description: "Apoiar gestores com alertas, recomendações e avaliação de impacto de políticas.",
+  },
+];
+---
+
+<section>
+  <h2 class="section-title">Proposta do projeto</h2>
+  <div class="card-grid">
+    {
+      items.map((item) => (
+        <article class="simple-card">
+          <h3>{item.label}</h3>
+          <p>{item.description}</p>
+        </article>
+      ))
+    }
+  </div>
+</section>
