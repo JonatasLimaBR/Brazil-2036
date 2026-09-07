@@ -93,6 +93,12 @@ h2.section-title {
   white-space: nowrap;
 }
 
+.nav__cta--secondary {
+  background: transparent;
+  border: 1px solid var(--blue);
+  color: var(--blue);
+}
+
 /* Hero */
 .hero {
   max-width: 72rem;
