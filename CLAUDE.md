@@ -86,8 +86,8 @@ BRASIL2036/
 └─ docs/
    ├─ discovery/          7 docs: jornadas, AI value/risk, failure modes, irreversibilidade, assurance, métricas, MVP boundaries
    ├─ prd/                18 PRDs (PRD-001…018)
-   ├─ adrs/               54 ADRs (ADR-001…054)
-   ├─ specs/              33 SPECs (SPEC-001…033)
+   ├─ adrs/               58 ADRs (ADR-001…058)
+   ├─ specs/              34 SPECs (SPEC-001…034)
    ├─ risks/              RISK-REGISTER.md, RISK-CONTROL-TEST-MATRIX.md
    ├─ governance/         AI-GOVERNANCE, DATA-GOVERNANCE, RESPONSIBLE-AI
    ├─ access/             ACCESS-PROFILES.md, PERMISSION-MATRIX.md
@@ -100,7 +100,7 @@ BRASIL2036/
 
 (`.claude/` guarda os comandos e skills do harness — ver "Comandos úteis" — e, em `.claude/sdd/`, os artefatos do workflow SDD por feature.)
 
-## Estado atual (2026-09-06)
+## Estado atual (2026-09-07)
 
 - **Repo:** `github.com/JonatasLimaBR/Brazil-2036`, `origin/main`. **Branch protection ativa desde 2026-09-04**: PR-only, `required_status_checks = [ci-gate]`.
 - **GCP:** projeto `brasil2036-dev`, região `southamerica-east1`. Provisionamento **GitOps via WIF**: `scripts/bootstrap.sh` (uma vez) → 5 *Actions Variables* → `ci.yml` (gate de merge) + `infra.yml`/`data.yml`/`api-web.yml` (deploy/apply pós-merge). Sem chave estática.
@@ -121,9 +121,13 @@ BRASIL2036/
   - **Achado real não planejado, corrigido no mesmo dia (PR #21):** o merge do PR do cap disparou o job automático `data.yml`, cujo passo "verify provenance chain" (`ingestion/scripts/verify_chain.py`) falhou de verdade em produção — bug pré-existente (não relacionado ao cap): a query contava `metric_provenance` só por `reference_year`, sem filtrar `metric_id`; como a tabela é compartilhada (`ADR-055`) e o backfill real da fatia fiscal (1997-2026) tem linhas em 2022 (ano da dívida), a contagem somava as duas métricas (27 dívida + 36 fiscal = 63 ≠ 27 esperado). Corrigido com filtro `--metric-id` explícito; verificado contra produção antes e depois da correção.
   - `/verify-spec` independente = OVERALL PASS (~92%), reproduziu de forma independente o bug/correção do `verify_chain.py` contra BigQuery real. Achado WARNING (teste de rejeição acima do cap prometido no DESIGN mas nunca escrito) corrigido no mesmo dia (PR #23, `_RejectingFakeBigQuery`); achado INFO cosmético (exemplo de clustering do INSS Mantidos no SPEC-034) corrigido junto.
   - Arquivo: `.claude/sdd/archive/BIGQUERY_OPERATIONAL_STANDARDS/`. SPEC-034; ADR-057; código em `ingestion/src/ingestion/{bigquery_io.py,bronze.py,scripts/verify_chain.py}`, `api/src/api/bigquery_repo.py`.
+- **`LANDING_PAGE_ASTRO` — 🔶 Built (PR1+PR2 mergeados, `/verify-spec` independente em andamento).** Ciclo SDD Brainstorm→Define→Design→Build completo; implementa `docs/landpage.png` (mockup fornecido pelo usuário) com dado real (não fabricado) e selos de status rastreáveis. Migra `web/` de Vite+TS puro para **Astro** (`output: "static"`) — `ADR-058` supera `ADR-051` explicitamente (nota "Superseded by" em `ADR-051`, nunca substituição silenciosa). Painel "Command Center" fictício do mockup (índices/alertas inventados) substituído por painel de dados reais (dívida/fiscal/INSS, mesmos 3 endpoints já em produção) — decisão do usuário para não violar `ADR-012`. Grid de módulos (15), arquitetura GCP (12 componentes) e roadmap (8 fases) carregam selo `real`/`parcial`/`planejado` (ou `concluída`/`em andamento`/`não iniciada`) com `evidence` obrigatório em `web/src/data/status.ts`, citando um `SHIPPED` doc/ADR/Terraform real por entrada — mecanismo para impedir selo fabricado, com `data-evidence` também exposto no DOM e testado por e2e.
+  - PR #25 (estrutura Astro + dados reais): achado real corrigido no mesmo PR — `spec-checks/SPEC-033.yaml` ainda apontava para `web/src/main.ts` (deletado pela migração); atualizado para `web/src/lib/metrics.ts`, `ci-gate` ficou verde depois.
+  - PR #26 (conteúdo com status real): achado real corrigido no mesmo PR — o novo card "Previdência & INSS" do grid de módulos colidiu com o `<h3>` do painel de dados no e2e pré-existente (`getByText` ambíguo); corrigido escopando o locator a `#dados-reais`.
+  - `typecheck`/`build`/e2e (5/5, incluindo novo teste "todo selo tem evidence não-vazio") verdes localmente contra a API real de produção em ambos os PRs; `ci-gate` verde nos dois.
+  - Arquivo (ainda não `/ship`): `.claude/sdd/features/{DEFINE,DESIGN}_LANDING_PAGE_ASTRO.md`, `.claude/sdd/reports/BUILD_REPORT_LANDING_PAGE_ASTRO.md`. ADR-058; código em `web/src/{pages/index.astro,components/*.astro,lib/metrics.ts,data/status.ts}`.
 - **Follow-ups rastreados (SHIPPED §7 de CI_ASSURANCE_GATES):** revisão humana obrigatória em `main` (hoje só CI); job noturno contra a fonte real do Tesouro (drift); bump de actions Node 20. **Follow-ups antigos ainda abertos (MVP_WALKING_SKELETON §7):** URL do catálogo dados.gov.br → `dataset_registry.source_url` (concurso CGU); `wif.tf`/serviços no Terraform; `MANIFEST.json`; provenance histórica. **Follow-ups do INSS_BENEFICIOS:** parser adaptativo por nome de coluna para backfill completo de Emitidos/Mantidos; Mantidos sem dado real carregado; W1 (RAW do Indeferidos não preserva XLSX original) — baixa prioridade. **Follow-up do FISCAL_RECEITA_DESPESA:** e2e do módulo fiscal com asserção fraca (SHIPPED §7) — baixa prioridade. **Follow-ups do BIGQUERY_OPERATIONAL_STANDARDS (SHIPPED §7):** `ingestion/scripts/*.py` sem cobertura de teste unitário (só verificação por execução real — já deixou 1 bug real escapar até produção); orçamento de projeto/billing export (`R-012`, `EPIC-042`, ainda não implementado); TTL de Bronze/Silver (`SPEC-034 §3`, decisão explícita de não implementar ainda — YAGNI); enforcement automático via lint de CI.
-- **Referência não implementada:** `docs/landpage.png` — mockup completo da landing page (nav, Command Center, grid de módulos, arquitetura GCP, roadmap 8 fases) fornecido pelo usuário; escopo de uma feature própria futura (`EPIC-002 — Landing & Brasil Hoje`), deliberadamente adiado.
-- **Próximo passo:** iniciar a próxima feature via `/brainstorm` ou `/define` — usuário ainda não direcionou qual.
+- **Próximo passo:** aguardar o `/verify-spec` independente de `LANDING_PAGE_ASTRO` (sessão nova, read-only, em andamento) → tratar achados, se houver → `/ship`.
 
 ## Arquivos-chave
 
