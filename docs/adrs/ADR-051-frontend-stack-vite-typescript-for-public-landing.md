@@ -1,7 +1,11 @@
 # ADR-051 — Vite + TypeScript for the public Landing
 
+> **Superseded by `ADR-058`** (2026-09-06): a Landing cresceu para múltiplas seções interativas —
+> exatamente o gatilho de reconsideração que a seção "Quando reconsiderar" deste ADR já previa.
+> Este documento permanece íntegro como registro histórico da decisão original.
+
 ## Status
-Accepted
+Accepted (superseded — ver nota acima)
 
 ## Contexto
 Esta decisão é parte do baseline arquitetural do BRASIL 2036 e deve ser lida com o `CONTEXTO.md`.

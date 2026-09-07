@@ -57,7 +57,8 @@ test("Fiscal module renders without crashing for each of the 3 metrics", async (
 
 test("no debt figure is hardcoded in the served bundle", async ({ request }) => {
   const html = await (await request.get("/")).text();
-  const scriptMatch = html.match(/src="([^"]*assets\/[^"]+\.js)"/);
+  // Astro (unlike Vite directly) emits bundled scripts under /_astro/, not /assets/.
+  const scriptMatch = html.match(/src="([^"]*_astro\/[^"]+\.js)"/);
   expect(scriptMatch, "expected a bundled module script").not.toBeNull();
 
   const bundle = await (await request.get(scriptMatch![1]!)).text();

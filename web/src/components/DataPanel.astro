@@ -1,0 +1,37 @@
+---
+---
+
+<section id="dados-reais">
+  <h2 class="section-title">Dados reais em produção</h2>
+  <div class="data-panel">
+    <div class="data-panel__group">
+      <h3>Dívida Consolidada dos Estados</h3>
+      <div id="card" class="card" aria-live="polite" aria-busy="true">
+        <p class="loading">Carregando…</p>
+      </div>
+      <p class="note">
+        Programa de Reestruturação e Ajuste Fiscal (PAF). Valor bruto, anual, por unidade
+        federativa.
+      </p>
+    </div>
+
+    <div class="data-panel__group">
+      <h3>Previdência &amp; INSS</h3>
+      <div id="inss-module" class="metric-grid" aria-live="polite" aria-busy="true">
+        <p class="loading">Carregando…</p>
+      </div>
+    </div>
+
+    <div class="data-panel__group">
+      <h3>Fiscal &amp; DebtLab</h3>
+      <div id="fiscal-module" class="metric-grid" aria-live="polite" aria-busy="true">
+        <p class="loading">Carregando…</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { renderMetricsPanel } from "../lib/metrics";
+  void renderMetricsPanel();
+</script>
