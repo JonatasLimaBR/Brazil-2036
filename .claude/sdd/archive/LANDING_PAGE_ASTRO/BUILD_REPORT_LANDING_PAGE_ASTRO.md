@@ -7,8 +7,10 @@
 - **Entrada:** `.claude/sdd/features/DESIGN_LANDING_PAGE_ASTRO.md` (v1.0)
 - **Branch:** PR1 `feature/landing-page-astro`
 - **Data:** 2026-09-06
-- **Status da build:** ✅ PR1 + PR2 + achados do `/verify-spec` corrigidos — pronto para `/ship`
-- **Próximo passo:** `/ship`
+- **Status da build:** ✅ Shipped
+- **Próximo passo:** — (arquivado)
+
+> Shipped and archived 2026-09-07.
 
 > Assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
 

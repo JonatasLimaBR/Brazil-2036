@@ -3,7 +3,9 @@
 ## Metadados
 
 - **Feature:** LANDING_PAGE_ASTRO
-- **Status:** Ready for Build
+- **Status:** ✅ Shipped
+
+> Shipped and archived 2026-09-07.
 - **Fase:** 2 (Design)
 - **Entrada:** `.claude/sdd/features/DEFINE_LANDING_PAGE_ASTRO.md` (Clarity 13/15)
 - **Criado:** 2026-09-06

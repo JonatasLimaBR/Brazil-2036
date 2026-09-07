@@ -1,7 +1,9 @@
 # BRAINSTORM — LANDING_PAGE_ASTRO
 
 - **Feature:** LANDING_PAGE_ASTRO
-- **Status:** ✅ Complete (Defined)
+- **Status:** ✅ Shipped
+
+> Shipped and archived 2026-09-07.
 - **Fase:** 0 (Brainstorm)
 - **Criado:** 2026-09-06
 - **Idioma:** PT-BR (alinhado a `docs/discovery/`)
