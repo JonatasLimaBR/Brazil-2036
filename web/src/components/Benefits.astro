@@ -1,17 +1,28 @@
 ---
-const benefits = [
-  "Decisão orientada por dados",
-  "Sustentabilidade fiscal",
-  "Eficiência do INSS",
-  "Monitoramento municipal",
-  "Simulação de políticas públicas",
-  "Redução de riscos",
+import Icon, { type IconName } from "./Icon.astro";
+
+const benefits: { label: string; icon: IconName; color: "green" | "yellow" | "blue" }[] = [
+  { label: "Decisão orientada por dados", icon: "compass", color: "blue" },
+  { label: "Sustentabilidade fiscal", icon: "leaf", color: "green" },
+  { label: "Eficiência do INSS", icon: "bolt", color: "yellow" },
+  { label: "Monitoramento municipal", icon: "pin", color: "blue" },
+  { label: "Simulação de políticas públicas", icon: "flask", color: "green" },
+  { label: "Redução de riscos", icon: "shield", color: "yellow" },
 ];
 ---
 
 <section>
   <h2 class="section-title">Benefícios esperados</h2>
   <div class="card-grid">
-    {benefits.map((label) => <article class="simple-card"><h3>{label}</h3></article>)}
+    {
+      benefits.map((benefit) => (
+        <article class="simple-card">
+          <div class={`icon-badge icon-badge--${benefit.color}`}>
+            <Icon name={benefit.icon} />
+          </div>
+          <h3>{benefit.label}</h3>
+        </article>
+      ))
+    }
   </div>
 </section>

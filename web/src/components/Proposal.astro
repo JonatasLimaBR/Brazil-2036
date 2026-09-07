@@ -1,21 +1,31 @@
 ---
-const items = [
+import Icon, { type IconName } from "./Icon.astro";
+
+const items: { label: string; description: string; icon: IconName; color: "green" | "yellow" | "blue" }[] = [
   {
     label: "Integrar",
     description:
       "Unir e padronizar dados de órgãos públicos, estados e municípios em uma base confiável e segura.",
+    icon: "puzzle",
+    color: "green",
   },
   {
     label: "Entender",
     description: "Gerar inteligência econômica, fiscal, social e territorial com visão 360° do Brasil.",
+    icon: "bulb",
+    color: "yellow",
   },
   {
     label: "Prever",
     description: "Construir cenários e projeções causais com IA e modelos avançados de simulação.",
+    icon: "trending",
+    color: "blue",
   },
   {
     label: "Agir",
     description: "Apoiar gestores com alertas, recomendações e avaliação de impacto de políticas.",
+    icon: "target",
+    color: "green",
   },
 ];
 ---
@@ -26,6 +36,9 @@ const items = [
     {
       items.map((item) => (
         <article class="simple-card">
+          <div class={`icon-badge icon-badge--${item.color}`}>
+            <Icon name={item.icon} />
+          </div>
           <h3>{item.label}</h3>
           <p>{item.description}</p>
         </article>
