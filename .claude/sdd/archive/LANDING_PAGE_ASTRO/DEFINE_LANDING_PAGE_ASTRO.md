@@ -3,7 +3,9 @@
 ## Metadados
 
 - **Feature:** LANDING_PAGE_ASTRO
-- **Status:** ✅ Complete (Designed)
+- **Status:** ✅ Shipped
+
+> Shipped and archived 2026-09-07.
 - **Fase:** 1 (Define)
 - **Entrada:** `.claude/sdd/features/BRAINSTORM_LANDING_PAGE_ASTRO.md` (Ready for Define)
 - **Criado:** 2026-09-06
