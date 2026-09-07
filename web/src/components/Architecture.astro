@@ -1,0 +1,24 @@
+---
+import { ARCHITECTURE_STATUS, type Status } from "../data/status";
+
+const STATUS_LABEL: Record<Status, string> = {
+  real: "Real",
+  parcial: "Parcial",
+  planejado: "Planejado",
+};
+---
+
+<section id="arquitetura">
+  <h2 class="section-title">Arquitetura GCP</h2>
+  <div class="architecture-grid">
+    {
+      ARCHITECTURE_STATUS.map((entry) => (
+        <article class="architecture-card" data-status-id={entry.id} data-evidence={entry.evidence}>
+          <h3>{entry.label}</h3>
+          <span class={`status-badge status-badge--${entry.status}`}>{STATUS_LABEL[entry.status]}</span>
+        </article>
+      ))
+    }
+  </div>
+  <p class="architecture-caption">Lakehouse · IA · Knowledge Graph · RAG · Agentes sobre GCP</p>
+</section>

@@ -1,0 +1,30 @@
+---
+const portals = [
+  "Portal Público",
+  "Portal Executivo",
+  "Portal Analítico",
+  "Portal INSS",
+  "Portal Estados e Municípios",
+  "Policy Lab",
+  "Agent Center",
+  "Administração da Plataforma",
+];
+---
+
+<section id="portais">
+  <h2 class="section-title">Portais e Experiência</h2>
+  <p class="portals-subtitle">
+    Experiências digitais para cada público, com acessos seguros e personalizados.
+  </p>
+  <div class="card-grid">
+    {portals.map((label) => <article class="simple-card"><h3>{label}</h3></article>)}
+  </div>
+</section>
+
+<style>
+  .portals-subtitle {
+    text-align: center;
+    color: var(--muted);
+    margin: -1rem 0 2rem;
+  }
+</style>

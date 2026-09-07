@@ -22,7 +22,7 @@ test("INSS module renders without crashing for each of the 3 metrics", async ({ 
   // above, because there is no real data to assert on until the backfill runs.
   await page.goto("/");
 
-  await expect(page.getByText("Previdência & INSS")).toBeVisible();
+  await expect(page.locator("#dados-reais").getByText("Previdência & INSS")).toBeVisible();
 
   for (const id of [
     "inss_beneficios_emitidos",
@@ -52,6 +52,21 @@ test("Fiscal module renders without crashing for each of the 3 metrics", async (
     const hasValue = await page.getByTestId(`fiscal-${id}-value`).count();
     const hasError = await article.locator(".error").count();
     expect(hasValue + hasError, `${id} must render a value or an error, not neither`).toBe(1);
+  }
+});
+
+test("every module, architecture and roadmap status badge carries non-empty evidence", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const entries = await page.locator("[data-evidence]").all();
+  expect(entries.length).toBeGreaterThan(0);
+
+  for (const entry of entries) {
+    const evidence = await entry.getAttribute("data-evidence");
+    expect(evidence, "every status entry must cite a real, non-empty fact").not.toBeNull();
+    expect(evidence!.trim().length).toBeGreaterThan(0);
   }
 });
 

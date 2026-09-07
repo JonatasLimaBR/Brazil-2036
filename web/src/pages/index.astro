@@ -1,7 +1,14 @@
 ---
+import Architecture from "../components/Architecture.astro";
+import Benefits from "../components/Benefits.astro";
 import DataPanel from "../components/DataPanel.astro";
+import FooterCta from "../components/FooterCta.astro";
 import Hero from "../components/Hero.astro";
+import ModuleGrid from "../components/ModuleGrid.astro";
 import Nav from "../components/Nav.astro";
+import PortalsGrid from "../components/PortalsGrid.astro";
+import Proposal from "../components/Proposal.astro";
+import Roadmap from "../components/Roadmap.astro";
 import "../styles/global.css";
 ---
 
@@ -17,6 +24,13 @@ import "../styles/global.css";
     <main>
       <Hero />
       <DataPanel />
+      <Proposal />
+      <ModuleGrid />
+      <PortalsGrid />
+      <Architecture />
+      <Roadmap />
+      <Benefits />
     </main>
+    <FooterCta />
   </body>
 </html>
