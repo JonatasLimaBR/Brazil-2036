@@ -1,20 +1,51 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from typing import Any
+import json
+from collections.abc import Mapping
+from typing import Any, Protocol
 
 from api.config import Config
 from api.models import (
     DataClass,
+    DebtLabScenarioBase,
+    DebtLabScenarioRequest,
+    DebtLabScenarioResponse,
     MetricResponse,
     NationalMetricResponse,
     ProvenanceResponse,
     ProvenanceSummary,
+    YearlyDeterministic,
+    YearlyPercentiles,
 )
 
-RunQuery = Callable[[str, Mapping[str, Any]], list[dict[str, Any]]]
+
+class RunQuery(Protocol):
+    """Callable[[str, Mapping[str, Any]], list[dict[str, Any]]] plus an
+    optional per-call maximum_bytes_billed override (DESIGN D5) -- a bare
+    Callable alias can't express a defaulted keyword-only parameter, so this
+    is a Protocol instead. Every existing 2-positional-arg call site keeps
+    working unchanged; only debtlab's DDL/INSERT calls pass the override.
+    """
+
+    def __call__(
+        self,
+        sql: str,
+        params: Mapping[str, Any],
+        *,
+        maximum_bytes_billed: int | None = ...,
+    ) -> list[dict[str, Any]]: ...
+
 
 _TRUST_STATUS = "source_only"
+
+# br2036_control, not Gold (ADR-059) -- operational bookkeeping for
+# simulator runs, same role as dataset_registry/metric_provenance.
+_DEBTLAB_SCENARIOS_SCHEMA = (
+    "scenario_id STRING, created_at TIMESTAMP, horizon_years INT64, "
+    "base_reference_date DATE, base_divida_pib_pct FLOAT64, base_source STRING, "
+    "assumptions_json STRING, engine_version STRING, seed INT64, n_iterations INT64, "
+    "deterministic_trajectory_json STRING, percentiles_json STRING, data_class STRING"
+)
 
 
 class BigQueryRepo:
@@ -124,6 +155,88 @@ class BigQueryRepo:
             provenance=summary,
         )
 
+    def debtlab_base(self) -> NationalMetricResponse | None:
+        """Real, observed divida/PIB anchor for a new DebtLab scenario
+        (ADR-059) -- reuses latest_national_total as-is, since
+        divida_bruta_pib is served through the exact same generic
+        /national route (config.metric_tables), zero new read code."""
+        metric_id = self._config.debtlab_base_metric_id
+        gold_table = self._config.metric_tables.get(metric_id)
+        if gold_table is None:
+            return None
+        return self.latest_national_total(metric_id, gold_table)
+
+    def create_debtlab_scenario(self, scenario: DebtLabScenarioResponse) -> None:
+        control = self._config.debtlab_scenarios_fqtn
+        # DDL/INSERT here, not a SELECT to be bounded by bytes scanned --
+        # same rationale as bronze.py's LOAD DATA (ADR-057, DESIGN D5).
+        self._run_query(
+            f"CREATE TABLE IF NOT EXISTS {control} ({_DEBTLAB_SCENARIOS_SCHEMA})",
+            {},
+            maximum_bytes_billed=None,
+        )
+        self._run_query(
+            f"INSERT INTO {control} "
+            "(scenario_id, created_at, horizon_years, base_reference_date, "
+            "base_divida_pib_pct, base_source, assumptions_json, engine_version, "
+            "seed, n_iterations, deterministic_trajectory_json, percentiles_json, data_class) "
+            "VALUES (@scenario_id, TIMESTAMP(@created_at), @horizon_years, "
+            "DATE(@base_reference_date), @base_divida_pib_pct, @base_source, "
+            "@assumptions_json, @engine_version, @seed, @n_iterations, "
+            "@deterministic_trajectory_json, @percentiles_json, @data_class)",
+            {
+                "scenario_id": scenario.scenario_id,
+                "created_at": scenario.created_at,
+                "horizon_years": scenario.horizon_years,
+                "base_reference_date": scenario.base.reference_date,
+                "base_divida_pib_pct": scenario.base.divida_pib_pct,
+                "base_source": scenario.base.source,
+                "assumptions_json": scenario.assumptions.model_dump_json(),
+                "engine_version": scenario.engine_version,
+                "seed": scenario.seed,
+                "n_iterations": scenario.n_iterations,
+                "deterministic_trajectory_json": json.dumps(
+                    [p.model_dump() for p in scenario.deterministic_trajectory]
+                ),
+                "percentiles_json": json.dumps([p.model_dump() for p in scenario.percentiles]),
+                "data_class": scenario.data_class.value,
+            },
+            maximum_bytes_billed=None,
+        )
+
+    def get_debtlab_scenario(self, scenario_id: str) -> DebtLabScenarioResponse | None:
+        control = self._config.debtlab_scenarios_fqtn
+        rows = self._run_query(
+            "SELECT scenario_id, CAST(created_at AS STRING) AS created_at, horizon_years, "
+            "CAST(base_reference_date AS STRING) AS base_reference_date, base_divida_pib_pct, "
+            "base_source, assumptions_json, engine_version, seed, n_iterations, "
+            "deterministic_trajectory_json, percentiles_json, data_class "
+            f"FROM {control} WHERE scenario_id = @scenario_id",
+            {"scenario_id": scenario_id},
+        )
+        if not rows:
+            return None
+        row = rows[0]
+        return DebtLabScenarioResponse(
+            scenario_id=row["scenario_id"],
+            created_at=row["created_at"],
+            horizon_years=int(row["horizon_years"]),
+            base=DebtLabScenarioBase(
+                reference_date=row["base_reference_date"],
+                divida_pib_pct=float(row["base_divida_pib_pct"]),
+                source=row["base_source"],
+            ),
+            assumptions=DebtLabScenarioRequest(**json.loads(row["assumptions_json"])),
+            engine_version=row["engine_version"],
+            seed=int(row["seed"]),
+            n_iterations=int(row["n_iterations"]),
+            deterministic_trajectory=[
+                YearlyDeterministic(**p) for p in json.loads(row["deterministic_trajectory_json"])
+            ],
+            percentiles=[YearlyPercentiles(**p) for p in json.loads(row["percentiles_json"])],
+            data_class=DataClass(row["data_class"]),
+        )
+
     def _national_provenance_summary(
         self, metric_id: str, reference_date: str
     ) -> ProvenanceSummary | None:
@@ -169,23 +282,36 @@ class BigQueryRepo:
 DEFAULT_MAX_BYTES_BILLED = 1_073_741_824
 
 
+def _bq_param_type(value: Any) -> str:
+    # bool is an int subclass in Python -- checked first so a bool value
+    # never gets misclassified as INT64.
+    if isinstance(value, bool):
+        return "BOOL"
+    if isinstance(value, int):
+        return "INT64"
+    if isinstance(value, float):
+        return "FLOAT64"
+    return "STRING"
+
+
 def build_bigquery_run_query(project: str) -> RunQuery:
     from google.cloud import bigquery
 
     client = bigquery.Client(project=project)
 
-    def run_query(sql: str, params: Mapping[str, Any]) -> list[dict[str, Any]]:
+    def run_query(
+        sql: str,
+        params: Mapping[str, Any],
+        *,
+        maximum_bytes_billed: int | None = DEFAULT_MAX_BYTES_BILLED,
+    ) -> list[dict[str, Any]]:
         job_params = [
-            bigquery.ScalarQueryParameter(
-                name,
-                "INT64" if isinstance(value, int) else "STRING",
-                value,
-            )
+            bigquery.ScalarQueryParameter(name, _bq_param_type(value), value)
             for name, value in params.items()
         ]
         job_config = bigquery.QueryJobConfig(
             query_parameters=job_params,
-            maximum_bytes_billed=DEFAULT_MAX_BYTES_BILLED,
+            maximum_bytes_billed=maximum_bytes_billed,
         )
         return [dict(row) for row in client.query(sql, job_config=job_config).result()]
 

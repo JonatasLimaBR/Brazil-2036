@@ -23,6 +23,11 @@ class Config:
     # route (INSS: PRD-005/SPEC-011) instead of the per-state debt route.
     # Additive: does not affect gold_table/default_metric_id above.
     metric_tables: Mapping[str, str] = field(default_factory=dict)
+    # DebtLab scenario persistence (ADR-059): br2036_control, not Gold -- this
+    # is operational bookkeeping, never a quantitative-truth table.
+    bq_dataset_control: str = ""
+    debtlab_scenarios_table: str = "debtlab_scenarios"
+    debtlab_base_metric_id: str = "divida_bruta_pib"
 
     @property
     def gold_fqtn(self) -> str:
@@ -31,6 +36,10 @@ class Config:
     @property
     def provenance_fqtn(self) -> str:
         return f"`{self.gcp_project}.{self.bq_dataset_gold}.{self.provenance_table}`"
+
+    @property
+    def debtlab_scenarios_fqtn(self) -> str:
+        return f"`{self.gcp_project}.{self.bq_dataset_control}.{self.debtlab_scenarios_table}`"
 
 
 def load_config(path: str | Path | None = None) -> Config:
@@ -44,4 +53,7 @@ def load_config(path: str | Path | None = None) -> Config:
         default_metric_id=raw["default_metric_id"],
         default_state_ibge_code=str(raw["default_state_ibge_code"]),
         metric_tables=dict(raw.get("metric_tables", {})),
+        bq_dataset_control=raw.get("bq_dataset_control", ""),
+        debtlab_scenarios_table=raw.get("debtlab_scenarios_table", "debtlab_scenarios"),
+        debtlab_base_metric_id=raw.get("debtlab_base_metric_id", "divida_bruta_pib"),
     )

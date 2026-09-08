@@ -72,15 +72,124 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/simulations/debtlab": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Debtlab Scenario */
+        post: operations["create_debtlab_scenario_v1_simulations_debtlab_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/simulations/debtlab/{scenario_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Debtlab Scenario */
+        get: operations["get_debtlab_scenario_v1_simulations_debtlab__scenario_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AssumptionDistributionInput */
+        AssumptionDistributionInput: {
+            /**
+             * Mean
+             * @description Fraction, e.g. 0.10 for 10%, not 10
+             */
+            mean: number;
+            /**
+             * Std
+             * @description Standard deviation, same unit as mean
+             */
+            std: number;
+        };
         /**
          * DataClass
          * @enum {string}
          */
         DataClass: "observed" | "estimated" | "simulated";
+        /** DebtLabScenarioBase */
+        DebtLabScenarioBase: {
+            /**
+             * Divida Pib Pct
+             * @description Real observed value at reference_date
+             */
+            divida_pib_pct: number;
+            /**
+             * Reference Date
+             * @description Most recent real divida_bruta_pib period used
+             */
+            reference_date: string;
+            /**
+             * Source
+             * @description URL of the source series (BCB SGS 13762)
+             */
+            source: string;
+        };
+        /** DebtLabScenarioRequest */
+        DebtLabScenarioRequest: {
+            crescimento_nominal_pib: components["schemas"]["AssumptionDistributionInput"];
+            /**
+             * Horizon Years
+             * @default 10
+             */
+            horizon_years: number;
+            juros_nominal: components["schemas"]["AssumptionDistributionInput"];
+            /**
+             * N Iterations
+             * @default 5000
+             */
+            n_iterations: number;
+            primario_pct_pib: components["schemas"]["AssumptionDistributionInput"];
+            /**
+             * Seed
+             * @default 42
+             */
+            seed: number;
+        };
+        /** DebtLabScenarioResponse */
+        DebtLabScenarioResponse: {
+            assumptions: components["schemas"]["DebtLabScenarioRequest"];
+            base: components["schemas"]["DebtLabScenarioBase"];
+            /** Created At */
+            created_at: string;
+            /** @default simulated */
+            data_class: components["schemas"]["DataClass"];
+            /** Deterministic Trajectory */
+            deterministic_trajectory: components["schemas"]["YearlyDeterministic"][];
+            /** Engine Version */
+            engine_version: string;
+            /** Horizon Years */
+            horizon_years: number;
+            /** N Iterations */
+            n_iterations: number;
+            /** Percentiles */
+            percentiles: components["schemas"]["YearlyPercentiles"][];
+            /** Scenario Id */
+            scenario_id: string;
+            /** Seed */
+            seed: number;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -170,6 +279,28 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** YearlyDeterministic */
+        YearlyDeterministic: {
+            /** Divida Pib Pct */
+            divida_pib_pct: number;
+            /** Year Offset */
+            year_offset: number;
+        };
+        /** YearlyPercentiles */
+        YearlyPercentiles: {
+            /** P10 */
+            p10: number;
+            /** P25 */
+            p25: number;
+            /** P50 */
+            p50: number;
+            /** P75 */
+            p75: number;
+            /** P90 */
+            p90: number;
+            /** Year Offset */
+            year_offset: number;
         };
     };
     responses: never;
@@ -286,6 +417,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProvenanceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_debtlab_scenario_v1_simulations_debtlab_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebtLabScenarioRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtLabScenarioResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_debtlab_scenario_v1_simulations_debtlab__scenario_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scenario_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtLabScenarioResponse"];
                 };
             };
             /** @description Validation Error */
