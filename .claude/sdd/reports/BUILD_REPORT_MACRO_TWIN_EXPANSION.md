@@ -7,8 +7,8 @@
 - **Entrada:** `.claude/sdd/features/DESIGN_MACRO_TWIN_EXPANSION.md` (v1.0)
 - **Branch:** `feature/macro-twin-expansion`
 - **Data:** 2026-09-08
-- **Status da build:** ✅ Completo (PR1 ingestão + PR2 endpoint de sugestão) — pronto para
-  `/verify-spec`
+- **Status da build:** ✅ Completo (PR1 ingestão + PR2 endpoint de sugestão + PR3 hotfix de bug real
+  de SQL/infra de teste de integração) — pronto para `/verify-spec`
 - **Próximo passo:** `/verify-spec` (sessão nova, read-only) → `/ship`
 
 > Nota: assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
@@ -73,6 +73,34 @@ determinística de dado observado (composição/YoY), não uma leitura direta �
 isso como `estimated`. Nenhum código de produção chegou a usar o valor errado (corrigido antes de
 qualquer commit).
 
+### Achado #4 — bug real de produção: erro de sintaxe SQL na query YoY de `pib_mensal` (PR3, hotfix)
+
+A primeira chamada real em produção a `GET /v1/simulations/debtlab/suggested-assumptions` (após o
+deploy da PR2) retornou 500. `gcloud run services logs read` mostrou o traceback completo:
+`google.api_core.exceptions.BadRequest: 400 ORDER BY clause expression references column
+reference_date which is neither grouped nor aggregated`. Causa raiz: a query de YoY do PIB em
+`bigquery_repo.py::suggested_assumptions()` colocava `ORDER BY reference_date DESC LIMIT 12` fora
+dos parênteses do `SELECT` agregador (`AVG`/`STDDEV_SAMP`), em vez de dentro de uma subquery
+intermediária que isola as 12 linhas mais recentes **antes** da agregação — a query irmã de SELIC
+já tinha a estrutura de 2 níveis correta, usada como padrão de referência para a correção.
+**Corrigido** com aninhamento explícito de 3 níveis (interna calcula YoY via `LAG`; intermediária
+isola as 12 linhas não-nulas mais recentes via `ORDER BY`+`LIMIT`; externa agrega exatamente sobre
+essas 12). Verificado contra BigQuery real (novo teste de integração, `§ Achado #4` abaixo) e,
+após o deploy da PR3, contra o endpoint de produção: `HTTP 200`, `juros_nominal.mean≈0.1349`
+(SELIC anualizada), `crescimento_nominal_pib.mean≈0.0716` (PIB YoY nominal) — valores em faixa
+plausível.
+
+**Causa raiz sistêmica identificada e corrigida junto:** `api/` nunca teve um teste de integração
+contra BigQuery real antes desta feature — todos os testes anteriores usavam funções `run_query`
+falsas que casam SQL por substring, que nunca chegam a parsear/executar SQL de verdade. Um erro de
+sintaxe SQL não tinha como ser pego antes do deploy. Fechado nesta mesma PR (não uma decisão
+adiada): `api/tests/integration/test_suggested_assumptions_bigquery.py` (novo, contra as tabelas
+Gold já populadas, somente leitura, sem dataset isolado necessário), convenção de marker
+`integration`/`addopts` em `api/pyproject.toml` (espelhando o padrão já existente em
+`ingestion/pyproject.toml`), e `.github/workflows/ci.yml`: job `integration` estendido para também
+disparar em mudanças de `api/` e rodar os testes de integração da API. PR #39, `ci-gate` verde
+confirmou a nova etapa de CI funcionando (5m14s), squash-merged e deployado.
+
 ---
 
 ## 3. Verification results
@@ -90,6 +118,13 @@ qualquer commit).
   incluindo os testes do `POST /v1/simulations/debtlab` — `AT6` confirmado).
 - **`web/`:** `npm run gen:client` + `typecheck` (`astro check`, 0 erros) + `build` verdes contra o
   `openapi.json` regenerado.
+- **PR3 (hotfix, Achado #4):** `ruff check`/`format --check`/`mypy`/`pytest -q` limpos (47 passed +
+  1 deselected). Novo teste de integração rodado manualmente contra `brasil2036-dev` real
+  (`GCP_PROJECT=brasil2036-dev pytest -m integration`) — **PASS em 71.57s**. `ci-gate` do PR #39
+  verde, incluindo a nova etapa `api integration tests against real BigQuery` no job `integration`
+  (5m14s) — primeira execução real dessa etapa. Após squash-merge e deploy (`api-web.yml`,
+  3m11s), `GET /v1/simulations/debtlab/suggested-assumptions` re-verificado ao vivo em produção:
+  `HTTP 200` com valores reais (antes: `HTTP 500`).
 
 ---
 
@@ -100,14 +135,16 @@ qualquer commit).
 | 1 | Criar o fixture `pib_mensal_sample.json` que faltava, ou deixar a parametrização com só 4 séries | (a) parametrizar só sobre as séries que já tinham fixture; (b) criar o fixture faltante e cobrir as 5 | (b) | O DESIGN já previa cobertura das 5 séries; deixar `pib_mensal` de fora seria uma lacuna de teste real, não uma decisão deliberada. |
 | 2 | Ordem de registro das rotas FastAPI | (a) registrar `/suggested-assumptions` depois de `/{scenario_id}` (ordem "natural" de leitura do arquivo); (b) antes | (b) | FastAPI casa por ordem de registro — (a) quebraria a rota nova silenciosamente (404 em vez do resultado real), achado confirmado por teste antes de qualquer deploy. |
 | 3 | `data_class` da sugestão | (a) `observed` (copiado do molde mais próximo); (b) `estimated` | (b) | `ADR-028`: é uma derivação, não uma leitura direta de dado observado. |
+| 4 | Após o bug real de SQL (Achado #4): corrigir só a query, ou também fechar a lacuna sistêmica de testes | (a) corrigir só `suggested_assumptions()` e seguir; (b) corrigir + adicionar infraestrutura de teste de integração real para `api/` (marker, CI, teste novo) | (b) | O mesmo padrão de bug (SQL/serialização que mocks não capturam) já tinha acontecido uma vez antes nesta sessão (`maximum_bytes_billed=None` no DEBTLAB_SIMULATOR) — 2 bugs reais em produção da mesma categoria era sinal de lacuna estrutural, não de azar; deixar sem correção estrutural teria permitido um 3º. |
 
 ---
 
 ## 5. Blockers / trabalho restante
 
-Nenhum blocker. Backfill real das 3 séries novas contra `brasil2036-dev` (fora do dataset
-`citest_*` isolado do teste de integração) ainda não executado — será feito e confirmado antes do
-`/ship`, mesmo padrão de toda fatia de dado anterior.
+Nenhum blocker. Backfill real das 3 séries novas contra `brasil2036-dev` **confirmado completo**
+(reverificado ao vivo: `ipca_mensal`, `selic_mensal`, `cambio_usd_brl` retornam dado real e
+`observed` em `/v1/metrics/{id}/national`; `suggested-assumptions` consome 12 meses reais de
+`selic_mensal`/`pib_mensal` sem gaps).
 
 ---
 
@@ -125,3 +162,4 @@ Nenhum blocker. Backfill real das 3 séries novas contra `brasil2036-dev` (fora 
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-08 | 1.0 | Build completo: PR1 (ingestão real de IPCA/SELIC/câmbio) + PR2 (endpoint de sugestão de premissas para o DebtLab, ADR-060). 3 achados reais durante o build (fixture faltante de `pib_mensal`; risco real de roteamento FastAPI corrigido antes do deploy; `data_class` corrigido para `estimated`). Integration test real contra `brasil2036-dev` PASS (5/5 séries). `typecheck`/`lint`/`unit` verdes em ambos os pacotes + `web/`, 0 regressão. | /build (Claude Sonnet 5) |
+| 2026-09-08 | 1.1 | PR3 (hotfix, Achado #4): 2º bug real de produção da sessão — erro de sintaxe SQL na query YoY de `pib_mensal` (`ORDER BY`/`LIMIT` fora dos parênteses do agregador), causando `HTTP 500` na primeira chamada real de `suggested-assumptions`. Corrigido com aninhamento SQL de 3 níveis. Causa raiz sistêmica fechada junto: `api/` nunca teve teste de integração contra BigQuery real — adicionado `api/tests/integration/`, marker `integration` em `api/pyproject.toml`, e etapa nova no job `integration` do `ci.yml`. PR #39 `ci-gate` verde (nova etapa validada em CI pela 1ª vez), squash-merged, deploy confirmado, endpoint re-verificado ao vivo (`HTTP 200`). Backfill real das 3 séries novas confirmado completo (não mais pendente). | /build (Claude Sonnet 5) |
