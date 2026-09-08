@@ -9,6 +9,7 @@ dependencies = [
     "uvicorn>=0.32",
     "pyyaml>=6.0",
     "google-cloud-bigquery>=3.25",
+    "numpy>=2.0",
 ]
 
 [project.optional-dependencies]

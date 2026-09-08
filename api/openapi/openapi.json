@@ -1,6 +1,27 @@
 {
   "components": {
     "schemas": {
+      "AssumptionDistributionInput": {
+        "properties": {
+          "mean": {
+            "description": "Fraction, e.g. 0.10 for 10%, not 10",
+            "title": "Mean",
+            "type": "number"
+          },
+          "std": {
+            "description": "Standard deviation, same unit as mean",
+            "minimum": 0.0,
+            "title": "Std",
+            "type": "number"
+          }
+        },
+        "required": [
+          "mean",
+          "std"
+        ],
+        "title": "AssumptionDistributionInput",
+        "type": "object"
+      },
       "DataClass": {
         "enum": [
           "observed",
@@ -9,6 +30,137 @@
         ],
         "title": "DataClass",
         "type": "string"
+      },
+      "DebtLabScenarioBase": {
+        "properties": {
+          "divida_pib_pct": {
+            "description": "Real observed value at reference_date",
+            "title": "Divida Pib Pct",
+            "type": "number"
+          },
+          "reference_date": {
+            "description": "Most recent real divida_bruta_pib period used",
+            "title": "Reference Date",
+            "type": "string"
+          },
+          "source": {
+            "description": "URL of the source series (BCB SGS 13762)",
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reference_date",
+          "divida_pib_pct",
+          "source"
+        ],
+        "title": "DebtLabScenarioBase",
+        "type": "object"
+      },
+      "DebtLabScenarioRequest": {
+        "properties": {
+          "crescimento_nominal_pib": {
+            "$ref": "#/components/schemas/AssumptionDistributionInput"
+          },
+          "horizon_years": {
+            "default": 10,
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Horizon Years",
+            "type": "integer"
+          },
+          "juros_nominal": {
+            "$ref": "#/components/schemas/AssumptionDistributionInput"
+          },
+          "n_iterations": {
+            "default": 5000,
+            "maximum": 20000.0,
+            "minimum": 100.0,
+            "title": "N Iterations",
+            "type": "integer"
+          },
+          "primario_pct_pib": {
+            "$ref": "#/components/schemas/AssumptionDistributionInput"
+          },
+          "seed": {
+            "default": 42,
+            "title": "Seed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "juros_nominal",
+          "crescimento_nominal_pib",
+          "primario_pct_pib"
+        ],
+        "title": "DebtLabScenarioRequest",
+        "type": "object"
+      },
+      "DebtLabScenarioResponse": {
+        "properties": {
+          "assumptions": {
+            "$ref": "#/components/schemas/DebtLabScenarioRequest"
+          },
+          "base": {
+            "$ref": "#/components/schemas/DebtLabScenarioBase"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "data_class": {
+            "$ref": "#/components/schemas/DataClass",
+            "default": "simulated"
+          },
+          "deterministic_trajectory": {
+            "items": {
+              "$ref": "#/components/schemas/YearlyDeterministic"
+            },
+            "title": "Deterministic Trajectory",
+            "type": "array"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "horizon_years": {
+            "title": "Horizon Years",
+            "type": "integer"
+          },
+          "n_iterations": {
+            "title": "N Iterations",
+            "type": "integer"
+          },
+          "percentiles": {
+            "items": {
+              "$ref": "#/components/schemas/YearlyPercentiles"
+            },
+            "title": "Percentiles",
+            "type": "array"
+          },
+          "scenario_id": {
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scenario_id",
+          "created_at",
+          "horizon_years",
+          "base",
+          "assumptions",
+          "engine_version",
+          "seed",
+          "n_iterations",
+          "deterministic_trajectory",
+          "percentiles"
+        ],
+        "title": "DebtLabScenarioResponse",
+        "type": "object"
       },
       "HTTPValidationError": {
         "properties": {
@@ -237,6 +389,62 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "YearlyDeterministic": {
+        "properties": {
+          "divida_pib_pct": {
+            "title": "Divida Pib Pct",
+            "type": "number"
+          },
+          "year_offset": {
+            "title": "Year Offset",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year_offset",
+          "divida_pib_pct"
+        ],
+        "title": "YearlyDeterministic",
+        "type": "object"
+      },
+      "YearlyPercentiles": {
+        "properties": {
+          "p10": {
+            "title": "P10",
+            "type": "number"
+          },
+          "p25": {
+            "title": "P25",
+            "type": "number"
+          },
+          "p50": {
+            "title": "P50",
+            "type": "number"
+          },
+          "p75": {
+            "title": "P75",
+            "type": "number"
+          },
+          "p90": {
+            "title": "P90",
+            "type": "number"
+          },
+          "year_offset": {
+            "title": "Year Offset",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year_offset",
+          "p10",
+          "p25",
+          "p50",
+          "p75",
+          "p90"
+        ],
+        "title": "YearlyPercentiles",
+        "type": "object"
       }
     }
   },
@@ -416,6 +624,83 @@
           }
         },
         "summary": "Get Provenance"
+      }
+    },
+    "/v1/simulations/debtlab": {
+      "post": {
+        "operationId": "create_debtlab_scenario_v1_simulations_debtlab_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DebtLabScenarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebtLabScenarioResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Debtlab Scenario"
+      }
+    },
+    "/v1/simulations/debtlab/{scenario_id}": {
+      "get": {
+        "operationId": "get_debtlab_scenario_v1_simulations_debtlab__scenario_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebtLabScenarioResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Debtlab Scenario"
       }
     }
   }

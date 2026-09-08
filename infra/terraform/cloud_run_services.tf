@@ -5,7 +5,7 @@
 
 resource "google_service_account" "api" {
   account_id   = "api-runtime"
-  display_name = "Metrics API runtime (read-only on Gold)"
+  display_name = "Metrics API runtime (read-only on Gold, write on control/debtlab_scenarios)"
 }
 
 resource "google_project_iam_member" "api_bq_job_user" {
@@ -17,6 +17,15 @@ resource "google_project_iam_member" "api_bq_job_user" {
 resource "google_bigquery_dataset_iam_member" "api_gold_viewer" {
   dataset_id = google_bigquery_dataset.layer["gold"].dataset_id
   role       = "roles/bigquery.dataViewer"
+  member     = "serviceAccount:${google_service_account.api.email}"
+}
+
+# ADR-059: DebtLab is the API's first write path. Scoped to the control
+# dataset only (least privilege, same principle as the ingestion job's
+# dataEditor grant) -- the API still cannot write to Gold/Silver/Bronze.
+resource "google_bigquery_dataset_iam_member" "api_control_editor" {
+  dataset_id = google_bigquery_dataset.layer["control"].dataset_id
+  role       = "roles/bigquery.dataEditor"
   member     = "serviceAccount:${google_service_account.api.email}"
 }
 
