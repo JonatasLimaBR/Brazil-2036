@@ -17,6 +17,7 @@ from api.models import (
     MetricResponse,
     NationalMetricResponse,
     ProvenanceResponse,
+    SuggestedAssumptionsResponse,
     YearlyDeterministic,
     YearlyPercentiles,
 )
@@ -166,6 +167,22 @@ def create_debtlab_scenario(
     )
     repo.create_debtlab_scenario(scenario)
     return scenario
+
+
+@app.get(
+    "/v1/simulations/debtlab/suggested-assumptions", response_model=SuggestedAssumptionsResponse
+)
+def get_suggested_assumptions(repo: RepoDep) -> SuggestedAssumptionsResponse:
+    # Registered before /v1/simulations/debtlab/{scenario_id} -- FastAPI
+    # matches routes in registration order, and a literal path segment must
+    # come first or "suggested-assumptions" would be swallowed as a
+    # scenario_id by the parameterized route below.
+    result = repo.suggested_assumptions()
+    if result is None:
+        raise HTTPException(
+            status_code=503, detail="not enough real trailing data yet (need >= 12 months)"
+        )
+    return result
 
 
 @app.get("/v1/simulations/debtlab/{scenario_id}", response_model=DebtLabScenarioResponse)

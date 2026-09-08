@@ -111,3 +111,33 @@ class DebtLabScenarioResponse(BaseModel):
     deterministic_trajectory: list[YearlyDeterministic]
     percentiles: list[YearlyPercentiles]
     data_class: DataClass = DataClass.simulated
+
+
+# --- Suggested assumptions (MACRO_TWIN_EXPANSION, ADR-060) -----------------
+#
+# Read-only: derives a mean/std suggestion for DebtLab premises from real
+# ingested series (selic_mensal, pib_mensal) over a trailing window. Never
+# written by the caller, never applied automatically to POST
+# /v1/simulations/debtlab (DESIGN D3) -- the caller decides whether to copy
+# these values into their own scenario request.
+
+
+class SuggestedAssumption(BaseModel):
+    mean: float = Field(description="Fraction, e.g. 0.10 for 10%, not 10")
+    std: float = Field(ge=0, description="Standard deviation, same unit as mean")
+    window_months: int = Field(description="Number of real trailing months used")
+    source_metric_id: str = Field(description="Gold metric_id the suggestion was derived from")
+    period_start: str
+    period_end: str
+    methodology: str = Field(
+        description="Plain-text note on how mean/std were derived from the real series"
+    )
+
+
+class SuggestedAssumptionsResponse(BaseModel):
+    juros_nominal: SuggestedAssumption
+    crescimento_nominal_pib: SuggestedAssumption
+    # 'estimated' (ADR-028), not 'observed': mean/std are a real deterministic
+    # derivation (annualization / YoY averaging) over observed data, not
+    # themselves a directly observed value.
+    data_class: DataClass = DataClass.estimated

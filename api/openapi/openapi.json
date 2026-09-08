@@ -350,6 +350,75 @@
         "title": "ProvenanceSummary",
         "type": "object"
       },
+      "SuggestedAssumption": {
+        "properties": {
+          "mean": {
+            "description": "Fraction, e.g. 0.10 for 10%, not 10",
+            "title": "Mean",
+            "type": "number"
+          },
+          "methodology": {
+            "description": "Plain-text note on how mean/std were derived from the real series",
+            "title": "Methodology",
+            "type": "string"
+          },
+          "period_end": {
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "title": "Period Start",
+            "type": "string"
+          },
+          "source_metric_id": {
+            "description": "Gold metric_id the suggestion was derived from",
+            "title": "Source Metric Id",
+            "type": "string"
+          },
+          "std": {
+            "description": "Standard deviation, same unit as mean",
+            "minimum": 0.0,
+            "title": "Std",
+            "type": "number"
+          },
+          "window_months": {
+            "description": "Number of real trailing months used",
+            "title": "Window Months",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mean",
+          "std",
+          "window_months",
+          "source_metric_id",
+          "period_start",
+          "period_end",
+          "methodology"
+        ],
+        "title": "SuggestedAssumption",
+        "type": "object"
+      },
+      "SuggestedAssumptionsResponse": {
+        "properties": {
+          "crescimento_nominal_pib": {
+            "$ref": "#/components/schemas/SuggestedAssumption"
+          },
+          "data_class": {
+            "$ref": "#/components/schemas/DataClass",
+            "default": "estimated"
+          },
+          "juros_nominal": {
+            "$ref": "#/components/schemas/SuggestedAssumption"
+          }
+        },
+        "required": [
+          "juros_nominal",
+          "crescimento_nominal_pib"
+        ],
+        "title": "SuggestedAssumptionsResponse",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -662,6 +731,24 @@
           }
         },
         "summary": "Create Debtlab Scenario"
+      }
+    },
+    "/v1/simulations/debtlab/suggested-assumptions": {
+      "get": {
+        "operationId": "get_suggested_assumptions_v1_simulations_debtlab_suggested_assumptions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestedAssumptionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Suggested Assumptions"
       }
     },
     "/v1/simulations/debtlab/{scenario_id}": {

@@ -14,6 +14,8 @@ from api.models import (
     NationalMetricResponse,
     ProvenanceResponse,
     ProvenanceSummary,
+    SuggestedAssumption,
+    SuggestedAssumptionsResponse,
     YearlyDeterministic,
     YearlyPercentiles,
 )
@@ -165,6 +167,74 @@ class BigQueryRepo:
         if gold_table is None:
             return None
         return self.latest_national_total(metric_id, gold_table)
+
+    def suggested_assumptions(self) -> SuggestedAssumptionsResponse | None:
+        """Real-data-derived suggestion for juros_nominal/crescimento_nominal_pib
+        (ADR-060, DESIGN §0.3/D2) -- read-only, never applied automatically to
+        POST /v1/simulations/debtlab (DESIGN D3). Returns None (-> 503 at the
+        route) when fewer than 12 real trailing months exist, rather than
+        completing the window with a fabricated value.
+        """
+        selic_table = self._config.metric_tables.get("selic_mensal")
+        pib_table = self._config.metric_tables.get("pib_mensal")
+        if selic_table is None or pib_table is None:
+            return None
+
+        gold = self._config.bq_dataset_gold
+        project = self._config.gcp_project
+
+        selic_rows = self._run_query(
+            "SELECT AVG(value) AS avg_m, STDDEV_SAMP(value) AS std_m, "
+            "MIN(reference_date) AS start_d, MAX(reference_date) AS end_d, COUNT(*) AS n FROM ("
+            f"SELECT value, reference_date FROM `{project}.{gold}.{selic_table}` "
+            "WHERE metric_id = 'selic_mensal' ORDER BY reference_date DESC LIMIT 12)",
+            {},
+        )
+        pib_rows = self._run_query(
+            "SELECT AVG(yoy) AS avg_yoy, STDDEV_SAMP(yoy) AS std_yoy, "
+            "MIN(reference_date) AS start_d, MAX(reference_date) AS end_d, COUNT(*) AS n FROM ("
+            "SELECT reference_date, "
+            "value / LAG(value, 12) OVER (ORDER BY reference_date) - 1 AS yoy "
+            f"FROM `{project}.{gold}.{pib_table}` WHERE metric_id = 'pib_mensal'"
+            ") WHERE yoy IS NOT NULL ORDER BY reference_date DESC LIMIT 12",
+            {},
+        )
+        if not selic_rows or not pib_rows:
+            return None
+        selic, pib = selic_rows[0], pib_rows[0]
+        if selic["n"] is None or int(selic["n"]) < 12 or pib["n"] is None or int(pib["n"]) < 12:
+            return None
+
+        juros_mean = (1 + float(selic["avg_m"]) / 100) ** 12 - 1
+        # Linear scaling approximation, not an exact conversion of a
+        # compounded rate's variance -- documented in `methodology` below,
+        # never presented as more precise than it is (DESIGN D2).
+        juros_std = float(selic["std_m"]) / 100 * (12**0.5)
+
+        return SuggestedAssumptionsResponse(
+            juros_nominal=SuggestedAssumption(
+                mean=juros_mean,
+                std=juros_std,
+                window_months=int(selic["n"]),
+                source_metric_id="selic_mensal",
+                period_start=str(selic["start_d"]),
+                period_end=str(selic["end_d"]),
+                methodology=(
+                    "selic_mensal (taxa acumulada mensal) composta 12x -- "
+                    "desvio-padrao escalonado linearmente (sqrt(12)), nao e "
+                    "uma conversao exata"
+                ),
+            ),
+            crescimento_nominal_pib=SuggestedAssumption(
+                mean=float(pib["avg_yoy"]),
+                std=float(pib["std_yoy"]),
+                window_months=int(pib["n"]),
+                source_metric_id="pib_mensal",
+                period_start=str(pib["start_d"]),
+                period_end=str(pib["end_d"]),
+                methodology="variacao ano-contra-ano (YoY) mes a mes, media/desvio sobre 12 pontos",
+            ),
+        )
 
     def create_debtlab_scenario(self, scenario: DebtLabScenarioResponse) -> None:
         control = self._config.debtlab_scenarios_fqtn

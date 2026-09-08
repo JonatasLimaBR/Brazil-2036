@@ -89,6 +89,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/simulations/debtlab/suggested-assumptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Suggested Assumptions */
+        get: operations["get_suggested_assumptions_v1_simulations_debtlab_suggested_assumptions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/simulations/debtlab/{scenario_id}": {
         parameters: {
             query?: never;
@@ -266,6 +283,45 @@ export interface components {
              * @description Provenance trust status; 'source_only' until a Data Trust Score exists (SPEC-006)
              */
             trust_status: string;
+        };
+        /** SuggestedAssumption */
+        SuggestedAssumption: {
+            /**
+             * Mean
+             * @description Fraction, e.g. 0.10 for 10%, not 10
+             */
+            mean: number;
+            /**
+             * Methodology
+             * @description Plain-text note on how mean/std were derived from the real series
+             */
+            methodology: string;
+            /** Period End */
+            period_end: string;
+            /** Period Start */
+            period_start: string;
+            /**
+             * Source Metric Id
+             * @description Gold metric_id the suggestion was derived from
+             */
+            source_metric_id: string;
+            /**
+             * Std
+             * @description Standard deviation, same unit as mean
+             */
+            std: number;
+            /**
+             * Window Months
+             * @description Number of real trailing months used
+             */
+            window_months: number;
+        };
+        /** SuggestedAssumptionsResponse */
+        SuggestedAssumptionsResponse: {
+            crescimento_nominal_pib: components["schemas"]["SuggestedAssumption"];
+            /** @default estimated */
+            data_class: components["schemas"]["DataClass"];
+            juros_nominal: components["schemas"]["SuggestedAssumption"];
         };
         /** ValidationError */
         ValidationError: {
@@ -459,6 +515,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_suggested_assumptions_v1_simulations_debtlab_suggested_assumptions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestedAssumptionsResponse"];
                 };
             };
         };

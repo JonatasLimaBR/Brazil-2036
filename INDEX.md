@@ -86,6 +86,7 @@
 - `docs/adrs/ADR-057-bigquery-cost-guardrail.md`
 - `docs/adrs/ADR-058-landing-page-astro-supersedes-adr-051.md`
 - `docs/adrs/ADR-059-debtlab-engine-and-persistence.md`
+- `docs/adrs/ADR-060-macro-twin-suggested-assumptions.md`
 - `docs/architecture/ARCHITECTURE.md`
 - `docs/discovery/01-USER-JOURNEYS.md`
 - `docs/discovery/02-AI-VALUE-RISK-MATRIX.md`
