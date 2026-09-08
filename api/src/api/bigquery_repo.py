@@ -190,13 +190,19 @@ class BigQueryRepo:
             "WHERE metric_id = 'selic_mensal' ORDER BY reference_date DESC LIMIT 12)",
             {},
         )
+        # 3-level nesting, not 2: LIMIT 12 must scope to the most-recent-12
+        # non-null yoy rows BEFORE aggregation -- placing ORDER BY/LIMIT
+        # outside the aggregate SELECT's own parens (as first written) is a
+        # different, invalid query ("ORDER BY ... references column ...
+        # neither grouped nor aggregated"), confirmed live in production.
         pib_rows = self._run_query(
             "SELECT AVG(yoy) AS avg_yoy, STDDEV_SAMP(yoy) AS std_yoy, "
             "MIN(reference_date) AS start_d, MAX(reference_date) AS end_d, COUNT(*) AS n FROM ("
+            "SELECT reference_date, yoy FROM ("
             "SELECT reference_date, "
             "value / LAG(value, 12) OVER (ORDER BY reference_date) - 1 AS yoy "
             f"FROM `{project}.{gold}.{pib_table}` WHERE metric_id = 'pib_mensal'"
-            ") WHERE yoy IS NOT NULL ORDER BY reference_date DESC LIMIT 12",
+            ") WHERE yoy IS NOT NULL ORDER BY reference_date DESC LIMIT 12)",
             {},
         )
         if not selic_rows or not pib_rows:
