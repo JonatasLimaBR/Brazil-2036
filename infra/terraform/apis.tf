@@ -7,6 +7,8 @@ locals {
     "cloudbuild.googleapis.com",
     "billingbudgets.googleapis.com",
     "logging.googleapis.com",
+    "bigqueryconnection.googleapis.com",
+    "aiplatform.googleapis.com",
   ]
 }
 
