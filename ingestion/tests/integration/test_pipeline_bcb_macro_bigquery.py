@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import uuid
 from collections.abc import Iterator
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from functools import partial
 from pathlib import Path
 
@@ -14,6 +14,27 @@ pytestmark = pytest.mark.integration
 _FIXTURE_DIR = Path(__file__).parent / "fixtures"
 _REPO_INGESTION_ROOT = Path(__file__).resolve().parents[2]
 _LAYERS = ("control", "bronze", "silver", "gold")
+
+
+@dataclass(frozen=True)
+class _Case:
+    dataset_id: str
+    series_code: int
+    gold_table: str
+    expected_reference_date: str
+    expected_value: float
+
+
+# One real, confirmed value per series (MACRO_TWIN_EXPANSION DESIGN 0.1 /
+# DEBTLAB_SIMULATOR DESIGN 0.1) -- pib_mensal's expected value is in reais
+# (fixture publishes R$ millions, Silver converts x1e6, same as production).
+_CASES = (
+    _Case("pib_mensal", 4380, "gold_pib_mensal", "2026-07-01", 1167869000000.0),
+    _Case("divida_bruta_pib", 13762, "gold_divida_bruta_pib", "2026-07-01", 82.51),
+    _Case("ipca_mensal", 433, "gold_ipca_mensal", "2026-07-01", 0.07),
+    _Case("selic_mensal", 4390, "gold_selic_mensal", "2026-09-01", 0.21),
+    _Case("cambio_usd_brl", 3695, "gold_cambio_usd_brl", "2026-08-01", 5.1810),
+)
 
 
 @pytest.fixture(scope="module")
@@ -54,8 +75,9 @@ def datasets(bq, project: str, run_id: str) -> Iterator[dict[str, str]]:  # type
             bq.delete_dataset(f"{project}.{name}", delete_contents=True, not_found_ok=True)
 
 
-def test_divida_bruta_pib_pipeline_against_bigquery(  # type: ignore[no-untyped-def]
-    project: str, run_id: str, bq, datasets: dict[str, str]
+@pytest.mark.parametrize("case", _CASES, ids=lambda c: c.dataset_id)
+def test_bcb_series_pipeline_against_bigquery(  # type: ignore[no-untyped-def]
+    project: str, run_id: str, bq, datasets: dict[str, str], case: _Case
 ) -> None:
     from google.cloud import storage
 
@@ -67,9 +89,9 @@ def test_divida_bruta_pib_pipeline_against_bigquery(  # type: ignore[no-untyped-
     )
     from ingestion.pipeline_wide_series import run
 
-    fixture_json = _FIXTURE_DIR / "divida_bruta_pib_sample.json"
+    fixture_json = _FIXTURE_DIR / f"{case.dataset_id}_sample.json"
     config = replace(
-        _base_config(),
+        _base_config(case.dataset_id),
         gcp_project=project,
         raw_bucket=os.environ.get("RAW_BUCKET", f"{project}-raw"),
         raw_prefix=f"citest/{run_id}",
@@ -78,13 +100,13 @@ def test_divida_bruta_pib_pipeline_against_bigquery(  # type: ignore[no-untyped-
         bq_dataset_silver=datasets["silver"],
         bq_dataset_gold=datasets["gold"],
     )
-    series = BcbSgsSeries(series_code=13762, metric_id="divida_bruta_pib")
+    series = BcbSgsSeries(series_code=case.series_code, metric_id=case.dataset_id)
     connector = build_default_connector(session=None, series=series)
     # discover() would build the real BCB URL; the integration test replaces
     # it with a fixture via file:// (same principle as fiscal_uniao's
     # integration test) so CI never depends on the live BCB API.
     ref = ResourceRef(
-        dataset_id="divida_bruta_pib",
+        dataset_id=case.dataset_id,
         resource_url=f"file://{fixture_json}",
         resource_format="json",
     )
@@ -101,12 +123,10 @@ def test_divida_bruta_pib_pipeline_against_bigquery(  # type: ignore[no-untyped-
     assert result.gold_rows == 3
     assert result.provenance_rows == 3
 
-    gold = f"`{project}.{datasets['gold']}.gold_divida_bruta_pib`"
-    latest = _scalar(
-        bq,
-        f"SELECT value AS n FROM {gold} WHERE reference_date = DATE('2026-07-01')",
-    )
-    assert latest is not None and float(latest) == pytest.approx(82.51)
+    gold = f"`{project}.{datasets['gold']}.{case.gold_table}`"
+    date_lit = case.expected_reference_date
+    latest = _scalar(bq, f"SELECT value AS n FROM {gold} WHERE reference_date = DATE('{date_lit}')")
+    assert latest is not None and float(latest) == pytest.approx(case.expected_value)
 
     entity_count = _scalar(bq, f"SELECT COUNT(*) AS n FROM {gold}")
     assert entity_count == 3
@@ -143,7 +163,7 @@ def _scalar(bq, sql: str):  # type: ignore[no-untyped-def]
     return rows[0]["n"] if rows else None
 
 
-def _base_config():  # type: ignore[no-untyped-def]
+def _base_config(dataset_id: str):  # type: ignore[no-untyped-def]
     from ingestion.pipeline_wide_series import load_wide_series_config
 
-    return load_wide_series_config(_REPO_INGESTION_ROOT / "config" / "divida_bruta_pib.yaml")
+    return load_wide_series_config(_REPO_INGESTION_ROOT / "config" / f"{dataset_id}.yaml")

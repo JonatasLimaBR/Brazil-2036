@@ -1,0 +1,57 @@
+dataset: cambio_usd_brl
+version: 1
+
+source:
+  catalog_url: "https://api.bcb.gov.br/dados/serie/bcdata.sgs.3695/dados"
+  resource_name: "Taxa de cambio - Livre - Dolar americano (venda) - media de periodo - mensal"
+  organization: "Banco Central do Brasil (BCB)"
+  license: "Dados abertos do governo federal"
+  update_frequency: "monthly"
+
+format:
+  type: json
+  encoding: "utf-8"
+  note: >
+    BCB SGS series 3695 -- monthly average USD/BRL rate, not series 1
+    (daily rate, wrong grain). Confirmed real: 15 real months
+    (06/2025-08/2026), values R$4.99-5.60. No consumer in the DebtLab
+    engine yet (the debt/GDP formula has no FX term) -- pure Macro Twin
+    coverage (SPEC-009), out of scope to wire in this slice.
+
+source_columns:
+  - reference_period
+  - value
+
+keys:
+  - state_ibge_code
+  - metric_id
+  - reference_date
+
+required_fields:
+  state_ibge_code:
+    type: STRING
+    nullable: false
+    note: "constant 'BR' sentinel -- no territorial dimension in this source"
+  metric_id:
+    type: STRING
+    nullable: false
+    allowed:
+      - cambio_usd_brl
+  reference_date:
+    type: DATE
+    nullable: false
+  value:
+    type: NUMERIC
+    nullable: false
+    note: "monthly average exchange rate, never negative"
+  unit:
+    type: STRING
+    nullable: false
+    allowed:
+      - brl_per_usd
+
+quality_rules:
+  - name: provenance_coverage
+    expr: "count(gold) = count(provenance)"
+
+evolution_policy: additive_only
