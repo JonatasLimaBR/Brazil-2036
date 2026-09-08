@@ -7,8 +7,10 @@
 - **Entrada:** `.claude/sdd/features/DESIGN_DEBTLAB_SIMULATOR.md` (v1.0)
 - **Branch:** `feature/debtlab-simulator`
 - **Data:** 2026-09-07 a 2026-09-08
-- **Status da build:** ✅ Completo (PR1 ingestão + PR2 engine/API/infra + PR3 hotfix pós-merge) — verificado ao vivo em produção, pronto para `/verify-spec`
-- **Próximo passo:** `/verify-spec` (sessão nova, read-only) → `/ship`
+- **Status da build:** ✅ Shipped
+- **Próximo passo:** — (arquivado)
+
+> Shipped and archived 2026-09-08.
 
 > Nota: assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
 

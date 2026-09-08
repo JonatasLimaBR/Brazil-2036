@@ -1,7 +1,9 @@
 # BRAINSTORM — DEBTLAB_SIMULATOR
 
 - **Feature:** DEBTLAB_SIMULATOR
-- **Status:** ✅ Complete (Defined)
+- **Status:** ✅ Shipped
+
+> Shipped and archived 2026-09-08.
 
 - **Fase:** 0 (Brainstorm)
 - **Criado:** 2026-09-07

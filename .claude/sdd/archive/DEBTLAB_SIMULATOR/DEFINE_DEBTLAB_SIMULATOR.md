@@ -3,7 +3,9 @@
 ## Metadados
 
 - **Feature:** DEBTLAB_SIMULATOR
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
+
+> Shipped and archived 2026-09-08.
 - **Fase:** 1 (Define)
 - **Entrada:** `.claude/sdd/features/BRAINSTORM_DEBTLAB_SIMULATOR.md` (Ready for Define)
 - **Criado:** 2026-09-07
