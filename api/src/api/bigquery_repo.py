@@ -207,7 +207,17 @@ class BigQueryRepo:
     def get_debtlab_scenario(self, scenario_id: str) -> DebtLabScenarioResponse | None:
         control = self._config.debtlab_scenarios_fqtn
         rows = self._run_query(
-            "SELECT scenario_id, CAST(created_at AS STRING) AS created_at, horizon_years, "
+            # FORMAT_TIMESTAMP with an explicit ISO 8601 pattern, not
+            # CAST(... AS STRING): BigQuery's default STRING cast for
+            # TIMESTAMP ("2026-09-08 13:34:21.515409+00") uses a space
+            # separator and a 2-digit UTC offset, which doesn't match the
+            # POST response's Python isoformat() ("...T...+00:00") --
+            # cosmetic (same instant either way) but a literal string
+            # comparison of the two responses would fail (found by an
+            # independent /verify-spec review).
+            "SELECT scenario_id, "
+            "FORMAT_TIMESTAMP('%Y-%m-%dT%H:%M:%E6S+00:00', created_at) AS created_at, "
+            "horizon_years, "
             "CAST(base_reference_date AS STRING) AS base_reference_date, base_divida_pib_pct, "
             "base_source, assumptions_json, engine_version, seed, n_iterations, "
             "deterministic_trajectory_json, percentiles_json, data_class "

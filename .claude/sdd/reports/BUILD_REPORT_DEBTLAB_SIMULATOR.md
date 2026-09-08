@@ -138,8 +138,16 @@ padrão errado por engano — nenhum call site anterior da API precisava do caso
 **Corrigido** (PR #33, hotfix, squash merge, `ci-gate` verde): kwargs do `QueryJobConfig`
 montados condicionalmente. Novo teste de regressão verificado tanto contra o padrão com bug
 (assert falha, confirmado manualmente) quanto contra o fix (assert passa) — a asserção precisou
-inspecionar `to_api_repr()`, não a propriedade Python (`job_config.maximum_bytes_billed`), porque
-esta última normaliza pra `None` nos dois casos e não pegaria a regressão.
+inspecionar `to_api_repr()`, não a propriedade Python (`job_config.maximum_bytes_billed`).
+
+**Correção (achado do `/verify-spec` independente):** a frase original aqui dizia que a
+propriedade Python "normaliza pra `None` nos dois casos" — impreciso. Confirmado por teste direto:
+`job_config.maximum_bytes_billed` (getter) na verdade **levanta `ValueError` ("invalid literal for
+int() with base 10: 'None'")** quando o campo foi setado como `None` explícito, não retorna
+silenciosamente `None`. Uma asserção baseada na propriedade também pegaria o bug — só que como uma
+exceção confusa no meio do teste, não como uma falha de assert limpa. A escolha de inspecionar
+`to_api_repr()` continua correta (é o jeito certo, direto, de verificar o payload real enviado à
+API), só a justificativa estava errada.
 
 **Verificado contra produção real após o fix:** `POST /v1/simulations/debtlab` cria e persiste um
 cenário real (base = 82,51% real, trajetória de 10 anos calculada corretamente, percentis P10-P90
