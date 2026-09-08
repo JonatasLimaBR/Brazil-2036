@@ -1,0 +1,92 @@
+# RAG_PROVENANCE_QA (SPEC-018, ADR-061): metodologia curada manualmente, 1 parágrafo real por
+# metric_id já ingerido. `source_url`/`producing_organization` NÃO ficam hardcoded aqui -- o
+# loader (ingestion/scripts/load_rag_corpus.py) busca o valor mais recente real direto de
+# `metric_provenance` no momento da carga, porque a URL de origem de algumas fontes muda todo
+# mês (ex.: a série histórica fiscal republica um arquivo com o mês no nome). Hardcodear a URL
+# aqui a deixaria desatualizada no próximo backfill sem ninguém notar.
+notes:
+  - metric_id: divida_consolidada
+    title: "Dívida Consolidada dos Estados e do DF (PAF)"
+    body_text: >-
+      Valor anual, por unidade federativa, publicado pela Secretaria do Tesouro Nacional (COREM/STN)
+      no âmbito do Programa de Ajuste Fiscal (PAF) -- reporta a dívida consolidada de cada estado e
+      do Distrito Federal conforme declarado pelo próprio ente sob os termos do PAF. É uma dívida
+      estadual (não confundir com a dívida bruta do governo geral, que é nacional). Hoje o projeto
+      carrega apenas o ano de 2022, o mais recente disponível na fonte no momento da ingestão.
+
+  - metric_id: fiscal_receita
+    title: "Receita líquida do Governo Central"
+    body_text: >-
+      Série mensal publicada pelo Tesouro Nacional no relatório "Resultado do Tesouro Nacional --
+      Série Histórica" (CESEF). Representa a receita líquida do Governo Central (Tesouro Nacional,
+      Previdência Social e Banco Central). A fonte republica o histórico mensal inteiro (desde 1997)
+      a cada atualização mensal, em vez de publicar um arquivo por período -- por isso o pipeline
+      deste projeto recomputa a série inteira a cada execução, não só o mês mais recente.
+
+  - metric_id: fiscal_despesa
+    title: "Despesa total do Governo Central"
+    body_text: >-
+      Mesma fonte e mesmo padrão de publicação de `fiscal_receita` (Resultado do Tesouro Nacional --
+      Série Histórica, CESEF) -- despesa total do Governo Central, série mensal desde 1997,
+      republicada por inteiro a cada atualização.
+
+  - metric_id: fiscal_primario
+    title: "Resultado primário do Governo Central"
+    body_text: >-
+      Mesma fonte de `fiscal_receita`/`fiscal_despesa` -- resultado primário (receita menos despesa
+      primária) do Governo Central, série mensal desde 1997. Ao contrário das outras duas métricas
+      fiscais, este valor pode ser negativo (déficit primário) -- já ocorreu em cerca de 38% dos
+      meses da série histórica real carregada por este projeto.
+
+  - metric_id: inss_beneficios_emitidos
+    title: "Benefícios do INSS emitidos"
+    body_text: >-
+      Publicado pelo INSS via seu portal de dados abertos, no grão UF × espécie de benefício × mês.
+      Conta os benefícios previdenciários efetivamente emitidos (concedidos) pelo INSS no período. O
+      formato de origem já mudou de estrutura de colunas mais de uma vez em menos de 3 anos --
+      histórico anterior ao formato atual exigiria um parser adaptativo, fora do escopo deste projeto
+      até o momento.
+
+  - metric_id: inss_beneficios_indeferidos
+    title: "Benefícios do INSS indeferidos"
+    body_text: >-
+      Mesma fonte de `inss_beneficios_emitidos` (INSS, dados abertos, grão UF × espécie × mês) --
+      conta os pedidos de benefício indeferidos (negados) pelo INSS no período, não os concedidos.
+
+  - metric_id: pib_mensal
+    title: "PIB mensal (BCB SGS série 4380)"
+    body_text: >-
+      Produto Interno Bruto mensal em R$ milhões, publicado pelo Banco Central do Brasil através do
+      Sistema Gerenciador de Séries Temporais (SGS), série 4380 -- uma estimativa mensal do BCB, não
+      o PIB trimestral oficial do IBGE (Contas Nacionais). Usado neste projeto como base real para a
+      razão dívida/PIB do simulador DebtLab.
+
+  - metric_id: divida_bruta_pib
+    title: "Dívida Bruta do Governo Geral (% do PIB)"
+    body_text: >-
+      Publicada pelo Banco Central do Brasil via SGS, série 13762, metodologia vigente desde 2008 --
+      mede a dívida bruta do governo geral (não a dívida estadual do PAF, que é uma estatística
+      diferente) como percentual do PIB. É a métrica de referência oficial usada para conferir
+      manualmente a razão dívida/PIB calculada pelo simulador DebtLab deste projeto.
+
+  - metric_id: ipca_mensal
+    title: "IPCA -- variação mensal (BCB SGS série 433)"
+    body_text: >-
+      Índice Nacional de Preços ao Consumidor Amplo (IPCA), variação percentual mensal, publicado
+      pelo Banco Central do Brasil via SGS série 433 (dado de origem é do IBGE, replicado pelo BCB
+      nesta série). Diferente das demais métricas macro deste projeto, este valor pode ser negativo
+      em meses de deflação.
+
+  - metric_id: selic_mensal
+    title: "Taxa Selic acumulada no mês (BCB SGS série 4390)"
+    body_text: >-
+      Taxa Selic acumulada no mês, publicada pelo Banco Central do Brasil via SGS série 4390 --
+      distinta da série 432 (meta diária definida pelo Copom). Usada neste projeto para sugerir a
+      premissa de juros nominal do simulador DebtLab, anualizada por composição (12 meses).
+
+  - metric_id: cambio_usd_brl
+    title: "Câmbio USD/BRL -- média mensal (BCB SGS série 3695)"
+    body_text: >-
+      Taxa de câmbio USD/BRL, média de venda no mês, publicada pelo Banco Central do Brasil via SGS
+      série 3695 -- distinta da série 1 (cotação diária). Ainda sem consumidor real dentro de um
+      simulador deste projeto (a fórmula do DebtLab não tem termo de câmbio).
