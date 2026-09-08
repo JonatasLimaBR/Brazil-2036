@@ -309,10 +309,17 @@ def build_bigquery_run_query(project: str) -> RunQuery:
             bigquery.ScalarQueryParameter(name, _bq_param_type(value), value)
             for name, value in params.items()
         ]
-        job_config = bigquery.QueryJobConfig(
-            query_parameters=job_params,
-            maximum_bytes_billed=maximum_bytes_billed,
-        )
+        # maximum_bytes_billed=None must be omitted from QueryJobConfig, not
+        # passed through literally -- the BigQuery client serializes an
+        # explicit None as the string "None", which the REST API rejects for
+        # an INT64 field (confirmed live in production: BadRequest on the
+        # first real debtlab_scenarios INSERT). Same fix already applied on
+        # the ingestion side (bigquery_io.py::run_sql) -- this call site just
+        # hadn't needed maximum_bytes_billed=None before this feature.
+        job_config_kwargs: dict[str, Any] = {"query_parameters": job_params}
+        if maximum_bytes_billed is not None:
+            job_config_kwargs["maximum_bytes_billed"] = maximum_bytes_billed
+        job_config = bigquery.QueryJobConfig(**job_config_kwargs)
         return [dict(row) for row in client.query(sql, job_config=job_config).result()]
 
     return run_query
