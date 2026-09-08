@@ -25,8 +25,11 @@ export const MODULE_STATUS: StatusEntry[] = [
   {
     id: "macro-twin",
     label: "Macro Economic Twin",
-    status: "planejado",
-    evidence: "EPIC-003, nenhum metric_id real em Gold ainda",
+    status: "parcial",
+    evidence:
+      "DEBTLAB_SIMULATOR + MACRO_TWIN_EXPANSION SHIPPED 2026-09-08 -- 5 metric_id reais em Gold " +
+      "(pib_mensal, divida_bruta_pib, ipca_mensal, selic_mensal, cambio_usd_brl, BCB SGS); " +
+      "ainda sem Twin completo com forecast/cenarios (EPIC-008)",
   },
   {
     id: "fiscal-debt",
