@@ -55,6 +55,13 @@ class BigQueryRepo:
         self._config = config
         self._run_query = run_query
 
+    @property
+    def run_query(self) -> RunQuery:
+        # Exposes the same RunQuery this repo already wraps, for knowledge.py's
+        # retrieve() -- avoids constructing a 2nd bigquery.Client just to run
+        # a query this process already has a client for.
+        return self._run_query
+
     def latest_metric(self, metric_id: str, state_ibge_code: str) -> MetricResponse | None:
         gold = self._config.gold_fqtn
         rows = self._run_query(

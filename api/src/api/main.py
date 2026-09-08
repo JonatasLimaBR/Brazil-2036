@@ -10,10 +10,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.bigquery_repo import BigQueryRepo, build_bigquery_run_query
 from api.config import Config, load_config
+from api.knowledge import GenerateContent, build_genai_generate, compose_answer, retrieve
 from api.models import (
     DebtLabScenarioBase,
     DebtLabScenarioRequest,
     DebtLabScenarioResponse,
+    KnowledgeAskRequest,
+    KnowledgeAskResponse,
     MetricResponse,
     NationalMetricResponse,
     ProvenanceResponse,
@@ -53,8 +56,15 @@ def get_repo() -> BigQueryRepo:
     return BigQueryRepo(config, build_bigquery_run_query(config.gcp_project))
 
 
+@lru_cache
+def get_genai_generate() -> GenerateContent:
+    config = get_config()
+    return build_genai_generate(config.gcp_project, config.gcp_region)
+
+
 RepoDep = Annotated[BigQueryRepo, Depends(get_repo)]
 ConfigDep = Annotated[Config, Depends(get_config)]
+GenAIDep = Annotated[GenerateContent, Depends(get_genai_generate)]
 
 
 @app.get("/healthz")
@@ -191,3 +201,19 @@ def get_debtlab_scenario(scenario_id: str, repo: RepoDep) -> DebtLabScenarioResp
     if result is None:
         raise HTTPException(status_code=404, detail="scenario not found")
     return result
+
+
+@app.post("/v1/knowledge/ask", response_model=KnowledgeAskResponse)
+def ask_knowledge(
+    request: KnowledgeAskRequest,
+    repo: RepoDep,
+    config: ConfigDep,
+    generate: GenAIDep,
+) -> KnowledgeAskResponse:
+    # RAG_PROVENANCE_QA (ADR-061, SPEC-018): read-only, classed READ
+    # (AGENTS.md) -- retrieval decides evidence sufficiency deterministically
+    # before the model is ever called (knowledge.py::compose_answer).
+    notes = retrieve(
+        repo.run_query, config, question=request.question, metric_id_filter=request.metric_id
+    )
+    return compose_answer(request.question, notes, config, generate=generate)

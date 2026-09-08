@@ -28,6 +28,21 @@ class Config:
     bq_dataset_control: str = ""
     debtlab_scenarios_table: str = "debtlab_scenarios"
     debtlab_base_metric_id: str = "divida_bruta_pib"
+    # RAG_PROVENANCE_QA (ADR-061): retrieval + answer synthesis config.
+    # similarity_threshold=0.45 is empirically calibrated (BUILD_REPORT), not
+    # an arbitrary default -- live cosine distances against the real 11-note
+    # corpus: genuinely relevant questions scored 0.30-0.42, genuinely
+    # irrelevant ones scored 0.53-0.57, so 0.45 sits in the real gap.
+    rag_corpus_table: str = "rag_knowledge_corpus"
+    rag_embedding_model: str = "rag_embedding_model"
+    rag_generative_model: str = "gemini-2.5-flash"
+    rag_similarity_threshold: float = 0.45
+    rag_top_k: int = 5
+    # api-web.yml only sets GCP_PROJECT on the deployed service, not
+    # GCP_REGION (the project has one region today) -- a plain config.yaml
+    # default, same pattern as debtlab_base_metric_id above, not an env var
+    # nothing sets.
+    gcp_region: str = "southamerica-east1"
 
     @property
     def gold_fqtn(self) -> str:
@@ -40,6 +55,14 @@ class Config:
     @property
     def debtlab_scenarios_fqtn(self) -> str:
         return f"`{self.gcp_project}.{self.bq_dataset_control}.{self.debtlab_scenarios_table}`"
+
+    @property
+    def rag_corpus_fqtn(self) -> str:
+        return f"`{self.gcp_project}.{self.bq_dataset_gold}.{self.rag_corpus_table}`"
+
+    @property
+    def rag_embedding_model_fqtn(self) -> str:
+        return f"`{self.gcp_project}.{self.bq_dataset_gold}.{self.rag_embedding_model}`"
 
 
 def load_config(path: str | Path | None = None) -> Config:
@@ -56,4 +79,10 @@ def load_config(path: str | Path | None = None) -> Config:
         bq_dataset_control=raw.get("bq_dataset_control", ""),
         debtlab_scenarios_table=raw.get("debtlab_scenarios_table", "debtlab_scenarios"),
         debtlab_base_metric_id=raw.get("debtlab_base_metric_id", "divida_bruta_pib"),
+        rag_corpus_table=raw.get("rag_corpus_table", "rag_knowledge_corpus"),
+        rag_embedding_model=raw.get("rag_embedding_model", "rag_embedding_model"),
+        rag_generative_model=raw.get("rag_generative_model", "gemini-2.5-flash"),
+        rag_similarity_threshold=float(raw.get("rag_similarity_threshold", 0.45)),
+        rag_top_k=int(raw.get("rag_top_k", 5)),
+        gcp_region=raw.get("gcp_region", "southamerica-east1"),
     )
