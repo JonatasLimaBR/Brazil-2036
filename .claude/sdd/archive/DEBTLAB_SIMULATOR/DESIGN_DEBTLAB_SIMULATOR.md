@@ -3,7 +3,9 @@
 ## Metadados
 
 - **Feature:** DEBTLAB_SIMULATOR
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
+
+> Shipped and archived 2026-09-08.
 - **Fase:** 2 (Design)
 - **Entrada:** `.claude/sdd/features/DEFINE_DEBTLAB_SIMULATOR.md` (Clarity 13/15)
 - **Criado:** 2026-09-07
