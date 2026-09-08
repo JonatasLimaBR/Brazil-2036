@@ -225,9 +225,13 @@ def test_build_bigquery_run_query_omits_cap_when_none() -> None:
 
         _sql, kwargs = mock_client.query.call_args
         job_config = kwargs["job_config"]
-        # The Python property getter normalizes back to None either way --
-        # only the wire representation (what QueryJobConfig(maximum_bytes_
-        # billed=None) vs. omitting the kwarg actually sends the REST API)
-        # reveals the bug: confirmed live, an explicit None serializes as
-        # the literal string "None" for an INT64 field, not an absent key.
+        # Asserting on the wire representation, not the Python property
+        # getter: job_config.maximum_bytes_billed actually raises ValueError
+        # when the field was set to an explicit None (it tries int("None")
+        # internally), so it would catch the regression too, just as a
+        # confusing exception instead of a clean assertion failure.
+        # to_api_repr() is the direct, correct way to confirm what actually
+        # gets sent to the REST API -- confirmed live, an explicit None
+        # serializes as the literal string "None" for an INT64 field, not an
+        # absent key.
         assert "maximumBytesBilled" not in job_config.to_api_repr()["query"]
