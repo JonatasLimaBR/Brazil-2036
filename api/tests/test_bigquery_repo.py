@@ -201,3 +201,33 @@ def test_build_bigquery_run_query_applies_cost_cap() -> None:
         _sql, kwargs = mock_client.query.call_args
         job_config = kwargs["job_config"]
         assert job_config.maximum_bytes_billed == DEFAULT_MAX_BYTES_BILLED
+
+
+def test_build_bigquery_run_query_omits_cap_when_none() -> None:
+    # Regression: passing maximum_bytes_billed=None straight into
+    # QueryJobConfig(...) makes the BigQuery client send the literal string
+    # "None" for an INT64 field, which the REST API rejects with a 400 --
+    # confirmed live in production on the first real debtlab_scenarios
+    # INSERT (ADR-059's write path). The field must be omitted from the
+    # job_config entirely, not passed through as None -- same fix already in
+    # place on the ingestion side (bigquery_io.py::run_sql).
+    from unittest.mock import MagicMock, patch
+
+    from api.bigquery_repo import build_bigquery_run_query
+
+    with patch("google.cloud.bigquery.Client") as mock_client_cls:
+        mock_client = MagicMock()
+        mock_client.query.return_value.result.return_value = []
+        mock_client_cls.return_value = mock_client
+
+        run_query = build_bigquery_run_query("brasil2036-dev")
+        run_query("CREATE TABLE IF NOT EXISTS t (x INT64)", {}, maximum_bytes_billed=None)
+
+        _sql, kwargs = mock_client.query.call_args
+        job_config = kwargs["job_config"]
+        # The Python property getter normalizes back to None either way --
+        # only the wire representation (what QueryJobConfig(maximum_bytes_
+        # billed=None) vs. omitting the kwarg actually sends the REST API)
+        # reveals the bug: confirmed live, an explicit None serializes as
+        # the literal string "None" for an INT64 field, not an absent key.
+        assert "maximumBytesBilled" not in job_config.to_api_repr()["query"]
