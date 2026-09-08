@@ -6,8 +6,8 @@
 - **Fase:** 3 (Build)
 - **Entrada:** `.claude/sdd/features/DESIGN_DEBTLAB_SIMULATOR.md` (v1.0)
 - **Branch:** `feature/debtlab-simulator`
-- **Data:** 2026-09-07
-- **Status da build:** ✅ Completo (PR1 ingestão + PR2 engine/API/infra) — pronto para `/verify-spec`
+- **Data:** 2026-09-07 a 2026-09-08
+- **Status da build:** ✅ Completo (PR1 ingestão + PR2 engine/API/infra + PR3 hotfix pós-merge) — verificado ao vivo em produção, pronto para `/verify-spec`
 - **Próximo passo:** `/verify-spec` (sessão nova, read-only) → `/ship`
 
 > Nota: assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.
@@ -116,6 +116,37 @@ essa razão, não por um problema no pipeline (o pipeline já tinha `status="ok"
 `gold_rows=3`, `provenance_rows=3` corretos). Corrigido com `float(latest) ==
 pytest.approx(82.51)`; reexecutado com sucesso contra BigQuery real.
 
+### PR3 — Hotfix pós-merge (achado real em produção)
+
+| # | Arquivo | Ação | Nota |
+|---|---|---|---|
+| 29 | `api/src/api/bigquery_repo.py` | Modify | `maximum_bytes_billed=None` deixa de ser passado literalmente pro `QueryJobConfig` — só entra no kwargs quando não-`None` |
+| 30 | `api/tests/test_bigquery_repo.py` | Modify | +1 teste de regressão, verificado que falha contra o padrão com bug e passa contra o fix |
+
+### Achado #7 (pós-merge, achado real em produção, não do build) — `maximum_bytes_billed=None` quebrava o primeiro `INSERT` real
+
+Minutos depois do merge do PR2, o primeiro `POST /v1/simulations/debtlab` real contra
+`brasil2036-dev` retornou **500**. Log do Cloud Run mostrou o erro exato do BigQuery: `Invalid
+value at 'job.configuration.query.maximum_bytes_billed.value' (TYPE_INT64), "None"`. Causa raiz
+confirmada por teste direto: `bigquery.QueryJobConfig(maximum_bytes_billed=None)` serializa o
+campo como a **string literal `"None"`** no request (`to_api_repr()` → `{'maximumBytesBilled':
+'None'}`), diferente de omitir o kwarg inteiramente (`{}`). `ingestion/bigquery_io.py::run_sql()`
+já tinha o padrão certo (só constrói o `job_config` com o campo quando não é `None`); o call site
+novo em `api/bigquery_repo.py` (criado nesta própria fatia para o path de escrita) reproduziu o
+padrão errado por engano — nenhum call site anterior da API precisava do caso `None`.
+
+**Corrigido** (PR #33, hotfix, squash merge, `ci-gate` verde): kwargs do `QueryJobConfig`
+montados condicionalmente. Novo teste de regressão verificado tanto contra o padrão com bug
+(assert falha, confirmado manualmente) quanto contra o fix (assert passa) — a asserção precisou
+inspecionar `to_api_repr()`, não a propriedade Python (`job_config.maximum_bytes_billed`), porque
+esta última normaliza pra `None` nos dois casos e não pegaria a regressão.
+
+**Verificado contra produção real após o fix:** `POST /v1/simulations/debtlab` cria e persiste um
+cenário real (base = 82,51% real, trajetória de 10 anos calculada corretamente, percentis P10-P90
+coerentes); `GET /v1/simulations/debtlab/{scenario_id}` recupera exatamente o mesmo cenário
+persistido. Backfill real de produção rodado antes deste teste: `pib_mensal` (438 linhas),
+`divida_bruta_pib` (236 linhas) — ambos servindo corretamente via `/v1/metrics/{metric_id}/national`.
+
 ---
 
 ## 3. Verification results
@@ -123,7 +154,7 @@ pytest.approx(82.51)`; reexecutado com sucesso contra BigQuery real.
 - **Ingestão:** `ruff check`/`format --check`/`mypy` limpos (24 arquivos fonte, `files =
   ["src/ingestion"]`); `pytest` — 110 passed, 4 deselected (integration).
 - **API:** `ruff check`/`format --check`/`mypy` limpos (8 arquivos fonte, `files = ["src/api"]`);
-  `pytest` — 40 passed (10 novos: 5 engine + 5 Monte Carlo; +9 endpoint = 19 novos no total,
+  `pytest` — 41 passed (19 novos: 5 engine + 5 Monte Carlo + 9 endpoint; +1 regressão do hotfix,
   0 regressão nos 21 pré-existentes).
 - **Terraform:** `terraform fmt -check` limpo; `terraform validate` (`terraform init
   -backend=false`) — `Success! The configuration is valid.`
@@ -146,15 +177,16 @@ pytest.approx(82.51)`; reexecutado com sucesso contra BigQuery real.
 | 1 | 1 conector combinado (DESIGN original) vs. 1 conector por série | (a) forçar as 2 séries num "1 resource" para caber em `pipeline_wide_series.py` como desenhado; (b) 1 execução independente por série, cada uma com seu Bronze/Silver/Gold | (b) | Provenance correta por métrica é inegociável no projeto; forçar (a) fabricaria uma URL de fonte errada para 1 das 2 métricas ou arriscaria colisão de `CREATE OR REPLACE` entre execuções. |
 | 2 | `RunQuery` como `Callable` alias vs. `Protocol` | (a) manter `Callable`, adicionar uma função de escrita separada; (b) converter para `Protocol` com parâmetro opcional | (b) | Menos duplicação de lógica de construção de `job_config`; todo call site existente continua válido sem mudança. |
 | 3 | Registrar o achado #4 em `RISK-CONTROL-TEST-MATRIX.md` (previsto no DESIGN) | (a) adicionar uma linha `R-016` nova; (b) não modificar, documentar como follow-up no BUILD_REPORT/SHIPPED | (b) | A matriz é uma taxonomia fixa de 15 riscos de IA/agente do Discovery original; nenhuma das 6 features anteriores adicionou uma linha nova a ela mesmo introduzindo achados novos — manter o precedente. |
-| 4 | `web/src/api-client/schema.d.ts` — regenerar nesta PR ou não | (a) regenerar proativamente; (b) deixar para quando `web/` for tocado de novo | (b) | `web-check` só roda quando `web/` muda no PR (gate `changes`); regenerar agora sem necessidade infla o diff desta fatia sem nenhum consumidor (esta fatia não tem UI). |
+| 4 | `web/src/api-client/schema.d.ts` — regenerar nesta PR ou não | (a) regenerar proativamente; (b) deixar para quando `web/` for tocado de novo | (a), corrigido | Decisão original (b) partiu de uma suposição errada — `web-check` na verdade roda sempre que `api/openapi/openapi.json` muda, não só quando `web/` muda; o CI do PR2 pegou a divergência real (`git diff --exit-code -- src/api-client/schema.d.ts` falhou). Corrigido no mesmo PR: `npm run gen:client` rodado de verdade, `typecheck`/`build` conferidos localmente antes de re-enviar. |
 
 ---
 
 ## 5. Blockers / trabalho restante
 
-Nenhum blocker. Backfill real (rodar `run_bcb_macro.py` contra `brasil2036-dev` de verdade, fora
-do dataset `citest_*` isolado do teste de integração) ainda não executado — como em toda fatia
-anterior, será feito e confirmado com o usuário antes do `/ship`, não durante o `/build`.
+Nenhum blocker. Backfill real contra `brasil2036-dev` (fora do dataset `citest_*` isolado do
+teste de integração) já executado: `pib_mensal` (438 linhas), `divida_bruta_pib` (236 linhas) —
+ambos servindo corretamente em produção. Endpoint de simulação (`POST`/`GET
+/v1/simulations/debtlab`) verificado ao vivo, ponta a ponta, após o hotfix do Achado #7.
 
 ---
 
@@ -172,3 +204,4 @@ anterior, será feito e confirmado com o usuário antes do `/ship`, não durante
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-07 | 1.0 | Build completo: PR1 (ingestão BCB SGS real, PIB + Dívida Bruta do Governo Geral) + PR2 (engine determinístico, Monte Carlo, endpoints, IAM Terraform, ADR-059). 6 achados reais durante o build (2 de arquitetura de pipeline, 2 de tipagem de query, 1 de escopo de risco, 1 bug no próprio teste). Integration test real contra `brasil2036-dev` PASS. `typecheck`/`lint`/`unit` verdes em ambos os pacotes, 0 regressão. | /build (Claude Sonnet 5) |
+| 2026-09-08 | 1.1 | PR3 (hotfix pós-merge): achado real #7 em produção — `maximum_bytes_billed=None` quebrava o primeiro `INSERT` real (`BadRequest` do BigQuery). Corrigido, teste de regressão verificado contra o padrão com bug e contra o fix. Backfill real de produção executado (`pib_mensal` 438 linhas, `divida_bruta_pib` 236 linhas). `POST`/`GET /v1/simulations/debtlab` verificados ao vivo, ponta a ponta, contra produção real. Status → pronto para `/verify-spec`. | /build (Claude Sonnet 5) |
