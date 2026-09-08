@@ -14,6 +14,9 @@ metric_tables:
   fiscal_primario: gold_fiscal_uniao
   pib_mensal: gold_pib_mensal
   divida_bruta_pib: gold_divida_bruta_pib
+  ipca_mensal: gold_ipca_mensal
+  selic_mensal: gold_selic_mensal
+  cambio_usd_brl: gold_cambio_usd_brl
 
 bq_dataset_control: br2036_control
 debtlab_scenarios_table: debtlab_scenarios
