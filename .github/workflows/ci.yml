@@ -127,7 +127,8 @@ jobs:
   integration:
     needs: changes
     if: >-
-      (needs.changes.outputs.ingestion == 'true' || needs.changes.outputs.specs == 'true')
+      (needs.changes.outputs.ingestion == 'true' || needs.changes.outputs.api == 'true'
+       || needs.changes.outputs.specs == 'true')
       && (github.event_name != 'pull_request'
           || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
@@ -145,6 +146,11 @@ jobs:
           GCP_PROJECT: ${{ vars.GCP_PROJECT }}
           RAW_BUCKET: ${{ vars.GCP_PROJECT }}-raw
           BQ_LOCATION: ${{ vars.GCP_REGION }}
+        run: uv run --extra dev python -m pytest -q -m integration
+      - name: api integration tests against real BigQuery (read-only)
+        working-directory: api
+        env:
+          GCP_PROJECT: ${{ vars.GCP_PROJECT }}
         run: uv run --extra dev python -m pytest -q -m integration
       - name: sweep stray citest datasets (safety net)
         if: always()
