@@ -1,7 +1,7 @@
 # BRAINSTORM — MACRO_TWIN_EXPANSION
 
 - **Feature:** MACRO_TWIN_EXPANSION
-- **Status:** ✅ Complete (Defined)
+- **Status:** ✅ Shipped
 
 - **Fase:** 0 (Brainstorm)
 - **Criado:** 2026-09-08

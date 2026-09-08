@@ -7,8 +7,8 @@
 - **Entrada:** `.claude/sdd/features/DESIGN_MACRO_TWIN_EXPANSION.md` (v1.0)
 - **Branch:** `feature/macro-twin-expansion`
 - **Data:** 2026-09-08
-- **Status da build:** ✅ Completo (PR1 ingestão + PR2 endpoint de sugestão + PR3 hotfix de bug real
-  de SQL/infra de teste de integração) — pronto para `/verify-spec`
+- **Status da build:** ✅ Shipped (PR1 ingestão + PR2 endpoint de sugestão + PR3 hotfix de bug real
+  de SQL/infra de teste de integração + PR4 docs sync/fix de selo)
 - **Próximo passo:** `/verify-spec` (sessão nova, read-only) → `/ship`
 
 > Nota: assets do plugin SDD ausentes — relatório segue a lista de seções do skill `sdd-build`.

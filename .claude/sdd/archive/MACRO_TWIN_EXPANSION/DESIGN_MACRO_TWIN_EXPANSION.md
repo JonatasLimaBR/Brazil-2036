@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** MACRO_TWIN_EXPANSION
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 2 (Design)
 - **Entrada:** `.claude/sdd/features/DEFINE_MACRO_TWIN_EXPANSION.md` (Clarity 13/15)
 - **Criado:** 2026-09-08

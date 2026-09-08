@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** MACRO_TWIN_EXPANSION
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 1 (Define)
 - **Entrada:** `.claude/sdd/features/BRAINSTORM_MACRO_TWIN_EXPANSION.md` (Ready for Define)
 - **Criado:** 2026-09-08
