@@ -15,11 +15,17 @@ from ingestion.pipeline_wide_series import Quarantined, load_wide_series_config,
 
 _CONFIG_DIR = Path(__file__).resolve().parents[1] / "config"
 
-# dataset_id -> BCB SGS series code. Both series share the exact same API
-# shape (BcbSgsConnector, DESIGN D1); only the code/metric_id differ.
+# dataset_id -> BCB SGS series code. All series share the exact same API
+# shape (BcbSgsConnector, DEBTLAB_SIMULATOR DESIGN D1); only the
+# code/metric_id differ. selic_mensal (4390) and cambio_usd_brl (3695) are
+# monthly-grain series, not the daily variants (432, 1) -- wrong grain for
+# this project's monthly pipeline (MACRO_TWIN_EXPANSION DESIGN 0.1).
 _SERIES_CODES: dict[str, int] = {
     "pib_mensal": 4380,
     "divida_bruta_pib": 13762,
+    "ipca_mensal": 433,
+    "selic_mensal": 4390,
+    "cambio_usd_brl": 3695,
 }
 
 

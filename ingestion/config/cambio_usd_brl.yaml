@@ -1,0 +1,36 @@
+dataset_id: cambio_usd_brl
+br2036_domain: macro
+br2036_module: M04
+
+catalog_url: "https://api.bcb.gov.br/dados/serie/bcdata.sgs.3695/dados"
+organization: "Banco Central do Brasil (BCB)"
+license: "Dados abertos do governo federal"
+
+metric_ids:
+  - cambio_usd_brl
+unit: brl_per_usd
+allow_negative_metric_ids: []
+
+contract_path: contracts/cambio_usd_brl.yaml
+
+gcp_project: ""
+raw_bucket: ""
+raw_prefix: macro
+
+bq_dataset_control: br2036_control
+bq_dataset_bronze: br2036_bronze
+bq_dataset_silver: br2036_silver
+bq_dataset_gold: br2036_gold
+
+bronze_table: cambio_usd_brl_raw
+bronze_columns:
+  - reference_period
+  - value
+field_delimiter: ","
+
+silver_model: cambio_usd_brl
+gold_model: gold_cambio_usd_brl
+
+# Unused for this source (BCB SGS JSON API, no CKAN) -- see divida_bruta_pib.yaml.
+ckan_base_url: ""
+ckan_package_id: ""
