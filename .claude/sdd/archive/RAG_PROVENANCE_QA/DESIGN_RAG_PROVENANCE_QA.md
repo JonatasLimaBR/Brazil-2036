@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** RAG_PROVENANCE_QA
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 2 (Design)
 - **Entrada:** `.claude/sdd/features/DEFINE_RAG_PROVENANCE_QA.md` (Ready for Design)
 - **Criado:** 2026-09-08

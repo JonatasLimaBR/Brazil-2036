@@ -1,7 +1,7 @@
 # BRAINSTORM — RAG_PROVENANCE_QA
 
 - **Feature:** RAG_PROVENANCE_QA
-- **Status:** ✅ Complete (Defined)
+- **Status:** ✅ Shipped
 
 - **Fase:** 0 (Brainstorm)
 - **Criado:** 2026-09-08

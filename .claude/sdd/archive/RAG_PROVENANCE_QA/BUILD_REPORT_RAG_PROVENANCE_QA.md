@@ -8,8 +8,8 @@
 - **Branch:** `feature/rag-provenance-qa` (#43, PR1), `feature/rag-provenance-qa-pr2` (#44, PR2),
   `feature/rag-provenance-qa-pr3` (#45, PR3), `fix/rag-connection-user-iam` (#46, hotfix real)
 - **Data:** 2026-09-08/09
-- **Status da build:** ✅ Completo (PR1 infra + PR2 corpus/embeddings + PR3 retrieval/endpoint + PR4
-  hotfix real de IAM) — pronto para `/verify-spec`
+- **Status da build:** ✅ Shipped (PR1 infra + PR2 corpus/embeddings + PR3 retrieval/endpoint + PR4
+  hotfix real de IAM + PR5/PR6 docs/achado do verify-spec)
 - **Próximo passo:** `/verify-spec` (sessão nova, read-only) → `/ship`
 
 ---
