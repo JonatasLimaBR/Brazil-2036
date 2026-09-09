@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 test("card renders the debt value from the API with a source link", async ({ page }) => {
-  await page.goto("/");
+  // "Dados Reais" is not the default tab (LANDING_PAGE_TABS) -- navigate straight to it via
+  // hash so Nav's tab script activates the right panel before we assert visibility.
+  await page.goto("/#dados");
 
   const value = page.getByTestId("value");
   await expect(value).toBeVisible({ timeout: 20_000 });
@@ -20,7 +22,7 @@ test("INSS module renders without crashing for each of the 3 metrics", async ({ 
   // asserts the module wires up and degrades gracefully either way; it is not
   // yet the strict "value must render" assertion the debt card test makes
   // above, because there is no real data to assert on until the backfill runs.
-  await page.goto("/");
+  await page.goto("/#dados");
 
   await expect(page.locator("#dados-reais").getByText("Previdência & INSS")).toBeVisible();
 
@@ -42,7 +44,7 @@ test("Fiscal module renders without crashing for each of the 3 metrics", async (
   // fiscal_primario, so the API may 404 and the module renders
   // "Indisponível" -- same graceful-degradation contract as the INSS module
   // above, not yet the strict "value must render" assertion.
-  await page.goto("/");
+  await page.goto("/#dados");
 
   await expect(page.getByText("Fiscal & DebtLab")).toBeVisible();
 

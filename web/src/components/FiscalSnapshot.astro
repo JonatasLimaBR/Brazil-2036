@@ -1,0 +1,67 @@
+---
+const cards: { id: string; label: string; value: string; source: string }[] = [
+  {
+    id: "pib-2026",
+    label: "PIB — projeção 2026",
+    value: "+2,3%",
+    source: "SPE/MF — Boletim Macrofiscal de julho/2026",
+  },
+  {
+    id: "ipca-2026",
+    label: "IPCA — projeção 2026",
+    value: "5,1%",
+    source: "SPE/MF — Boletim Macrofiscal de julho/2026",
+  },
+  {
+    id: "divida-bruta-pib-2026",
+    label: "Dívida Bruta/PIB — 2026",
+    value: "83,0%",
+    source: "Prisma Fiscal — agosto/2026",
+  },
+  {
+    id: "divida-bruta-pib-2027",
+    label: "Dívida Bruta/PIB — 2027",
+    value: "86,77%",
+    source: "Prisma Fiscal — agosto/2026",
+  },
+  {
+    id: "deficit-primario-2026",
+    label: "Déficit primário Gov. Central 2026",
+    value: "R$ 59,145 bi",
+    source: "Mediana Prisma Fiscal — agosto/2026",
+  },
+  {
+    id: "receita-liquida-2026",
+    label: "Receita líquida 2026",
+    value: "R$ 2,574 tri",
+    source: "Mediana Prisma Fiscal — agosto/2026",
+  },
+  {
+    id: "despesa-total-2026",
+    label: "Despesa total 2026",
+    value: "R$ 2,624 tri",
+    source: "Mediana Prisma Fiscal — agosto/2026",
+  },
+];
+---
+
+<section id="brasil-hoje" class="fiscal-snapshot">
+  <h2 class="section-title">Brasil hoje — contexto econômico e fiscal</h2>
+  <p class="fiscal-snapshot__note">
+    Valores de referência de agosto de 2026, reproduzidos do documento de contextualização da
+    iniciativa. Em versões futuras da plataforma, estes indicadores serão atualizados
+    automaticamente pelas fontes oficiais — não são, hoje, dado vivo do pipeline do projeto (ver
+    a aba "Dados Reais" para os indicadores já conectados às fontes oficiais via API).
+  </p>
+  <div class="fiscal-grid">
+    {
+      cards.map((c) => (
+        <article class="fiscal-card" data-testid={`fiscal-snapshot-${c.id}`}>
+          <h3>{c.label}</h3>
+          <p class="fiscal-card__value">{c.value}</p>
+          <p class="fiscal-card__source">{c.source}</p>
+        </article>
+      ))
+    }
+  </div>
+</section>

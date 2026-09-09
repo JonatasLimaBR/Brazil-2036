@@ -1,16 +1,15 @@
 ---
-const links = [
-  { href: "#visao-geral", label: "Visão Geral" },
-  { href: "#modulos", label: "Módulos" },
-  { href: "#arquitetura", label: "Arquitetura" },
-  { href: "#roadmap", label: "Roadmap" },
-  { href: "#portais", label: "Portais" },
-  { href: "#contato", label: "Contato" },
+const tabs = [
+  { id: "home", label: "Home" },
+  { id: "dados", label: "Dados Reais" },
+  { id: "modulos-portais", label: "Módulos & Portais" },
+  { id: "arquitetura-roadmap", label: "Arquitetura & Roadmap" },
+  { id: "sobre", label: "Sobre" },
 ];
 ---
 
 <header class="nav">
-  <a class="nav__brand" href="#visao-geral">
+  <a class="nav__brand" href="#home">
     <svg
       class="logo-mark"
       width="30"
@@ -26,15 +25,79 @@ const links = [
     </svg>
     BRASIL 2036
   </a>
-  <ul class="nav__links">
+  <ul class="nav__links" role="tablist" aria-label="Seções da landing page">
     {
-      links.map((link) => (
+      tabs.map((t, i) => (
         <li>
-          <a href={link.href}>{link.label}</a>
+          <button
+            type="button"
+            role="tab"
+            id={`tab-btn-${t.id}`}
+            aria-controls={`tab-${t.id}`}
+            aria-selected={i === 0 ? "true" : "false"}
+            tabindex={i === 0 ? 0 : -1}
+            data-tab-target={t.id}
+          >
+            {t.label}
+          </button>
         </li>
       ))
     }
   </ul>
-  <a class="nav__cta nav__cta--secondary" href="#roadmap">Ver Roadmap</a>
-  <a class="nav__cta" href="#dados-reais">Explorar Plataforma</a>
+  <a class="nav__cta nav__cta--secondary" href="#arquitetura-roadmap">Ver Roadmap</a>
+  <a class="nav__cta" href="#dados">Explorar Plataforma</a>
 </header>
+
+<script>
+  const TAB_IDS = ["home", "dados", "modulos-portais", "arquitetura-roadmap", "sobre"];
+
+  function tabButtons(): HTMLButtonElement[] {
+    return Array.from(document.querySelectorAll<HTMLButtonElement>("[data-tab-target]"));
+  }
+
+  function activate(tabId: string): void {
+    const id = TAB_IDS.includes(tabId) ? tabId : "home";
+    for (const t of TAB_IDS) {
+      const panel = document.getElementById(`tab-${t}`);
+      const btn = document.getElementById(`tab-btn-${t}`);
+      if (panel) panel.hidden = t !== id;
+      if (btn) {
+        const active = t === id;
+        btn.setAttribute("aria-selected", String(active));
+        btn.tabIndex = active ? 0 : -1;
+      }
+    }
+  }
+
+  function currentHashTab(): string {
+    return window.location.hash.replace("#", "") || "home";
+  }
+
+  tabButtons().forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = btn.dataset.tabTarget;
+      if (!target) return;
+      if (window.location.hash === `#${target}`) {
+        activate(target);
+      } else {
+        window.location.hash = target;
+      }
+    });
+  });
+
+  // WAI-ARIA APG tabs pattern: seta esquerda/direita move o foco entre abas.
+  document.querySelector('[role="tablist"]')?.addEventListener("keydown", (event) => {
+    const e = event as KeyboardEvent;
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const buttons = tabButtons();
+    const idx = buttons.findIndex((b) => b === document.activeElement);
+    if (idx === -1) return;
+    e.preventDefault();
+    const nextIdx =
+      e.key === "ArrowRight" ? (idx + 1) % buttons.length : (idx - 1 + buttons.length) % buttons.length;
+    buttons[nextIdx]?.focus();
+  });
+
+  window.addEventListener("hashchange", () => activate(currentHashTab()));
+  activate(currentHashTab());
+</script>
