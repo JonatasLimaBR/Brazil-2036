@@ -16,8 +16,8 @@ variable "github_repo" {
 
 variable "budget_amount_brl" {
   type        = number
-  description = "Monthly budget amount (BRL) for the dev project alert."
-  default     = 50
+  description = "Monthly budget amount (BRL) for the dev project alert. 1800, not 50 (ADR-062): AlloyDB's smallest viable cluster costs ~US$300/month continuously."
+  default     = 1800
 }
 
 variable "billing_account" {

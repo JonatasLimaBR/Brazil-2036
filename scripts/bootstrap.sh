@@ -54,7 +54,11 @@ for role in \
   roles/iam.serviceAccountAdmin \
   roles/iam.serviceAccountUser \
   roles/resourcemanager.projectIamAdmin \
-  roles/aiplatform.user ; do  # RAG_PROVENANCE_QA: CI's real integration test calls Gemini directly
+  roles/aiplatform.user \
+  roles/secretmanager.admin \
+  roles/alloydb.admin \
+  roles/compute.networkAdmin \
+  roles/servicenetworking.networksAdmin ; do  # RBAC_ABAC_AUTH: VPC + Private Services Access + AlloyDB + Secret Manager
   gcloud projects add-iam-policy-binding "$PROJECT_ID" \
     --member "serviceAccount:${DEPLOYER_SA}" --role "$role" --condition=None >/dev/null
 done

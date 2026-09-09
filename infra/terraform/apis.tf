@@ -9,6 +9,9 @@ locals {
     "logging.googleapis.com",
     "bigqueryconnection.googleapis.com",
     "aiplatform.googleapis.com",
+    "servicenetworking.googleapis.com",
+    "alloydb.googleapis.com",
+    "vpcaccess.googleapis.com",
   ]
 }
 
