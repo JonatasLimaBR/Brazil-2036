@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** RAG_PROVENANCE_QA
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 1 (Define)
 - **Entrada:** `.claude/sdd/features/BRAINSTORM_RAG_PROVENANCE_QA.md` (Ready for Define)
 - **Criado:** 2026-09-08
