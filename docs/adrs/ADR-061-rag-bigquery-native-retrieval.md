@@ -42,6 +42,18 @@ Alternativa escolhida.
 - **`VECTOR_SEARCH` sem `CREATE VECTOR INDEX`** — brute-force é suficiente e mais simples no volume
   atual; reconsiderar se o corpus crescer o bastante para o índice compensar (gatilho, não decisão
   permanente).
+- **`SEARCH()`/full-text (a perna lexical do "híbrido") não foi implementada nesta fatia** — só
+  `VECTOR_SEARCH` + filtro de metadata (`metric_id`). O `DEFINE` original (G4, MUST) e o desenho
+  inicial deste documento previam as 3 pernas; a omissão só foi documentada depois do fato, em
+  `SPEC-018-RAG.md` ("fora de escopo"), sem virar uma decisão rastreada aqui — achado real do
+  `/verify-spec` independente, corrigido nesta revisão. Razão real, registrada agora
+  explicitamente: com um corpus de 11 notas, a busca vetorial sozinha já recupera a nota certa em
+  todos os casos de teste reais verificados (unit + integration + verificação ao vivo em produção,
+  incluindo o caso negativo de evidência insuficiente); `SEARCH()` teria adicionado uma 2ª
+  dimensão de score pra combinar sem nenhum ganho de recall observável nesse volume. **Não é uma
+  decisão permanente** — reconsiderar junto com `CREATE VECTOR INDEX` quando o corpus crescer o
+  suficiente para buscas por termo exato (siglas, códigos de série) começarem a divergir do que o
+  vetor sozinho recupera bem.
 - **Gate de evidência determinístico, não decidido pelo LLM** (`ADR-013`): a resposta só é
   sintetizada por um modelo generativo quando pelo menos 1 nota recuperada tem distância de cosseno
   ≤ `rag_similarity_threshold` (0.45, calibrado empiricamente — ver "Verificação"). Sem nota
