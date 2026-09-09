@@ -42,6 +42,21 @@ resource "google_project_iam_member" "api_vertex_ai_user" {
   member  = "serviceAccount:${google_service_account.api.email}"
 }
 
+# Real production 500, found live on the first POST /v1/knowledge/ask call
+# after deploy: aiplatform.user alone is not enough. Every query api-runtime
+# runs through knowledge.py::retrieve() references the rag-vertex-ai
+# connection (ML.GENERATE_EMBEDDING on the question text) -- BigQuery
+# requires the *querying* principal to also hold bigquery.connections.use on
+# that specific connection resource, separate from the connection's own
+# service account being allowed to call Vertex AI (bigquery_connection_vertex.tf).
+resource "google_bigquery_connection_iam_member" "api_rag_connection_user" {
+  project       = var.project_id
+  location      = google_bigquery_connection.vertex_ai.location
+  connection_id = google_bigquery_connection.vertex_ai.connection_id
+  role          = "roles/bigquery.connectionUser"
+  member        = "serviceAccount:${google_service_account.api.email}"
+}
+
 output "api_service_account" {
   value = google_service_account.api.email
 }
