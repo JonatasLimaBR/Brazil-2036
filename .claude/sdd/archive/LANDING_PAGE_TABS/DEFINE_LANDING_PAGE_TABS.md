@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** LANDING_PAGE_TABS
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 1 (Define)
 - **Entrada:** `.claude/sdd/features/BRAINSTORM_LANDING_PAGE_TABS.md` (Ready for Define)
 - **Criado:** 2026-09-09

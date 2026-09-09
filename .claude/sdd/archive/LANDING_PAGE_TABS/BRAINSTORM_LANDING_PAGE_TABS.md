@@ -1,7 +1,7 @@
 # BRAINSTORM — LANDING_PAGE_TABS
 
 - **Feature:** LANDING_PAGE_TABS
-- **Status:** ✅ Complete (Defined)
+- **Status:** ✅ Shipped
 
 - **Fase:** 0 (Brainstorm)
 - **Criado:** 2026-09-09
