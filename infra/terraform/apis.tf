@@ -12,6 +12,7 @@ locals {
     "servicenetworking.googleapis.com",
     "alloydb.googleapis.com",
     "vpcaccess.googleapis.com",
+    "secretmanager.googleapis.com",
   ]
 }
 
