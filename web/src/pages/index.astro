@@ -1,14 +1,19 @@
 ---
+import AccessGovernance from "../components/AccessGovernance.astro";
 import Architecture from "../components/Architecture.astro";
 import Benefits from "../components/Benefits.astro";
 import DataPanel from "../components/DataPanel.astro";
+import Expectations from "../components/Expectations.astro";
+import FiscalSnapshot from "../components/FiscalSnapshot.astro";
 import FooterCta from "../components/FooterCta.astro";
 import Hero from "../components/Hero.astro";
+import LandingEvolution from "../components/LandingEvolution.astro";
 import ModuleGrid from "../components/ModuleGrid.astro";
 import Nav from "../components/Nav.astro";
 import PortalsGrid from "../components/PortalsGrid.astro";
 import Proposal from "../components/Proposal.astro";
 import Roadmap from "../components/Roadmap.astro";
+import Scenarios from "../components/Scenarios.astro";
 import "../styles/global.css";
 ---
 
@@ -23,14 +28,39 @@ import "../styles/global.css";
     <div class="brand-bar"></div>
     <Nav />
     <main>
-      <Hero />
-      <DataPanel />
-      <Proposal />
-      <ModuleGrid />
-      <PortalsGrid />
-      <Architecture />
-      <Roadmap />
-      <Benefits />
+      <div id="tab-home" role="tabpanel" aria-labelledby="tab-btn-home">
+        <Hero />
+        <FiscalSnapshot />
+        <Proposal />
+      </div>
+      <div id="tab-dados" role="tabpanel" aria-labelledby="tab-btn-dados" hidden>
+        <DataPanel />
+      </div>
+      <div
+        id="tab-modulos-portais"
+        role="tabpanel"
+        aria-labelledby="tab-btn-modulos-portais"
+        hidden
+      >
+        <ModuleGrid />
+        <PortalsGrid />
+        <Scenarios />
+      </div>
+      <div
+        id="tab-arquitetura-roadmap"
+        role="tabpanel"
+        aria-labelledby="tab-btn-arquitetura-roadmap"
+        hidden
+      >
+        <Architecture />
+        <AccessGovernance />
+        <Roadmap />
+        <LandingEvolution />
+      </div>
+      <div id="tab-sobre" role="tabpanel" aria-labelledby="tab-btn-sobre" hidden>
+        <Benefits />
+        <Expectations />
+      </div>
     </main>
     <FooterCta />
   </body>

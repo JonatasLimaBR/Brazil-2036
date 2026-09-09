@@ -1,0 +1,37 @@
+---
+const scenarios: { label: string; description: string }[] = [
+  {
+    label: "Cenário de Estresse",
+    description:
+      "Choques adversos, crescimento mais fraco, maior pressão fiscal e deterioração de indicadores.",
+  },
+  {
+    label: "Cenário Tendencial",
+    description:
+      "Projeção baseada em tendências observadas e premissas de referência, sem assumir reformas extraordinárias.",
+  },
+  {
+    label: "Brasil nos Trilhos",
+    description:
+      "Cenário otimizado que combina sustentabilidade fiscal, produtividade, formalização, investimento e resultados sociais, sujeito a restrições realistas.",
+  },
+];
+---
+
+<section id="cenarios">
+  <h2 class="section-title">Três trajetórias de referência</h2>
+  <p class="section-lead">
+    A iniciativa não define uma única previsão como verdade. Ela cria cenários comparáveis, com
+    premissas explícitas, probabilidades e impacto econômico, fiscal e social.
+  </p>
+  <div class="scenario-grid">
+    {
+      scenarios.map((s) => (
+        <article class="scenario-card">
+          <h3>{s.label}</h3>
+          <p>{s.description}</p>
+        </article>
+      ))
+    }
+  </div>
+</section>

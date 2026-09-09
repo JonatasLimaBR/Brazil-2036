@@ -1,0 +1,39 @@
+---
+const items: { label: string; description: string }[] = [
+  {
+    label: "RBAC + ABAC",
+    description: "Permissões por papel, domínio, organização e classificação do dado.",
+  },
+  {
+    label: "Multi-organização",
+    description:
+      "União, ministérios, estados, municípios, universidades, empresas e demais instituições com isolamento lógico.",
+  },
+  {
+    label: "MFA e SSO",
+    description: "Integração com provedores corporativos via OIDC/SAML quando necessário.",
+  },
+  {
+    label: "Auditoria",
+    description:
+      "Trilha de login, exportação, alteração de permissão, execução de simulação e uso de agentes.",
+  },
+  {
+    label: "Governança de IA",
+    description: "Prompt registry, versões, avaliação, tool permissions, limites de custo e rollback.",
+  },
+];
+---
+
+<section id="acessos-governanca">
+  <h2 class="section-title">Acessos, segurança e governança</h2>
+  <ul class="access-list">
+    {
+      items.map((i) => (
+        <li>
+          <strong>{i.label}:</strong> {i.description}
+        </li>
+      ))
+    }
+  </ul>
+</section>

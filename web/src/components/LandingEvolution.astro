@@ -1,0 +1,49 @@
+---
+const versions: { label: string; description: string }[] = [
+  {
+    label: "Versão 1",
+    description: "Marca + proposta + Brasil Hoje + histórico + desafios + visão 2036 + roadmap.",
+  },
+  {
+    label: "Versão 2",
+    description: "Conecta APIs e fontes oficiais; cards e séries passam a atualizar automaticamente.",
+  },
+  {
+    label: "Versão 3",
+    description: "Publica Digital Twins, projeções, comparadores e primeiros cenários.",
+  },
+  {
+    label: "Versão 4",
+    description: "Adiciona Policy Lab público, mapas, risco e Brasil On-Track Index.",
+  },
+  {
+    label: "Versão 5",
+    description: "Integra Ask Brasil 2036, agentes, explicações e acesso aos portais autenticados.",
+  },
+];
+---
+
+<section id="evolucao-landing">
+  <h2 class="section-title">Evolução da landing page</h2>
+  <p class="section-lead">
+    A landing page é a primeira entrega pública. Ela não será descartada: evolui continuamente até
+    se tornar o Portal Público da plataforma.
+  </p>
+  <ol class="evolution-list">
+    {
+      versions.map((v) => (
+        <li>
+          <strong>{v.label}:</strong> {v.description}
+        </li>
+      ))
+    }
+  </ol>
+
+  <div class="central-question">
+    <p class="central-question__eyebrow">Questão central do Brasil 2036</p>
+    <p class="central-question__text">
+      Onde o Brasil está hoje, para onde está caminhando e quais decisões podem colocá-lo nos
+      trilhos até 2036?
+    </p>
+  </div>
+</section>

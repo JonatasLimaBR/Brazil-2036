@@ -103,10 +103,28 @@ h2.section-title::after {
   flex-wrap: wrap;
 }
 
-.nav__links a {
+.nav__links button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
   text-decoration: none;
   color: var(--ink);
+  font: inherit;
   font-size: 0.9rem;
+  padding: 0.35rem 0.1rem;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.nav__links button:hover {
+  color: var(--green-dark);
+}
+
+.nav__links button[aria-selected="true"] {
+  color: var(--green-dark);
+  font-weight: 700;
+  border-bottom-color: var(--green);
 }
 
 .nav__cta {
@@ -640,4 +658,149 @@ h2.section-title::after {
   letter-spacing: 0.02em;
   background: #fff;
   border-top: 1px solid var(--line);
+}
+
+/* Tab panels (LANDING_PAGE_TABS) */
+[role="tabpanel"] {
+  animation: tabpanel-fade-in 0.2s ease;
+}
+
+@keyframes tabpanel-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.section-lead {
+  max-width: 46rem;
+  margin: 0 auto 2rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* Fiscal snapshot (Home) — visually distinct from .data-panel: these values are curated
+   static content from an external document, never the project's own ingested pipeline. */
+.fiscal-snapshot__note {
+  max-width: 46rem;
+  margin: 0 auto 2rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.fiscal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+}
+
+.fiscal-card {
+  background: #fff;
+  border: 1px solid var(--yellow);
+  border-top: 3px solid var(--yellow);
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.fiscal-card h3 {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.fiscal-card__value {
+  margin: 0 0 0.5rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--green-dark);
+}
+
+.fiscal-card__source {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* Scenarios */
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.scenario-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.scenario-card h3 {
+  margin: 0 0 0.5rem;
+  color: var(--blue);
+  font-size: 1rem;
+}
+
+.scenario-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* Access & governance, evolution, expectations — simple lists matching the project's
+   existing text-heavy sections (no new visual language). */
+.access-list,
+.expectations-list {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding-left: 1.25rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.access-list li,
+.expectations-list li {
+  margin-bottom: 0.5rem;
+}
+
+.evolution-list {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding-left: 1.25rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.evolution-list li {
+  margin-bottom: 0.5rem;
+}
+
+.central-question {
+  max-width: 46rem;
+  margin: 2.5rem auto 0;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: #fdf1d6;
+  text-align: center;
+}
+
+.central-question__eyebrow {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #8a5a00;
+}
+
+.central-question__text {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
 }
