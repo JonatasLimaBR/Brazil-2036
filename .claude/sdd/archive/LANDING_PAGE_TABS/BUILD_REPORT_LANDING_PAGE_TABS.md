@@ -7,7 +7,7 @@
 - **Entrada:** `.claude/sdd/features/DESIGN_LANDING_PAGE_TABS.md` (Ready for Build)
 - **Branch:** `feature/landing-page-tabs`
 - **Data:** 2026-09-09
-- **Status da build:** ✅ Completo — pronto para `/verify-spec`
+- **Status da build:** ✅ Shipped
 - **Próximo passo:** `/verify-spec` (sessão nova, read-only) → `/ship`
 
 ---

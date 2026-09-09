@@ -3,7 +3,7 @@
 ## Metadados
 
 - **Feature:** LANDING_PAGE_TABS
-- **Status:** ✅ Complete (Built)
+- **Status:** ✅ Shipped
 - **Fase:** 2 (Design)
 - **Entrada:** `.claude/sdd/features/DEFINE_LANDING_PAGE_TABS.md` (Ready for Design)
 - **Criado:** 2026-09-09
