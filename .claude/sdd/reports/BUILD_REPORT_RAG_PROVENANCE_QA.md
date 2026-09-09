@@ -5,10 +5,11 @@
 - **Feature:** RAG_PROVENANCE_QA
 - **Fase:** 3 (Build)
 - **Entrada:** `.claude/sdd/features/DESIGN_RAG_PROVENANCE_QA.md` (Ready for Build)
-- **Branch:** `feature/rag-provenance-qa` (#43, PR1), `feature/rag-provenance-qa-pr2` (#44, PR2), PR3 (esta branch)
-- **Data:** 2026-09-08
-- **Status da build:** ✅ Completo (PR1 infra + PR2 corpus/embeddings + PR3 retrieval/endpoint) —
-  pronto para `/verify-spec`
+- **Branch:** `feature/rag-provenance-qa` (#43, PR1), `feature/rag-provenance-qa-pr2` (#44, PR2),
+  `feature/rag-provenance-qa-pr3` (#45, PR3), `fix/rag-connection-user-iam` (#46, hotfix real)
+- **Data:** 2026-09-08/09
+- **Status da build:** ✅ Completo (PR1 infra + PR2 corpus/embeddings + PR3 retrieval/endpoint + PR4
+  hotfix real de IAM) — pronto para `/verify-spec`
 - **Próximo passo:** `/verify-spec` (sessão nova, read-only) → `/ship`
 
 ---
@@ -100,6 +101,35 @@ combinação exata usada em `knowledge.py::retrieve()` (parâmetro NULL-ável + 
 `WHERE` externo) foi testada contra `brasil2036-dev` real antes de ser escrita no módulo — PASS
 sem surpresas, mas a verificação evitou repetir o padrão dos 2 bugs anteriores.
 
+### Achado #5 — bug real de produção pós-merge do PR3 (#46, hotfix no mesmo dia): faltava `bigquery.connections.use` pro `api-runtime`
+
+A 1ª chamada real a `POST /v1/knowledge/ask` em produção, minutos após o deploy do PR3, retornou
+500. `gcloud run services logs read` mostrou o traceback completo:
+`google.api_core.exceptions.Forbidden: 403 Access Denied: Connection
+brasil2036-dev.southamerica-east1.rag-vertex-ai: User does not have bigquery.connections.use
+permission`. Causa raiz: `roles/aiplatform.user` (concedido ao `api-runtime` no PR3, para a
+chamada direta ao Gemini em `compose_answer()`) não é suficiente para que a MESMA service account
+rode uma query que referencia `ML.GENERATE_EMBEDDING` através da conexão `rag-vertex-ai` dentro de
+`retrieve()` — BigQuery exige que o **principal que roda a query** (não só a service account da
+própria conexão) tenha `bigquery.connections.use` no recurso da conexão. Este é um 3º tipo de
+permissão distinto dos outros 2 já concedidos nesta fatia (a SA da conexão chamando Vertex AI,
+`api-runtime` chamando o Gemini diretamente) — nenhum dos 2 cobria este caso.
+
+**Corrigido no mesmo dia** (PR #46): `google_bigquery_connection_iam_member` novo, concedendo
+`roles/bigquery.connectionUser` ao `api-runtime` especificamente na conexão `rag-vertex-ai`.
+Verificado ao vivo antes e depois da correção — `POST /v1/knowledge/ask` reverificado em produção
+pós-deploy: `HTTP 200`, resposta real citando 5 fontes reais (incluindo uma nota honesta do modelo
+reconhecendo que o contexto recuperado não cobria totalmente o "porquê" perguntado, em vez de
+inventar uma explicação).
+
+**Lição generalizável:** ao integrar BigQuery com um recurso externo via `REMOTE WITH CONNECTION`,
+existem até 3 identidades distintas em jogo — a service account da própria conexão (autentica
+contra o serviço externo), o principal que executa a query (precisa de `connections.use` no
+recurso da conexão), e, se houver uma chamada direta separada ao mesmo serviço externo fora do
+BigQuery (como `compose_answer()` chamando o Gemini via `google-genai`), uma 3ª permissão própria
+para essa chamada direta. As 3 são supridas por decisões de IAM diferentes; supor que 1 delas
+implica as outras foi exatamente o que causou este bug.
+
 ---
 
 ## 3. Verification results
@@ -114,8 +144,11 @@ sem surpresas, mas a verificação evitou repetir o padrão dos 2 bugs anteriore
   completo com uma chamada real ao Gemini via Vertex AI.
 - **`web/`:** `npm run gen:client` + `typecheck` (`astro check`, 0 erros) + `build` verdes contra o
   `openapi.json` regenerado.
-- **`terraform`:** `fmt -check` + `validate` (local, `-backend=false`) limpos para as 2 mudanças de
-  infra (PR1 conexão, PR3 IAM do `api-runtime`).
+- **`terraform`:** `fmt -check` + `validate` (local, `-backend=false`) limpos para as 3 mudanças de
+  infra (PR1 conexão, PR3 IAM do `api-runtime` p/ Gemini, PR4 IAM p/ usar a conexão).
+- **PR4 (#46, hotfix):** `terraform fmt -check`/`validate` limpos; `ci-gate` verde (incluindo o job
+  `terraform`). Deploy confirmado via `infra.yml`; `POST /v1/knowledge/ask` reverificado ao vivo em
+  produção pós-fix: `HTTP 200`, resposta real citando 5 fontes reais.
 
 ---
 
@@ -155,3 +188,4 @@ ingerido), então este débito é de prioridade ainda mais baixa que o das séri
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-08 | 1.0 | Build completo: PR1 (conexão BigQuery↔Vertex AI, infra spike verificada ao vivo) + PR2 (corpus curado de 11 notas reais + embeddings, bug real de `ARRAY_LENGTH` pego e corrigido antes do merge) + PR3 (retrieval híbrida + endpoint `POST /v1/knowledge/ask` + síntese via Gemini real, limiar de similaridade calibrado empiricamente). Todos os testes de integração rodados contra `brasil2036-dev` real, incluindo uma chamada real ao Gemini. 0 regressão em `ingestion/`/`api/`/`web/`. | /build (Claude Sonnet 5) |
+| 2026-09-09 | 1.1 | PR4 (#46, hotfix mesmo dia, Achado #5): 1ª chamada real de `POST /v1/knowledge/ask` em produção 500ou — `roles/aiplatform.user` não bastava, faltava `bigquery.connections.use` do `api-runtime` na conexão `rag-vertex-ai` (3ª identidade de IAM distinta desta integração, nenhuma das outras 2 já concedidas cobria este caso). Corrigido com `google_bigquery_connection_iam_member`, verificado ao vivo antes/depois. Endpoint confirmado funcionando ponta a ponta em produção. | /build (Claude Sonnet 5) |
