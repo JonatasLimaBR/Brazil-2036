@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/knowledge/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask Knowledge */
+        post: operations["ask_knowledge_v1_knowledge_ask_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/metrics/{metric_id}": {
         parameters: {
             query?: never;
@@ -212,6 +229,37 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** KnowledgeAskRequest */
+        KnowledgeAskRequest: {
+            /**
+             * Metric Id
+             * @description Optional filter: only retrieve notes for this metric_id
+             */
+            metric_id?: string | null;
+            /** Question */
+            question: string;
+        };
+        /** KnowledgeAskResponse */
+        KnowledgeAskResponse: {
+            /** Answer */
+            answer: string;
+            /** Citations */
+            citations: components["schemas"]["KnowledgeCitation"][];
+            /** Evidence Sufficient */
+            evidence_sufficient: boolean;
+        };
+        /** KnowledgeCitation */
+        KnowledgeCitation: {
+            /** Metric Id */
+            metric_id: string;
+            /**
+             * Source Url
+             * @description Real URL from metric_provenance -- never fabricated
+             */
+            source_url: string;
+            /** Title */
+            title: string;
+        };
         /** MetricResponse */
         MetricResponse: {
             data_class: components["schemas"]["DataClass"];
@@ -385,6 +433,39 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    ask_knowledge_v1_knowledge_ask_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KnowledgeAskRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeAskResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

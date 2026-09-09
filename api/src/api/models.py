@@ -141,3 +141,31 @@ class SuggestedAssumptionsResponse(BaseModel):
     # derivation (annualization / YoY averaging) over observed data, not
     # themselves a directly observed value.
     data_class: DataClass = DataClass.estimated
+
+
+# --- RAG provenance Q&A (RAG_PROVENANCE_QA, ADR-061, SPEC-018) -------------
+#
+# A Q&A answer is neither observed, estimated, nor simulated (ADR-028 labels
+# a *metric value*; this is synthesized text) -- it carries its own envelope
+# instead: citations the caller can verify are real, plus an explicit
+# evidence_sufficient flag the retrieval gate sets deterministically (DESIGN
+# D2). No data_class field on this model, by design.
+
+
+class KnowledgeAskRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+    metric_id: str | None = Field(
+        default=None, description="Optional filter: only retrieve notes for this metric_id"
+    )
+
+
+class KnowledgeCitation(BaseModel):
+    metric_id: str
+    title: str
+    source_url: str = Field(description="Real URL from metric_provenance -- never fabricated")
+
+
+class KnowledgeAskResponse(BaseModel):
+    answer: str
+    citations: list[KnowledgeCitation]
+    evidence_sufficient: bool

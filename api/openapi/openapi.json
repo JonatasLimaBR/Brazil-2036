@@ -175,6 +175,83 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "KnowledgeAskRequest": {
+        "properties": {
+          "metric_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional filter: only retrieve notes for this metric_id",
+            "title": "Metric Id"
+          },
+          "question": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "KnowledgeAskRequest",
+        "type": "object"
+      },
+      "KnowledgeAskResponse": {
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeCitation"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "evidence_sufficient": {
+            "title": "Evidence Sufficient",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "answer",
+          "citations",
+          "evidence_sufficient"
+        ],
+        "title": "KnowledgeAskResponse",
+        "type": "object"
+      },
+      "KnowledgeCitation": {
+        "properties": {
+          "metric_id": {
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "source_url": {
+            "description": "Real URL from metric_provenance -- never fabricated",
+            "title": "Source Url",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "metric_id",
+          "title",
+          "source_url"
+        ],
+        "title": "KnowledgeCitation",
+        "type": "object"
+      },
       "MetricResponse": {
         "properties": {
           "data_class": {
@@ -544,6 +621,44 @@
           }
         },
         "summary": "Healthz"
+      }
+    },
+    "/v1/knowledge/ask": {
+      "post": {
+        "operationId": "ask_knowledge_v1_knowledge_ask_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeAskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeAskResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ask Knowledge"
       }
     },
     "/v1/metrics/{metric_id}": {

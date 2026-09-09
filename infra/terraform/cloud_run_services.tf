@@ -29,6 +29,19 @@ resource "google_bigquery_dataset_iam_member" "api_control_editor" {
   member     = "serviceAccount:${google_service_account.api.email}"
 }
 
+# RAG_PROVENANCE_QA (ADR-061): POST /v1/knowledge/ask calls Gemini directly
+# via google-genai (Vertex AI backend) to synthesize an answer from notes the
+# retrieval gate already validated as relevant -- this is a separate call
+# from the BigQuery-internal ML.GENERATE_EMBEDDING (which authenticates as
+# the bigquery_connection_vertex.tf connection's own service account, not
+# api-runtime). Project-level, not dataset-scoped: aiplatform.user has no
+# per-resource scoping in this project the way BigQuery dataset roles do.
+resource "google_project_iam_member" "api_vertex_ai_user" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.api.email}"
+}
+
 output "api_service_account" {
   value = google_service_account.api.email
 }

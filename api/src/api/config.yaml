@@ -21,3 +21,10 @@ metric_tables:
 bq_dataset_control: br2036_control
 debtlab_scenarios_table: debtlab_scenarios
 debtlab_base_metric_id: divida_bruta_pib
+
+gcp_region: southamerica-east1
+rag_corpus_table: rag_knowledge_corpus
+rag_embedding_model: rag_embedding_model
+rag_generative_model: gemini-2.5-flash
+rag_similarity_threshold: 0.45
+rag_top_k: 5
