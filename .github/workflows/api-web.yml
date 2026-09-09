@@ -52,6 +52,22 @@ jobs:
           echo "::error::$SA not found after 5 min (infra workflow may have failed)"
           exit 1
 
+      # RBAC_ABAC_AUTH: the API needs rbac-subnet (infra.yml, network.tf) to exist before
+      # it can deploy with Direct VPC egress -- same race as the wait step above (both
+      # workflows trigger off the same push, with no explicit ordering between them).
+      - name: wait for rbac-subnet (created by the infra workflow)
+        run: |
+          for i in $(seq 1 30); do
+            if gcloud compute networks subnets describe rbac-subnet \
+                 --region "${{ vars.GCP_REGION }}" --project "${{ vars.GCP_PROJECT }}" \
+                 >/dev/null 2>&1; then
+              echo "found rbac-subnet"; exit 0
+            fi
+            echo "waiting for rbac-subnet ($i/30)"; sleep 10
+          done
+          echo "::error::rbac-subnet not found after 5 min (infra workflow may have failed)"
+          exit 1
+
       - name: build + deploy api
         run: |
           IMG="${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT }}/br2036/api:${{ github.sha }}"
@@ -60,6 +76,7 @@ jobs:
           gcloud run deploy br2036-api --image "$IMG" \
             --region "${{ vars.GCP_REGION }}" --project "${{ vars.GCP_PROJECT }}" \
             --service-account "api-runtime@${{ vars.GCP_PROJECT }}.iam.gserviceaccount.com" \
+            --network rbac-vpc --subnet rbac-subnet --vpc-egress private-ranges-only \
             --allow-unauthenticated --port 8080 \
             --set-env-vars "GCP_PROJECT=${{ vars.GCP_PROJECT }}"
           API_URL=$(gcloud run services describe br2036-api \
