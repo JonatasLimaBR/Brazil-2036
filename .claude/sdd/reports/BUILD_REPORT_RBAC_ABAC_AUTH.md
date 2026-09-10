@@ -68,6 +68,25 @@ o valor de `budget_amount_brl` está corrigido no Terraform (pronto pra ser apli
 já reflete os novos R$1.800. Registrado como achado, não como bug corrigido — fora do escopo
 desta fatia investigar/corrigir o wiring do `billing_account` em si.
 
+### Achado #5 — bug real de produção no `apply` do PR1: `secretmanager.googleapis.com` nunca habilitado (hotfix mesmo dia, PR #55)
+
+O `apply` real do `infra.yml` criou a VPC, subnet, Private Services Access e o cluster+instância
+AlloyDB com sucesso (`google_alloydb_instance.rbac_primary: Creation complete after 6m15s`), e só
+então falhou em `google_secret_manager_secret.alloydb_password` com `403 SERVICE_DISABLED` —
+`secretmanager.googleapis.com` nunca foi adicionado à lista de serviços de `apis.tf`, mesmo o
+recurso já tendo `depends_on = [google_project_service.enabled]`. Uma falha não-destrutiva
+(nada foi destruído, o `apply` só parou antes de terminar) — confirmado com um `plan` real contra
+o estado parcialmente aplicado: exatamente os 3 recursos pendentes (habilitar a API + o secret +
+sua versão), 0 mudança no que já existia. Corrigido no mesmo dia (PR #55): `secretmanager.
+googleapis.com` adicionado à lista. Reverificado ao vivo pós-fix: cluster `READY`, instância
+`READY` (IP privado real `10.55.115.2`, dentro do range PSA reservado — confirma que a
+conectividade privada funciona de ponta a ponta), secret com 1 versão `enabled`.
+
+**Verificação adicional ao vivo (D2):** confirmado que `--vpc-egress=private-ranges-only` não
+quebrou nenhuma chamada pública já existente — `GET /v1/metrics/divida_consolidada` (BigQuery)
+e `POST /v1/knowledge/ask` (BigQuery `VECTOR_SEARCH` + chamada direta ao Gemini via `google-genai`)
+ambos retornaram `HTTP 200` reais em produção depois do deploy com as novas flags de rede.
+
 ---
 
 ## 3. Verification results (PR1)
@@ -78,6 +97,11 @@ desta fatia investigar/corrigir o wiring do `billing_account` em si.
   próprias, só leitura) — **limpo, `Plan: 12 to add, 0 to change, 0 to destroy`**, incluindo os 3
   recursos novos de API habilitada, VPC+subnet+PSA, cluster+instância AlloyDB, secret+versão,
   senha aleatória. Nenhum erro, nenhuma mudança destrutiva.
+- `ci-gate` verde em `#54` e `#55` (hotfix), incluindo o `terraform plan` real da própria CI
+  (`tf-deployer`, confirma que os 4 IAM roles novos funcionam lá também).
+- **Aplicado de verdade em produção** (Achado #5): AlloyDB cluster+instância `READY`, IP privado
+  real, secret com versão `enabled`; tráfego público (BigQuery, Gemini) confirmado funcionando
+  sem regressão pós-deploy com as novas flags de rede do Cloud Run.
 
 ---
 
@@ -91,9 +115,51 @@ desta fatia investigar/corrigir o wiring do `billing_account` em si.
 
 ---
 
-## 5. Blockers / trabalho restante
+### PR2a — Firebase / Identity Platform (infra spike, primeira parte do PR2 do DESIGN)
 
-Nenhum blocker pro PR1. Trabalho restante desta fatia (PR2-PR4, ver `DESIGN §3`): motor de
+| # | Arquivo | Ação | Nota |
+|---|---|---|---|
+| 1 | `infra/terraform/versions.tf` | Modify | +provider `google-beta` (recursos de Firebase/Identity Platform ainda não estão no provider `google` estável) |
+| 2 | `infra/terraform/apis.tf` | Modify | +`firebase.googleapis.com`, +`identitytoolkit.googleapis.com` |
+| 3 | `infra/terraform/firebase.tf` | Create | `google_firebase_project.default` (linka Firebase ao projeto GCP existente) + `google_identity_platform_config.default` (`sign_in.email`, `password_required=true`) |
+
+### Achado #6 — `google_identity_platform_config.sign_in` não suporta Google Sign-In como sub-bloco direto
+
+Suposição inicial: haveria um sub-bloco `google`/OAuth dentro de `sign_in`, análogo ao `email`.
+Introspecção real do schema do provider (`terraform providers schema -json`, mesma técnica dos
+achados #1/#2) mostrou que `sign_in` só aceita `email`/`anonymous`/`phone_number` diretamente.
+Pesquisa adicional real (documentação oficial do provider) identificou o recurso correto para
+Google Sign-In: `google_identity_platform_default_supported_idp_config` — mas seus campos
+`client_id`/`client_secret` são ambos obrigatórios e só podem vir de um cliente OAuth 2.0 criado
+manualmente no Console do GCP. **Terraform/gcloud não conseguem provisionar esse cliente** — é uma
+lacuna de automação real, análoga ao passo manual único de `scripts/bootstrap.sh` (setup de WIF).
+
+**Decisão:** enviar email/senha agora (cobre o caso real que o motor de autorização precisa
+verificar — `firebase_admin.auth.verify_id_token()` funciona igual para qualquer provedor) e
+documentar o Google Sign-In como follow-up explícito, comentado no próprio `firebase.tf`, em vez
+de fabricar ou adiar silenciosamente a decisão. Nenhum código de app (`auth.py`) depende de
+Google Sign-In especificamente — só de um ID token Firebase válido.
+
+**Verificação:** `terraform validate` limpo; `terraform plan` **real** (read-only, credenciais
+próprias) contra `brasil2036-dev` — **limpo, `Plan: 4 to add, 0 to change, 0 to destroy`**
+(`google_firebase_project.default`, `google_identity_platform_config.default`, 2 APIs). Nenhuma
+mudança destrutiva, nenhum recurso pré-existente afetado.
+
+---
+
+## 5. Autonomous Decisions (PR2a)
+
+| # | Decision Point | Options Considered | Chose | Rationale |
+|---|----------------|--------------------|-------|-----------|
+| 4 | Google Sign-In: fabricar/simular client_id, bloquear a fatia até criação manual, ou enviar só email/senha e documentar o gap | (a) bloquear; (b) fabricar credenciais falsas (nunca); (c) email/senha agora + follow-up documentado | (c) | Nenhum requisito do DEFINE exige Google Sign-In no dia 1; `auth.py` verifica qualquer ID token Firebase válido, então o provedor de login é ortogonal ao motor de autorização. Bloquear a fatia inteira por um passo manual de Console (mesmo padrão já aceito em `bootstrap.sh`) violaria YAGNI. |
+
+---
+
+## 6. Blockers / trabalho restante
+
+Nenhum blocker pro PR1 ou PR2a. Google Sign-In propriamente dito fica como follow-up rastreado
+(achado #6) — requer criação manual de cliente OAuth 2.0 no Console, fora do alcance de
+Terraform/gcloud. Trabalho restante desta fatia (resto do PR2 + PR3-PR4, ver `DESIGN §3`): motor de
 autorização (`authz.py`), repositório AlloyDB (`alloydb_repo.py`), verificação de token Firebase
 (`auth.py`), aplicação real nos 3 grupos de endpoint, colunas de organização em
 `debtlab_scenarios`, seed das 2 organizações de teste, botão de login na landing, testes formais,
@@ -101,15 +167,16 @@ autorização (`authz.py`), repositório AlloyDB (`alloydb_repo.py`), verificaç
 
 ---
 
-## 6. Status transitions
+## 7. Status transitions
 
 Ainda não — status muda pra "Built" só depois do PR4 (matriz de teste completa), per
 `sdd-build`/`sdd-ship`.
 
 ---
 
-## 7. Revision history
+## 8. Revision history
 
 | Data | Versão | Mudança | Autor |
 |---|---|---|---|
 | 2026-09-09 | 0.1 | PR1 (infra): VPC+PSA+AlloyDB+budget+deploy flags+IAM do `tf-deployer`. 4 achados reais durante o build (schema do `network_config`, `availability_type` explícito, IAM novo, `budget_amount_brl` sem confirmação de aplicação real). `terraform plan` real (read-only, credenciais próprias) limpo contra `brasil2036-dev`: 12 recursos a criar, 0 erro. | /build (Claude Sonnet 5) |
+| 2026-09-09 | 0.2 | PR2a (infra): Firebase project link + Identity Platform config (email/senha). Achado real #6 (Google Sign-In exige cliente OAuth criado manualmente — não automatizável via Terraform/gcloud), documentado e deferido sem bloquear a fatia. `terraform plan` real limpo: 4 recursos a criar, 0 erro. | /build (Claude Sonnet 5) |

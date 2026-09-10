@@ -13,6 +13,8 @@ locals {
     "alloydb.googleapis.com",
     "vpcaccess.googleapis.com",
     "secretmanager.googleapis.com",
+    "firebase.googleapis.com",
+    "identitytoolkit.googleapis.com",
   ]
 }
 
